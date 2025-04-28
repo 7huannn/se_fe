@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedigo</title>
+    <link rel = "stylesheet" href = "../public/styles/home.css">
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <img src="../public/assets/images/logo_rectangle.png" alt="Schedigo logo">
+        <button class="auth-button">Sign in | Sign up</button>
+    </div>
+
+    <!-- Main Section -->
+    <section class = "main-section">
+        <div class="main-content">
+            <div class="main-left">
+                <h1>Maximize Your Time <br>Optimize Your Life</h1>
+                <p>Write. Plan. Collaborate. With a little help from AI.</p>
+                <div class="buttons">
+                    <button class="btn primary">Try it now</button>
+                    <button onclick="viewDemo()" class="btn secondary">View demo</button>
+                </div>
+            </div>
+            <div class="main-right">
+                <img src="../public/assets/images/logo_square.png" alt="Workspace Image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature section -->
+    <section class="features">
+        <h2 class="section-title">Main Features</h2>
+        <div class="feature-container">
+            <div class="feature-box">
+                <div class="feature-content">
+                    <h3>📌 Easy Organization</h3>
+                    <p>Keep your tasks and projects neatly arranged in one place. Schedigo provides intuitive tools to organize your workflow and stay on top of your priorities.</p>
+                </div>
+                <div class="feature-image">
+                    <img src="../assets/images/feature1.png" alt="Easy Organization Feature">
+                </div>
+            </div>
+            
+            <div class="feature-box">
+                <div class="feature-content">
+                    <h3>🤝 Collaboration</h3>
+                    <p>Work together in real-time, anytime, anywhere. Share documents, assign tasks, and communicate effortlessly with your team members no matter where they are.</p>
+                </div>
+                <div class="feature-image">
+                    <img src="../assets/images/feature2.png" alt="Collaboration Feature">
+                </div>
+            </div>
+            
+            <div class="feature-box">
+                <div class="feature-content">
+                    <h3>🔍 AI-Powered Search</h3>
+                    <p>Find what you need </p>
+                </div>
+                <div class="feature-image">
+                    <img src="../assets/images/feature2.png" alt="Collaboration Feature">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <h2>What Our Users Say</h2>
+        <div>"Schedigo has changed the way I work!" - User A</div>
+        <div>"Super intuitive and efficient!" - User B</div>
+    </section>
+    <section class="cta">
+        <h2>Start Now</h2>
+        <button class="btn primary">Get Started</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 Schedigo. All rights reserved.</p>
+        <p><a href="#">Blog</a> | <a href="#">Docs</a> | <a href="#">Contact</a> | <a href="#">Terms</a></p>
+    </footer>
+    <script type="module" src="../controllers/home.js"></script>
+</body>
+</html>
