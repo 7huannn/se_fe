@@ -63,7 +63,7 @@ body {
 }
 
 .sidebar-menu {
-  background-color: #1d1d2b;         /* nền tối */
+  background-color: #0056b3;         /* nền tối */
   color: #f9f9f9;                    /* chữ sáng */
   overflow-y: auto;                 /* scroll nếu quá dài */
 }
@@ -85,7 +85,7 @@ body {
 }
 
 .menu-card {
-  background: #31315a;
+  background:#2d7fa8;
   color: #f9f9f9;
   border: none;
   border-radius: 8px;
@@ -100,7 +100,7 @@ body {
 }
 
 .menu-card:hover {
-  background: #4651ca;
+  background: #8c519a;
 }
 
 .menu-card .icon {
