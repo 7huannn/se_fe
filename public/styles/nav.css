@@ -3,6 +3,7 @@
   display: flex;
   padding: 0.5rem 1rem;
   gap: 1rem;
+  align-items: center;
 }
 
 .nav__date-info {
@@ -22,6 +23,14 @@
   display: flex;
   gap: 0.125rem;
 }
+
+.nav__search {
+  margin-right: 1rem;
+}
+
+/* .nav__theme {
+  margin-right: 1rem; 
+} */
 
 .nav__date {
   font-size: var(--font-size-lg);
