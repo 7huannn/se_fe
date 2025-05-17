@@ -67,7 +67,8 @@ function createCalendarDay(calendarDay, events) {
   });
 
   // 3) **Click vào vùng sự kiện (wrapper)** → dispatch event-create-request
-  wrapperEl.addEventListener("click", () => {
+  wrapperEl.addEventListener("click", e => {
+    if (e.target.closest("[data-event]")) return;
     document.dispatchEvent(new CustomEvent("event-create-request", {
       detail: {
         date: calendarDay,

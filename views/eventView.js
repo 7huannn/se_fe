@@ -25,7 +25,8 @@ import {
     evEl.style.setProperty("--event-color", event.color);
   
     // Click vào event, đẩy custom event ra ngoài
-    evEl.addEventListener("click", () => {
+    evEl.addEventListener("click", e => {
+      e.stopPropagation();
       evEl.dispatchEvent(new CustomEvent("event-click", {
         detail: { event }, bubbles: true
       }));

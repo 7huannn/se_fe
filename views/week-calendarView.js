@@ -88,7 +88,8 @@ function renderWeekColumn(parent, weekDay, events) {
   cells.forEach(cell => {
     const start = parseInt(cell.dataset.weekCalendarCell, 10);
     const end = start + 60;
-    cell.addEventListener("click", () => {
+    cell.addEventListener("click", e => {
+      if (e.target.closest("[data-event]")) return;
       document.dispatchEvent(new CustomEvent("event-create-request", { detail: { date: weekDay, startTime: start, endTime: end }, bubbles: true }));
     });
   });

@@ -76,7 +76,7 @@ export function initEventForm(toaster) {
       );
     } else {
       // Giữ nguyên id cũ
-      detail.id = formElement.dataset.id;
+      detail.id = Number(formElement.dataset.id);  // 5 (number), will match evt.id === 5
       toaster.toast("Event updated!", "success");
       formElement.dispatchEvent(
         new CustomEvent("event-edit", { detail, bubbles: true })
