@@ -48,18 +48,18 @@ export function initNavigationController() {
   // 1. Topbar Auth button
   const authBtn = document.querySelector(".auth-button");
   if (authBtn) {
-    handleRedirectButton(authBtn, "../public/login.html");
+    handleRedirectButton(authBtn, "login.html");
   }
 
   // 2. Tất cả nút .btn.primary (Try it now, View demo…)
   document
     .querySelectorAll(".btn.primary")
-    .forEach(btn => handleRedirectButton(btn, "../public/login.html"));
+    .forEach(btn => handleRedirectButton(btn, "login.html"));
 
   // 3. CTA Get Started (nếu nằm trong .cta)
   const getStartedBtn = document.querySelector(".cta .btn.primary");
   if (getStartedBtn) {
-    handleGetStarted(getStartedBtn, "../public/login.html");
+    handleGetStarted(getStartedBtn, "login.html");
   }
 
   // 4. Nút demo (nếu dùng data-demo-button)

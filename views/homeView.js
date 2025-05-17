@@ -13,20 +13,20 @@ import {
       // Nút Auth (Topbar)
       const authBtn = document.querySelector(".auth-button");
       if (authBtn) {
-        handleRedirectButton(authBtn, "../public/login.html");
+        handleRedirectButton(authBtn, "login.html");
       }
   
       // Nút chính (Main Section)
       const primaryBtn = document.querySelector(".btn.primary");
       if (primaryBtn) {
-        handleRedirectButton(primaryBtn, "../public/login.html");
+        handleRedirectButton(primaryBtn, "login.html");
       }
     });
   
     // Nút Get Started (có thể nằm ngoài DOMContentLoaded)
     const getStartedBtn = document.querySelector(".cta .btn.primary");
     if (getStartedBtn) {
-      handleGetStarted(getStartedBtn, "../public/login.html");
+      handleGetStarted(getStartedBtn, "login.html");
     }
   }
   

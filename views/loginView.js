@@ -73,7 +73,7 @@ export function initLoginView() {
         if (!isValidEmail(email)) throw new Error('Invalid email address');
         await login({ email, password });
         alert('Login successful!');
-        window.location.href = '../public/index.html';
+        window.location.href = 'index.html';
       } catch (err) {
         alert(err.message);
       }
