@@ -16,7 +16,7 @@ import { initMobileSidebarController } from "./mobile-sidebar.js";
 import { initHamburger }               from "./hamburger.js";
 import { initNotificationsController } from "./notifications.js";
 import { initSidebarToggleView }   from "../views/sidebar-toggleView.js"; // nếu bạn vẫn dùng view init
-
+import { initMenuNavigateView }     from "../views/menuNavigateView.js";
 import { initEventCreateController }   from "./event-create-button.js";
 import { initEventDeleteController }   from "./event-delete-dialog.js";
 import { initEventDetailsController }  from "./event-details-dialog.js";
@@ -33,6 +33,7 @@ initMobileSidebarController();
 initHamburger();
 initNotificationsController();
 initSidebarToggleView();    // hoặc initSidebarToggleController() nếu bạn có controller cho sidebar
+initMenuNavigateView();
 
 // b) Form & dialog controllers
 initEventCreateController();
