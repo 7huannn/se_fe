@@ -1,45 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teams</title>
     <link rel="stylesheet" href="../styles/group.css">
 </head>
+
 <body>
     <div class="sidebar">
         <div class="logo">
             <img src="../assets/images/logo_rectangle.png" alt="Logo">
         </div>
-        
+
         <div class="sidebar-item">
             <div class="sidebar-icon">💬</div>
             <div class="sidebar-text">Chat</div>
         </div>
-        
+
         <div class="sidebar-item active">
             <div class="sidebar-icon">👥</div>
             <div class="sidebar-text">Teams</div>
         </div>
-        
+
         <div class="sidebar-item">
             <div class="sidebar-icon">📅</div>
-            <div class="sidebar-text">Personal Calendar</div>
+            <div class="sidebar-text">Calendar</div>
         </div>
-        <div class="sidebar-item">
-            <div class="sidebar-icon">📅</div>
-            <div class="sidebar-text">Group Calendar</div>
-        </div>
+
         <div class="sidebar-spacer"></div>
-        
-        <!-- <div class="sidebar-settings">
+
+        <div class="sidebar-settings">
             <div class="sidebar-item">
                 <div class="sidebar-icon">⚙️</div>
                 <div class="sidebar-text">Settings</div>
             </div>
-        </div> -->
+        </div>
     </div>
-    
+
     <div class="main-content">
         <div class="header">
             <div class="navigation">
@@ -52,11 +51,11 @@
                         Join or create team
                     </button>
                     <div class="dropdown-menu" id="teamDropdown">
-                        <div class="dropdown-item">
+                        <div class="dropdown-item" id="createTeamBtn">
                             <span class="dropdown-icon">👥</span>
                             Create team
                         </div>
-                        <div class="dropdown-item">
+                        <div class="dropdown-item" id="joinTeamBtn">
                             <span class="dropdown-icon">👤</span>
                             Join team
                         </div>
@@ -67,18 +66,108 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- Chỉ giữ lại phần này -->
         <div class="teams-section">
-            <h2 class="section-title">Teams</h2>
-            
-            <div class="item-row">
-                <span class="chevron">▶</span>
-                <span>Classes</span>
+            <h2 class="section-title">TEAMS</h2>
+            <div class="item-row" id="teamsHeader">
+                <span class="chevron" id="teamsChevron">▶</span>
+                <span>Teams</span>
+            </div>
+            <div class="teams-content" id="teamsContent" style="display: none;">
+                <div class="teams-grid">
+                    <!-- Team cards sẽ được thêm vào đây khi người dùng tạo team -->
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Thêm script vào đây -->
-    <script src="../../controllers/group.js"></script>
+        <!-- Modal Create Team -->
+        <div class="modal" id="createTeamModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create team</h2>
+                    <button class="close-btn" id="closeCreateTeamModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="teamName">Team name</label>
+                        <input type="text" id="teamName" placeholder="Enter team name">
+                    </div>
+                    <div class="form-group">
+                        <label for="teamDescription">Description (optional)</label>
+                        <textarea id="teamDescription" placeholder="Add a description for your team"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Privacy</label>
+                        <div class="radio-group">
+                            <label class="radio-container">
+                                <input type="radio" name="privacy" value="private" checked>
+                                <span class="radio-label">Private</span>
+                                <span class="radio-description">Only team owners can add members</span>
+                            </label>
+                            <label class="radio-container">
+                                <input type="radio" name="privacy" value="public">
+                                <span class="radio-label">Public</span>
+                                <span class="radio-description">Anyone in the organization can join</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Color</label>
+                        <div class="color-picker">
+                            <label class="color-option">
+                                <input type="radio" name="color" value="blue" checked>
+                                <span class="color-circle blue"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="color" value="orange">
+                                <span class="color-circle orange"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="color" value="green">
+                                <span class="color-circle green"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="color" value="purple">
+                                <span class="color-circle purple"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="color" value="red">
+                                <span class="color-circle red"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="cancelCreateTeam">Cancel</button>
+                    <button class="btn btn-save" id="saveTeam">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Join Team -->
+        <div class="modal" id="joinTeamModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Join team</h2>
+                    <button class="close-btn" id="closeJoinTeamModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="teamCode">Team code</label>
+                        <input type="text" id="teamCode" placeholder="Enter team code">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="cancelJoinTeam">Cancel</button>
+                    <button class="btn btn-save" id="joinTeamSubmit">Join</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <!-- Script -->
+        <script src="../../controllers/group.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Schedigo</title>
+    <link rel="stylesheet" href="../styles/chat.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="../assets/images/logo_rectangle.png" alt="Logo">
+        </div>
+        
+        <div class="sidebar-item active">
+            <div class="sidebar-icon">💬</div>
+            <div class="sidebar-text">Chat</div>
+        </div>
+        
+        <div class="sidebar-item">
+            <div class="sidebar-icon">👥</div>
+            <div class="sidebar-text">Teams</div>
+        </div>
+        
+        <div class="sidebar-item">
+            <div class="sidebar-icon">📅</div>
+            <div class="sidebar-text">Calendar</div>
+        </div>
+        
+        <div class="sidebar-spacer"></div>
+        
+        <div class="sidebar-settings">
+            <div class="sidebar-item">
+                <div class="sidebar-icon">⚙️</div>
+                <div class="sidebar-text">Settings</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-header">
+                    <h2>Chat</h2>
+                    <div class="chat-actions">
+                        <button class="icon-button">⋯</button>
+                        <button class="icon-button">✏️</button>
+                    </div>
+                </div>
+                
+                <div class="chat-sections">
+                    <div class="chat-section">
+                        <div class="section-header">
+                            <span class="section-toggle">▼</span>
+                            <span class="section-title">Pinned</span>
+                        </div>
+                        <div class="section-content">
+                            <!-- Pinned chats will go here -->
+                        </div>
+                    </div>
+                    
+                    <div class="chat-section">
+                        <div class="section-header">
+                            <span class="section-toggle">▼</span>
+                            <span class="section-title">Recent</span>
+                        </div>
+                        <div class="section-content">
+                            <div class="chat-item">
+                                <div class="chat-avatar">
+                                    <div class="avatar-placeholder">NC</div>
+                                </div>
+                                <div class="chat-info">
+                                    <div class="chat-name">New chat</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="recipient-info">
+                        <input type="text" class="recipient-input" placeholder="To: Enter name, email, group or tag">
+                        <button class="dropdown-button">▼</button>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="icon-button">⋯</button>
+                        <button class="icon-button">✏️</button>
+                    </div>
+                </div>
+                
+                <div class="chat-content">
+                    <div class="empty-chat">
+                        <div class="empty-chat-illustration">
+                            <img src="../assets/images/chat-illustration.png" alt="Start a conversation">
+                        </div>
+                        <h3>You're starting a new conversation</h3>
+                        <p>Type your first message below.</p>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <div class="chat-input-box">
+                        <input type="text" class="chat-input" placeholder="Type a message">
+                        <div class="input-actions">
+                            <button class="icon-button">📎</button>
+                            <button class="icon-button">😊</button>
+                            <button class="icon-button">🎨</button>
+                            <button class="icon-button">➕</button>
+                        </div>
+                    </div>
+                    <button class="send-button">▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../controllers/chat.js"></script>
+</body>
+</html>

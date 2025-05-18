@@ -1,10 +1,23 @@
-// JavaScript để xử lý dropdown menu
+// JavaScript để xử lý dropdown menu và modals
 document.addEventListener('DOMContentLoaded', function() {
     // Xử lý dropdown menu "Join or create team"
     initTeamDropdown();
     
     // Xử lý sự kiện khi click vào các mục sidebar
     initSidebarItems();
+    
+    // Xử lý các modal
+    initModals();
+    
+    // Khởi tạo danh sách teams
+    initTeamsList();
+    
+    // Khởi tạo form tạo team
+    initCreateTeamForm();
+    
+    initChatUI();
+    
+    initSidebarNav();
 });
 
 function initTeamDropdown() {
@@ -27,28 +40,6 @@ function initTeamDropdown() {
     // Ngăn không đóng dropdown khi click vào dropdown menu
     dropdown.addEventListener('click', function(e) {
         e.stopPropagation();
-    });
-    
-    // Xử lý khi click vào các item trong dropdown
-    const dropdownItems = document.querySelectorAll('.dropdown-item');
-    dropdownItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // Đóng dropdown
-            dropdown.classList.remove('show');
-            
-            // Xử lý logic tương ứng với từng lựa chọn
-            const itemText = this.textContent.trim();
-            
-            if (itemText.includes('Create team')) {
-                console.log('Create team action');
-                // Thêm code để xử lý khi người dùng chọn "Create team"
-                // Ví dụ: mở form tạo team mới
-            } else if (itemText.includes('Join team')) {
-                console.log('Join team action');
-                // Thêm code để xử lý khi người dùng chọn "Join team"
-                // Ví dụ: mở form nhập mã tham gia team
-            }
-        });
     });
 }
 
@@ -92,21 +83,416 @@ function initSidebarItems() {
     });
 }
 
-// Thêm các hàm tiện ích
-function toggleElement(element, className) {
-    if (element) {
-        element.classList.toggle(className);
+function initModals() {
+    const modalOverlay = document.getElementById('modalOverlay');
+    const createTeamModal = document.getElementById('createTeamModal');
+    const joinTeamModal = document.getElementById('joinTeamModal');
+    
+    // Mở modal Create Team khi click vào Create team
+    document.getElementById('createTeamBtn').addEventListener('click', function() {
+        document.getElementById('teamDropdown').classList.remove('show');
+        showModal(createTeamModal);
+    });
+    
+    // Mở modal Join Team khi click vào Join team
+    document.getElementById('joinTeamBtn').addEventListener('click', function() {
+        document.getElementById('teamDropdown').classList.remove('show');
+        showModal(joinTeamModal);
+    });
+    
+    // Đóng modal Create Team
+    document.getElementById('closeCreateTeamModal').addEventListener('click', function() {
+        hideModal(createTeamModal);
+    });
+    
+    document.getElementById('cancelCreateTeam').addEventListener('click', function() {
+        hideModal(createTeamModal);
+    });
+    
+    // Đóng modal Join Team
+    document.getElementById('closeJoinTeamModal').addEventListener('click', function() {
+        hideModal(joinTeamModal);
+    });
+    
+    document.getElementById('cancelJoinTeam').addEventListener('click', function() {
+        hideModal(joinTeamModal);
+    });
+    
+    // Xử lý khi nhấn nút Join
+    document.getElementById('joinTeamSubmit').addEventListener('click', function() {
+        // Lấy dữ liệu từ form
+        const teamCode = document.getElementById('teamCode').value;
+        
+        console.log('Joining team with code:', teamCode);
+        
+        // Đóng modal
+        hideModal(joinTeamModal);
+        
+        // Reset form
+        document.getElementById('teamCode').value = '';
+    });
+    
+    // Đóng modal khi click vào overlay
+    modalOverlay.addEventListener('click', function() {
+        hideAllModals();
+    });
+    
+    // Đóng modal khi nhấn Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideAllModals();
+        }
+    });
+}
+
+function showModal(modal) {
+    if (!modal) return;
+    
+    const modalOverlay = document.getElementById('modalOverlay');
+    modalOverlay.style.display = 'block';
+    modal.style.display = 'block';
+    
+    // Ngăn scroll trên body
+    document.body.style.overflow = 'hidden';
+}
+
+function hideModal(modal) {
+    if (!modal) return;
+    
+    const modalOverlay = document.getElementById('modalOverlay');
+    modalOverlay.style.display = 'none';
+    modal.style.display = 'none';
+    
+    // Cho phép scroll trên body
+    document.body.style.overflow = '';
+}
+
+function hideAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        hideModal(modal);
+    });
+}
+
+function initTeamsList() {
+    const teamsHeader = document.getElementById('teamsHeader');
+    const teamsChevron = document.getElementById('teamsChevron');
+    const teamsContent = document.getElementById('teamsContent');
+    
+    if (!teamsHeader || !teamsChevron || !teamsContent) return;
+    
+    teamsHeader.addEventListener('click', function() {
+        // Toggle hiển thị nội dung
+        if (teamsContent.style.display === 'none') {
+            teamsContent.style.display = 'block';
+            teamsChevron.classList.add('expanded');
+        } else {
+            teamsContent.style.display = 'none';
+            teamsChevron.classList.remove('expanded');
+        }
+    });
+}
+
+function initCreateTeamForm() {
+    const saveTeamBtn = document.getElementById('saveTeam');
+    if (!saveTeamBtn) return;
+    
+    saveTeamBtn.addEventListener('click', function() {
+        // Lấy dữ liệu từ form
+        const teamName = document.getElementById('teamName').value;
+        const teamDescription = document.getElementById('teamDescription').value;
+        const privacy = document.querySelector('input[name="privacy"]:checked').value;
+        const color = document.querySelector('input[name="color"]:checked').value;
+        
+        if (!teamName.trim()) {
+            alert('Please enter a team name.');
+            return;
+        }
+        
+        // Tạo team code từ team name
+        const teamCode = generateTeamCode(teamName);
+        
+        // Tạo một team card mới và thêm vào teams grid
+        addNewTeamCard(teamName, teamCode, color);
+        
+        // Đóng modal
+        hideModal(document.getElementById('createTeamModal'));
+        
+        // Reset form
+        document.getElementById('teamName').value = '';
+        document.getElementById('teamDescription').value = '';
+        
+        // Mở mục Teams nếu đang đóng
+        const teamsContent = document.getElementById('teamsContent');
+        const teamsChevron = document.getElementById('teamsChevron');
+        if (teamsContent && teamsContent.style.display === 'none') {
+            teamsContent.style.display = 'block';
+            if (teamsChevron) teamsChevron.classList.add('expanded');
+        }
+    });
+}
+
+function generateTeamCode(teamName) {
+    // Tạo team code từ tên team
+    // Lấy chữ cái đầu của mỗi từ và chuyển thành in hoa
+    const words = teamName.split(' ');
+    let code = '';
+    
+    if (words.length > 1) {
+        // Nếu có nhiều từ, lấy chữ cái đầu của mỗi từ
+        words.forEach(word => {
+            if (word.length > 0) {
+                code += word[0].toUpperCase();
+            }
+        });
+    } else {
+        // Nếu chỉ có một từ, lấy 4 ký tự đầu
+        code = teamName.substring(0, 4).toUpperCase();
+    }
+    
+    // Thêm số ngẫu nhiên vào cuối
+    code += Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    
+    return code;
+}
+
+function addNewTeamCard(teamName, teamCode, colorClass) {
+    const teamsGrid = document.querySelector('.teams-grid');
+    if (!teamsGrid) {
+        // Nếu chưa có teams-grid, tạo mới cấu trúc
+        createTeamsGridStructure();
+        return addNewTeamCard(teamName, teamCode, colorClass); // Gọi lại hàm
+    }
+    
+    // Lấy initials cho team icon
+    const initials = getInitials(teamName);
+    
+    // Map color từ input sang CSS class
+    const colorMap = {
+        'blue': 'team-blue',
+        'orange': 'team-orange',
+        'green': 'team-green',
+        'purple': 'team-purple',
+        'red': 'team-pink'
+    };
+    
+    const teamColorClass = colorMap[colorClass] || 'team-blue';
+    
+    // Tạo DOM element cho team card
+    const teamCard = document.createElement('div');
+    teamCard.className = 'team-card';
+    teamCard.innerHTML = `
+        <div class="team-card-header">
+            <div class="team-icon ${teamColorClass}">${initials}</div>
+            <div class="team-info">
+                <div class="team-name">${teamName}</div>
+                <div class="team-code">${teamCode}</div>
+            </div>
+            <div class="team-options">
+                <button class="team-options-btn">⋯</button>
+            </div>
+        </div>
+        <div class="team-action-buttons">
+            <button class="team-action-btn">
+                <span class="team-action-icon">📄</span>
+            </button>
+            <button class="team-action-btn">
+                <span class="team-action-icon">🔒</span>
+            </button>
+            <button class="team-action-btn">
+                <span class="team-action-icon">✏️</span>
+            </button>
+        </div>
+    `;
+    
+    // Thêm card vào grid
+    teamsGrid.appendChild(teamCard);
+    
+    // Thêm sự kiện cho team card và các nút của nó
+    attachTeamCardEvents(teamCard);
+}
+
+function getInitials(name) {
+    const words = name.split(' ');
+    if (words.length > 1) {
+        return (words[0][0] + words[1][0]).toUpperCase();
+    } else {
+        return name.substring(0, 2).toUpperCase();
     }
 }
 
-function showElement(element, className) {
-    if (element && !element.classList.contains(className)) {
-        element.classList.add(className);
+function createTeamsGridStructure() {
+    const teamsSection = document.querySelector('.teams-section');
+    if (!teamsSection) return;
+    
+    // Kiểm tra xem đã có item-row chưa
+    let itemRow = teamsSection.querySelector('.item-row');
+    if (!itemRow) {
+        itemRow = document.createElement('div');
+        itemRow.className = 'item-row';
+        itemRow.id = 'teamsHeader';
+        itemRow.innerHTML = `
+            <span class="chevron" id="teamsChevron">▶</span>
+            <span>Teams</span>
+        `;
+        teamsSection.appendChild(itemRow);
+    }
+    
+    // Tạo content container
+    const teamsContent = document.createElement('div');
+    teamsContent.className = 'teams-content';
+    teamsContent.id = 'teamsContent';
+    teamsContent.style.display = 'block'; // Hiển thị ngay khi tạo mới
+    
+    // Tạo grid container
+    const teamsGrid = document.createElement('div');
+    teamsGrid.className = 'teams-grid';
+    
+    teamsContent.appendChild(teamsGrid);
+    teamsSection.appendChild(teamsContent);
+    
+    // Thêm event cho item row
+    itemRow.addEventListener('click', function() {
+        // Toggle hiển thị nội dung
+        if (teamsContent.style.display === 'none') {
+            teamsContent.style.display = 'block';
+            document.getElementById('teamsChevron').classList.add('expanded');
+        } else {
+            teamsContent.style.display = 'none';
+            document.getElementById('teamsChevron').classList.remove('expanded');
+        }
+    });
+}
+
+function attachTeamCardEvents(teamCard) {
+    // Xử lý các nút tùy chọn trên card
+    const optionButton = teamCard.querySelector('.team-options-btn');
+    if (optionButton) {
+        optionButton.addEventListener('click', function(e) {
+            e.stopPropagation(); // Ngăn event bubble lên card
+            console.log('Options button clicked');
+            // Code để hiển thị menu tùy chọn
+        });
+    }
+    
+    // Xử lý các action buttons
+    const actionButtons = teamCard.querySelectorAll('.team-action-btn');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation(); // Ngăn event bubble lên card
+            console.log('Action button clicked');
+            // Code để xử lý các action
+        });
+    });
+    
+    // Xử lý khi click vào card
+    teamCard.addEventListener('click', function() {
+        console.log('Team card clicked');
+        // Code để navigate đến trang chi tiết team
+    });
+}
+
+function initChatUI() {
+    // Xử lý toggle các section
+    const sectionHeaders = document.querySelectorAll('.section-header');
+    sectionHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const content = this.nextElementSibling;
+            const toggle = this.querySelector('.section-toggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '►';
+            }
+        });
+    });
+    
+    // Xử lý khi nhấn nút gửi
+    const sendButton = document.querySelector('.send-button');
+    const chatInput = document.querySelector('.chat-input');
+    
+    if (sendButton && chatInput) {
+        sendButton.addEventListener('click', function() {
+            sendMessage();
+        });
+        
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+    
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            console.log('Sending message:', message);
+            // Thêm code để xử lý tin nhắn
+            
+            // Xóa nội dung input
+            chatInput.value = '';
+            
+            // Xóa trạng thái trống
+            const emptyChat = document.querySelector('.empty-chat');
+            if (emptyChat) {
+                emptyChat.style.display = 'none';
+            }
+            
+            // Hiển thị tin nhắn (đây chỉ là mẫu, bạn cần thêm code để hiển thị tin nhắn thực tế)
+            const chatContent = document.querySelector('.chat-content');
+            if (chatContent) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message-container sent';
+                messageElement.innerHTML = `
+                    <div class="message-bubble">
+                        <div class="message-text">${message}</div>
+                        <div class="message-time">Just now</div>
+                    </div>
+                `;
+                chatContent.appendChild(messageElement);
+                
+                // Scroll xuống cuối
+                chatContent.scrollTop = chatContent.scrollHeight;
+            }
+        }
     }
 }
 
-function hideElement(element, className) {
-    if (element && element.classList.contains(className)) {
-        element.classList.remove(className);
-    }
+function initSidebarNav() {
+    // Xử lý chuyển trang khi nhấp vào các mục trong sidebar
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Xóa trạng thái active khỏi tất cả các mục
+            sidebarItems.forEach(si => si.classList.remove('active'));
+            
+            // Thêm trạng thái active cho mục được chọn
+            this.classList.add('active');
+            
+            // Lấy tên của mục được chọn (từ sidebar-text)
+            const itemName = this.querySelector('.sidebar-text')?.textContent.trim() || '';
+            
+            // Xử lý chuyển trang
+            switch(itemName) {
+                case 'Chat':
+                    // Đã ở trang Chat
+                    break;
+                case 'Teams':
+                    window.location.href = "/chat.html";
+                    break;
+                case 'Calendar':
+                    // Chuyển đến trang Calendar
+                    break;
+                case 'Settings':
+                    // Chuyển đến trang Settings
+                    break;
+                default:
+                    break;
+            }
+        });
+    });
 }
