@@ -1,14 +1,15 @@
-export default class AccountView {
+export default class AccView {
   constructor() {
-    this.passwordInput    = document.getElementById('password');
-    this.passwordToggle   = document.getElementById('passwordToggle');
-    this.avatarInput      = document.getElementById('avatar');
-    this.avatarPreview    = document.getElementById('avatarPreview');
-    this.darkModeToggle   = document.getElementById('darkModeToggle');
-    this.body             = document.body;
+    this.passwordInput = document.getElementById('password');
+    this.passwordToggle = document.getElementById('passwordToggle');
+    this.avatarInput = document.getElementById('avatar');
+    this.avatarPreview = document.getElementById('avatarPreview');
+    this.darkModeToggle = document.getElementById('darkModeToggle');
+    this.body = document.body;
   }
 
   togglePassword() {
+    if (!this.passwordInput) return;
     const isPwd = this.passwordInput.type === 'password';
     this.passwordInput.type = isPwd ? 'text' : 'password';
     this.passwordToggle.classList.toggle('fa-eye');
@@ -16,7 +17,14 @@ export default class AccountView {
   }
 
   previewAvatar(file) {
-    if (!file) return;
+    if (!file || !this.avatarPreview) return;
+    
+    if (file.src) {
+      // Handle case when file is actually an object with src property
+      this.avatarPreview.innerHTML = `<img src="${file.src}" alt="Avatar">`;
+      return;
+    }
+    
     const reader = new FileReader();
     reader.onload = e => {
       this.avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
@@ -26,7 +34,7 @@ export default class AccountView {
 
   toggleDarkMode() {
     this.body.classList.toggle('dark-mode');
-    // cập nhật icon và thay đổi CSS variables
+    
     if (this.body.classList.contains('dark-mode')) {
       this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
       document.documentElement.style.setProperty('--text-color', '#f8f9fa');
@@ -49,5 +57,14 @@ export default class AccountView {
       el.style.backgroundColor = bg;
       el.style.color = color;
     });
+  }
+  
+  showSaveIndicator(saveIndicator, duration = 3000) {
+    if (!saveIndicator) return;
+    
+    saveIndicator.style.display = 'block';
+    setTimeout(() => {
+      saveIndicator.style.display = 'none';
+    }, duration);
   }
 }

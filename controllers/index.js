@@ -21,8 +21,9 @@ import { initEventCreateController }   from "./event-create-button.js";
 import { initEventDeleteController }   from "./event-delete-dialog.js";
 import { initEventDetailsController }  from "./event-details-dialog.js";
 import { initEventFormController }     from "./event-form-dialog.js";
-
+import { initAccountController } from "./acc.js";
 import { initCalendar }                from "./calendar.js";
+
 
 // a) UI‐wide controllers
 initResponsiveController();    
@@ -34,7 +35,7 @@ initHamburger();
 initNotificationsController();
 initSidebarToggleView();    // hoặc initSidebarToggleController() nếu bạn có controller cho sidebar
 initMenuNavigateView();
-
+initAccountController();
 // b) Form & dialog controllers
 initEventCreateController();
 initEventDeleteController();

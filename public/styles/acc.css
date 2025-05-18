@@ -281,6 +281,23 @@ h1 {
   }
 }
 
+.dark-mode-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.dark-mode-toggle:hover {
+  color: var(--primary-color);
+  transform: rotate(30deg);
+}
+
 .save-indicator {
   display: none;
   position: fixed;
