@@ -15,8 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Khởi tạo form tạo team
     initCreateTeamForm();
     
+    // Khởi tạo UI chat
     initChatUI();
     
+    // Khởi tạo điều hướng sidebar
     initSidebarNav();
 });
 
@@ -62,19 +64,19 @@ function initSidebarItems() {
             switch(itemName) {
                 case 'Chat':
                     console.log('Navigate to Chat');
-                    // Thêm code để chuyển đến trang Chat
+                    window.location.href = "../html/chat.html";
                     break;
                 case 'Teams':
                     console.log('Navigate to Teams');
-                    // Thêm code để chuyển đến trang Teams
+                    // Đã ở trang Teams nên không cần điều hướng
                     break;
                 case 'Calendar':
                     console.log('Navigate to Calendar');
-                    // Thêm code để chuyển đến trang Calendar
+                    window.location.href = "../html/index.html";
                     break;
                 case 'Settings':
                     console.log('Navigate to Settings');
-                    // Thêm code để chuyển đến trang Settings
+                    window.location.href = "../html/manageAcc.html";
                     break;
                 default:
                     break;
@@ -377,18 +379,24 @@ function attachTeamCardEvents(teamCard) {
     
     // Xử lý các action buttons
     const actionButtons = teamCard.querySelectorAll('.team-action-btn');
-    actionButtons.forEach(button => {
+    actionButtons.forEach((button, index) => {
         button.addEventListener('click', function(e) {
             e.stopPropagation(); // Ngăn event bubble lên card
-            console.log('Action button clicked');
-            // Code để xử lý các action
+            console.log('Action button clicked', index);
+            
+            // Nếu là nút chat (nút đầu tiên)
+            if (index === 0) {
+                // Chuyển đến trang chat.html
+                window.location.href = "../html/chat.html";
+            }
         });
     });
     
     // Xử lý khi click vào card
     teamCard.addEventListener('click', function() {
         console.log('Team card clicked');
-        // Code để navigate đến trang chi tiết team
+        // Chuyển đến trang chat.html khi click vào team card
+        window.location.href = "../html/chat.html";
     });
 }
 
@@ -475,20 +483,25 @@ function initSidebarNav() {
             
             // Lấy tên của mục được chọn (từ sidebar-text)
             const itemName = this.querySelector('.sidebar-text')?.textContent.trim() || '';
+            console.log("Clicked on:", itemName); // Debug
             
             // Xử lý chuyển trang
             switch(itemName) {
                 case 'Chat':
-                    // Đã ở trang Chat
+                    // Chuyển đến trang Chat
+                    window.location.href = "../html/chat.html";
                     break;
                 case 'Teams':
-                    window.location.href = "/chat.html";
+                    // Đã ở trang Teams
+                    // window.location.href = "../html/group.html";
                     break;
                 case 'Calendar':
                     // Chuyển đến trang Calendar
+                    window.location.href = "../html/index.html";
                     break;
                 case 'Settings':
                     // Chuyển đến trang Settings
+                    window.location.href = "../html/manageAcc.html";
                     break;
                 default:
                     break;
