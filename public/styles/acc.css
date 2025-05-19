@@ -304,13 +304,16 @@ h1 {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px 20px;
+  padding: 12px 25px;
   background-color: var(--success-color);
   color: white;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   z-index: 1000;
-  animation: fadeInOut 3s ease;
+  animation: fadeInOut 1.5s ease;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
 }
 
 @keyframes fadeInOut {
@@ -318,4 +321,74 @@ h1 {
   10%  { opacity: 1; }
   90%  { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* Date of Birth styles */
+.date-of-birth {
+  display: flex;
+  gap: 10px;
+}
+
+.date-select {
+  flex: 1;
+  position: relative;
+}
+
+.date-select:after {
+  content: '';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #999;
+  pointer-events: none;
+}
+
+.date-select-item {
+  appearance: none;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
+/* Error message */
+.error-message {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  display: none;
+}
+
+.error-message.show {
+  display: block;
+}
+
+/* Responsive date fields */
+@media (max-width: 480px) {
+  .date-of-birth {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+/* Dark mode support for date fields */
+body.dark-mode .date-select:after {
+  border-top-color: #ccc;
+}
+
+body.dark-mode .date-select-item {
+  background-color: #2c3e50;
+  color: #f8f9fa;
+  border-color: #4d5b6a;
+}
+
+body.dark-mode .date-select-item option {
+  background-color: #2c3e50;
+}
+
+body.dark-mode .error-message {
+  color: #ff7675;
 }

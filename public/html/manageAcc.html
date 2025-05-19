@@ -45,6 +45,42 @@
                     </div>
                 </div>
                 
+                <!-- Date of Birth Fields -->
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <div class="date-of-birth">
+                        <div class="date-select">
+                            <select id="birthDay" name="birthDay" class="form-control date-select-item">
+                                <option value="" disabled selected>Day</option>
+                                <!-- Days 1-31 populated by controller -->
+                            </select>
+                        </div>
+                        <div class="date-select">
+                            <select id="birthMonth" name="birthMonth" class="form-control date-select-item">
+                                <option value="" disabled selected>Month</option>
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                        </div>
+                        <div class="date-select">
+                            <select id="birthYear" name="birthYear" class="form-control date-select-item">
+                                <option value="" disabled selected>Year</option>
+                                <!-- Years populated by controller -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label>Gender</label>
                     <div class="gender-options">
@@ -69,6 +105,15 @@
                         <i class="fas fa-lock input-icon"></i>
                         <input type="password" id="password" class="form-control password" placeholder="Leave blank if you don't want to change">
                         <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="confirmPassword" class="form-control password" placeholder="Confirm your new password">
+                        <i class="fas fa-eye password-toggle" id="confirmPasswordToggle"></i>
                     </div>
                 </div>
                 

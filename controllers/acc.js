@@ -1,42 +1,5 @@
 import AccView from '../views/accView.js';
-
-// Create a fallback model in case the real one fails to load
-const AccountModelFallback = {
-  getAccountInfo: () => Promise.resolve({
-    email: 'legendarylkt@gmail.com',
-    username: 'Lê Thuận',
-    fullname: '',
-    gender: 'male',
-    avatar: null
-  }),
-  updateAccount: (data) => {
-    console.log('Account updated with:', data);
-    return Promise.resolve({ success: true });
-  },
-  updatePassword: () => Promise.resolve({ success: true }),
-  uploadAvatar: (file) => Promise.resolve({ 
-    success: true, 
-    avatarUrl: file ? URL.createObjectURL(file) : null 
-  })
-};
-
-// Try to import the real model, fall back if it fails
-let AccountModel;
-try {
-  // Dynamic import may not work in some environments, so we use a static import
-  import('../models/account.js')
-    .then(module => {
-      AccountModel = module.default;
-      console.log('Account model loaded successfully');
-    })
-    .catch(error => {
-      console.warn('Could not load AccountModel, using fallback data', error);
-      AccountModel = AccountModelFallback;
-    });
-} catch (error) {
-  console.warn('Could not load AccountModel, using fallback data', error);
-  AccountModel = AccountModelFallback;
-}
+import AccountModel from '../models/account.js';
 
 export class AccountController {
   constructor(formId = 'accountForm', saveIndicatorId = 'saveIndicator') {
@@ -51,10 +14,16 @@ export class AccountController {
     this.view = new AccView();
     
     // Form fields
+    this.emailInput = document.getElementById('email');
+    this.usernameInput = document.getElementById('username');
     this.fullnameInput = document.getElementById('fullname');
     this.genderInputs = document.querySelectorAll('input[name="gender"]');
     this.passwordInput = document.getElementById('password');
+    this.confirmPasswordInput = document.getElementById('confirmPassword');
     this.avatarInput = document.getElementById('avatar');
+    this.birthDayInput = document.getElementById('birthDay');
+    this.birthMonthInput = document.getElementById('birthMonth');
+    this.birthYearInput = document.getElementById('birthYear');
 
     this._bindEvents();
     this._loadAccountData();
@@ -62,22 +31,26 @@ export class AccountController {
 
   async _loadAccountData() {
     try {
-      // Make sure AccountModel is available
-      if (!AccountModel) {
-        AccountModel = AccountModelFallback;
-      }
-      
       const accountData = await AccountModel.getAccountInfo();
       this._populateForm(accountData);
     } catch (error) {
       console.error('Error loading account data:', error);
+      this.view.showError('Failed to load account data. Please try again later.');
     }
   }
 
   _populateForm(data) {
     // Fill form with user data
-    if (data.fullname && this.fullnameInput) {
-      this.fullnameInput.value = data.fullname;
+    if (this.emailInput) {
+      this.emailInput.value = data.email || '';
+    }
+    
+    if (this.usernameInput) {
+      this.usernameInput.value = data.username || '';
+    }
+    
+    if (this.fullnameInput) {
+      this.fullnameInput.value = data.fullname || '';
     }
     
     // Set gender radio button
@@ -87,6 +60,12 @@ export class AccountController {
           input.checked = true;
         }
       });
+    }
+    
+    // Set date of birth if available
+    if (data.dateOfBirth) {
+      const dateOfBirth = AccountModel.parseDateOfBirth(data.dateOfBirth);
+      this.view.setDateOfBirth(dateOfBirth);
     }
     
     // Display avatar if exists
@@ -99,7 +78,14 @@ export class AccountController {
     // Toggle password visibility
     if (this.view.passwordToggle) {
       this.view.passwordToggle.addEventListener('click', () => {
-        this.view.togglePassword();
+        this.view.togglePassword(this.passwordInput, this.view.passwordToggle);
+      });
+    }
+    
+    // Toggle confirm password visibility
+    if (this.view.confirmPasswordToggle) {
+      this.view.confirmPasswordToggle.addEventListener('click', () => {
+        this.view.togglePassword(this.confirmPasswordInput, this.view.confirmPasswordToggle);
       });
     }
 
@@ -127,43 +113,137 @@ export class AccountController {
         this._handleFormSubmit();
       });
     }
+    
+    // Date of birth validation - show different day counts for different months
+    if (this.birthMonthInput && this.birthDayInput) {
+      this.birthMonthInput.addEventListener('change', () => {
+        const month = parseInt(this.birthMonthInput.value);
+        const year = parseInt(this.birthYearInput.value);
+        this.view.updateDaysInMonth(month, year);
+      });
+      
+      this.birthYearInput.addEventListener('change', () => {
+        // February days depend on leap years
+        if (this.birthMonthInput.value === '1') { // February (0-based)
+          const month = parseInt(this.birthMonthInput.value);
+          const year = parseInt(this.birthYearInput.value);
+          this.view.updateDaysInMonth(month, year);
+        }
+      });
+    }
   }
 
   async _handleFormSubmit() {
     try {
-      // Make sure AccountModel is available
-      if (!AccountModel) {
-        AccountModel = AccountModelFallback;
+      // Basic validations
+      if (!this.emailInput.value.trim()) {
+        this.view.showError('Email is required', 'email');
+        return;
       }
       
-      // Gather form data
-      const formData = {
+      if (!AccountModel.isValidEmail(this.emailInput.value)) {
+        this.view.showError('Please enter a valid email address', 'email');
+        return;
+      }
+      
+      if (!this.usernameInput.value.trim()) {
+        this.view.showError('Username is required', 'username');
+        return;
+      }
+      
+      // Validate date of birth if provided
+      if (!this.view.isValidDateOfBirth()) {
+        this.view.showError('Please enter a valid date of birth or leave all date fields empty', 'birthDay');
+        return;
+      }
+      
+      // Validate password fields
+      const hasPassword = this.passwordInput.value.trim() !== '';
+      const hasConfirmPassword = this.confirmPasswordInput.value.trim() !== '';
+      
+      // If one password field is filled but not the other
+      if ((hasPassword && !hasConfirmPassword) || (!hasPassword && hasConfirmPassword)) {
+        this.view.showError('Please fill both password fields or leave both empty', 'confirmPassword');
+        return;
+      }
+      
+      // If both password fields are filled, check if they match
+      if (hasPassword && hasConfirmPassword) {
+        if (this.passwordInput.value !== this.confirmPasswordInput.value) {
+          this.view.showError('Passwords do not match', 'confirmPassword');
+          return;
+        }
+      }
+      
+      // Get date of birth components
+      const dob = this.view.getDateOfBirth();
+      
+      // Format date of birth if all components are provided
+      let dateOfBirth = null;
+      if (dob.day && dob.month && dob.year) {
+        dateOfBirth = AccountModel.formatDateOfBirth(dob.day, dob.month, dob.year);
+      }
+      
+      // Gather account data
+      const accountData = {
+        email: this.emailInput.value,
+        username: this.usernameInput.value,
         fullname: this.fullnameInput ? this.fullnameInput.value : '',
         gender: document.querySelector('input[name="gender"]:checked')?.value || 'male',
-        password: this.passwordInput ? this.passwordInput.value : null,
-        avatar: this.avatarInput ? this.avatarInput.files[0] : null
+        dateOfBirth: dateOfBirth
       };
 
       // Update account info
-      await AccountModel.updateAccount({
-        fullname: formData.fullname,
-        gender: formData.gender
-      });
+      const accountResult = await AccountModel.updateAccount(accountData);
+      if (!accountResult.success) {
+        throw new Error(accountResult.message || 'Failed to update account information');
+      }
 
       // Update password if provided
-      if (formData.password) {
-        await AccountModel.updatePassword(formData.password);
+      if (hasPassword) {
+        const passwordResult = await AccountModel.updatePassword(
+          this.passwordInput.value,
+          this.confirmPasswordInput.value
+        );
+        
+        if (!passwordResult.success) {
+          throw new Error(passwordResult.message || 'Failed to update password');
+        }
+        
+        // Clear password fields after successful update
+        this.passwordInput.value = '';
+        this.confirmPasswordInput.value = '';
       }
 
       // Upload avatar if provided
-      if (formData.avatar) {
-        await AccountModel.uploadAvatar(formData.avatar);
+      if (this.avatarInput && this.avatarInput.files && this.avatarInput.files.length > 0) {
+        const avatarResult = await AccountModel.uploadAvatar(this.avatarInput.files[0]);
+        
+        if (!avatarResult.success) {
+          throw new Error(avatarResult.message || 'Failed to upload avatar');
+        }
+        
+        // Update the avatar preview with the new URL
+        if (avatarResult.avatarUrl) {
+          this.view.previewAvatar({ src: avatarResult.avatarUrl });
+        }
+        
+        // Clear file input
+        this.avatarInput.value = '';
       }
 
-      // Show save indicator
+      // Show success indicator with redirect message
       this.view.showSaveIndicator(this.saveIndicator);
+      
+      // Add redirect after successful update
+      setTimeout(() => {
+        // Redirect back to calendar page
+        window.location.href = "index.html";
+      }, 1500); // Redirect after 1.5 seconds so user can see success message
+      
     } catch (error) {
       console.error('Error updating account:', error);
+      this.view.showError(error.message || 'An error occurred while updating your account');
     }
   }
 }
@@ -177,13 +257,4 @@ export function initAccountController() {
   if (document.getElementById('accountForm')) {
     new AccountController('accountForm', 'saveIndicator');
   }
-}
-
-// Self-initialization for standalone use
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initAccountController();
-  });
-} else {
-  initAccountController();
 }
