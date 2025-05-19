@@ -26,11 +26,11 @@ export default class AccountModel {
       
       // Fallback to mock data if API fails
       return {
-        email: 'legendarylkt@gmail.com',
-        username: 'Lê Thuận',
+        email: 'Schedigo@gmail.com',
+        username: 'Schedigo',
         fullname: '',
         gender: 'male',
-        dateOfBirth: '1995-06-15', // ISO format: YYYY-MM-DD
+        dateOfBirth: '2005-00-00', // ISO format: YYYY-MM-DD
         avatar: null
       };
     }
