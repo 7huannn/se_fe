@@ -1,30 +1,4 @@
-// controllers/sidebar-navigation.js (Updated version)
-
-// Hàm xử lý điều hướng chung cho tất cả các trang
-export function handleSidebarNavigation(itemName) {
-    console.log("Navigation requested to:", itemName); // For debugging
-    
-    switch(itemName) {
-        case 'Chat':
-            window.location.href = "../html/chat.html";
-            break;
-        case 'Teams':
-            window.location.href = "../html/group.html";
-            break;
-        case 'Personal Calendar':
-            window.location.href = "../html/index.html";
-            break;
-        case 'Group Calendar':
-            window.location.href = "../html/group-calendar.html";
-            break;
-        case 'Settings':
-            window.location.href = "../html/manageAcc.html";
-            break;
-        default:
-            console.log("Unknown navigation target:", itemName);
-            break;
-    }
-}
+// Updated event handlers for sidebar navigation in sidebar-navigation.js
 
 export function initSidebarNav() {
     // Xử lý chuyển trang khi nhấp vào các mục trong sidebar
@@ -68,7 +42,7 @@ export function initSidebarNav() {
         activeItem = 'Chat';
     } else if (currentPath.includes('group.html')) {
         activeItem = 'Teams';
-    } else if (currentPath.includes('index.html')) {
+    } else if (currentPath.includes('index.html') || currentPath.endsWith('/')) {
         activeItem = 'Personal Calendar';
     } else if (currentPath.includes('group-calendar.html')) {
         activeItem = 'Group Calendar';
@@ -83,5 +57,30 @@ export function initSidebarNav() {
                 item.classList.add('active');
             }
         });
+    }
+}
+
+export function handleSidebarNavigation(itemName) {
+    console.log("Navigation requested to:", itemName); // For debugging
+    
+    switch(itemName) {
+        case 'Chat':
+            window.location.href = "chat.html";
+            break;
+        case 'Teams':
+            window.location.href = "group.html";
+            break;
+        case 'Personal Calendar':
+            window.location.href = "index.html";
+            break;
+        case 'Group Calendar':
+            window.location.href = "group-calendar.html";
+            break;
+        case 'Settings':
+            window.location.href = "manageAcc.html";
+            break;
+        default:
+            console.log("Unknown navigation target:", itemName);
+            break;
     }
 }

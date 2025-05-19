@@ -1,34 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat - Schedigo</title>
     <link rel="stylesheet" href="../styles/chat.css">
 </head>
+
 <body>
     <div class="sidebar">
         <div class="logo">
             <img src="../assets/images/logo_rectangle.png" alt="Logo">
         </div>
-        
+
         <div class="sidebar-item active">
             <div class="sidebar-icon">💬</div>
             <div class="sidebar-text">Chat</div>
         </div>
-        
+
         <div class="sidebar-item">
             <div class="sidebar-icon">👥</div>
             <div class="sidebar-text">Teams</div>
         </div>
-        
+
         <div class="sidebar-item">
             <div class="sidebar-icon">📅</div>
             <div class="sidebar-text">Personal Calendar</div>
         </div>
-        
+
+        <div class="sidebar-item">
+            <div class="sidebar-icon">🗓️</div>
+            <div class="sidebar-text">Group Calendar</div>
+        </div>
         <div class="sidebar-spacer"></div>
-        
+
         <!-- <div class="sidebar-settings">
             <div class="sidebar-item">
                 <div class="sidebar-icon">⚙️</div>
@@ -36,7 +42,7 @@
             </div>
         </div> -->
     </div>
-    
+
     <div class="main-content">
         <div class="chat-container">
             <div class="chat-sidebar">
@@ -47,7 +53,7 @@
                         <button class="icon-button">✏️</button>
                     </div>
                 </div>
-                
+
                 <div class="chat-sections">
                     <div class="chat-section">
                         <div class="section-header">
@@ -58,7 +64,7 @@
                             <!-- Pinned chats will go here -->
                         </div>
                     </div>
-                    
+
                     <div class="chat-section">
                         <div class="section-header">
                             <span class="section-toggle">▼</span>
@@ -77,7 +83,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="chat-main">
                 <div class="chat-header">
                     <div class="recipient-info">
@@ -89,7 +95,7 @@
                         <button class="icon-button">✏️</button>
                     </div>
                 </div>
-                
+
                 <div class="chat-content">
                     <div class="empty-chat">
                         <div class="empty-chat-illustration">
@@ -99,7 +105,7 @@
                         <p>Type your first message below.</p>
                     </div>
                 </div>
-                
+
                 <div class="chat-input-container">
                     <div class="chat-input-box">
                         <input type="text" class="chat-input" placeholder="Type a message">
@@ -115,7 +121,8 @@
             </div>
         </div>
     </div>
-    
+
     <script type="module" src="../../controllers/chat/index.js"></script>
 </body>
+
 </html>
