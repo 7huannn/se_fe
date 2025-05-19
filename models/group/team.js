@@ -1,4 +1,4 @@
-// models/group/team.js - Updated with team management features
+// models/group/team.js
 
 /**
  * Lưu teams vào localStorage
@@ -61,85 +61,16 @@ export function getInitials(name) {
 /**
  * Thêm team mới vào danh sách teams
  * @param {Object} teamData - Thông tin team mới
- * @returns {Array} Danh sách teams sau khi thêm
  */
 export function addTeam(teamData) {
     const teams = loadTeams();
-    
-    // Ensure team has an ID if not provided
-    if (!teamData.id) {
-        teamData.id = Date.now();
-    }
-    
     teams.push(teamData);
     saveTeams(teams);
     return teams;
 }
 
 /**
- * Get team by ID
- * @param {number} teamId - ID of the team to retrieve
- * @returns {Object|null} Team object or null if not found
- */
-export function getTeamById(teamId) {
-    const teams = loadTeams();
-    return teams.find(team => team.id === teamId) || null;
-}
-
-/**
- * Update an existing team
- * @param {number} teamId - ID of the team to update
- * @param {Object} updateData - Data to update
- * @returns {boolean} Success status
- */
-export function updateTeam(teamId, updateData) {
-    const teams = loadTeams();
-    const teamIndex = teams.findIndex(team => team.id === teamId);
-    
-    if (teamIndex === -1) return false;
-    
-    // Update team with new data
-    teams[teamIndex] = {
-        ...teams[teamIndex],
-        ...updateData
-    };
-    
-    saveTeams(teams);
-    return true;
-}
-
-/**
- * Delete a team
- * @param {number} teamId - ID of the team to delete
- * @returns {boolean} Success status
- */
-export function deleteTeam(teamId) {
-    const teams = loadTeams();
-    const filteredTeams = teams.filter(team => team.id !== teamId);
-    
-    if (filteredTeams.length === teams.length) {
-        // No team was removed
-        return false;
-    }
-    
-    saveTeams(filteredTeams);
-    return true;
-}
-
-/**
- * Update team privacy setting
- * @param {number} teamId - ID of the team to update
- * @param {string} privacy - 'public' or 'private'
- * @returns {boolean} Success status
- */
-export function updateTeamPrivacy(teamId, privacy) {
-    return updateTeam(teamId, { privacy });
-}
-
-/**
  * Map màu từ input sang CSS class
- * @param {string} colorCode - Code của màu
- * @returns {string} CSS class tương ứng
  */
 export function getColorClass(colorCode) {
     const colorMap = {
@@ -152,79 +83,3 @@ export function getColorClass(colorCode) {
     
     return colorMap[colorCode] || 'team-blue';
 }
-
-// Backend Integration Functions (Commented out until backend is ready)
-
-/*
-const API_URL = 'https://se_backend.hrzn.run/api';
-
-/**
- * Get teams from backend API
- * @returns {Promise<Array>} Teams array
- */
-/*
-export async function fetchTeamsFromAPI() {
-    try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-        
-        const response = await fetch(`${API_URL}/teams`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch teams');
-        }
-        
-        const data = await response.json();
-        return data.teams || [];
-    } catch (error) {
-        console.error('Error fetching teams:', error);
-        // Fallback to localStorage
-        return loadTeams();
-    }
-}
-
-/**
- * Create team via API
- * @param {Object} teamData - Team data
- * @returns {Promise<Object>} Created team
- */
-/*
-export async function createTeamAPI(teamData) {
-    try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-        
-        const response = await fetch(`${API_URL}/teams`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(teamData)
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to create team');
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error creating team:', error);
-        // Fallback to localStorage
-        const teams = loadTeams();
-        teams.push(teamData);
-        saveTeams(teams);
-        return teamData;
-    }
-}
-*/

@@ -1,106 +1,60 @@
-// controllers/group/modalController.js - With error handling and fixed toast import
-import { showModal, hideModal, hideAllModals } from '../../views/group/modalView.js';
-import { showToast } from './toast.js';
+// controllers/group/modalController.js
+import { showModal, hideModal, hideAllModals, initModalCloseButtons } from '../../views/group/modalView.js';
 
 /**
- * Safely get an element by ID, with console warning if not found
- * @param {string} id - Element ID to find
- * @returns {HTMLElement|null} - The element or null if not found
- */
-function safeGetElement(id) {
-    const element = document.getElementById(id);
-    if (!element) {
-        console.warn(`Element with ID "${id}" not found in the DOM`);
-    }
-    return element;
-}
-
-/**
- * Safely add event listener to an element
- * @param {string} id - Element ID
- * @param {string} event - Event name (e.g., 'click')
- * @param {Function} handler - Event handler function
- */
-function safeAddEventListener(id, event, handler) {
-    const element = safeGetElement(id);
-    if (element) {
-        element.addEventListener(event, handler);
-    }
-}
-
-/**
- * Initialize controller for modals
+ * Khởi tạo controller cho modals
  */
 export function initModalsController() {
-    // Get elements, with null checks
-    const modalOverlay = safeGetElement('modalOverlay');
-    const createTeamModal = safeGetElement('createTeamModal');
-    const joinTeamModal = safeGetElement('joinTeamModal');
-    const editTeamModal = safeGetElement('editTeamModal');
-    const teamDropdown = safeGetElement('teamDropdown');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const createTeamModal = document.getElementById('createTeamModal');
+    const joinTeamModal = document.getElementById('joinTeamModal');
     
-    // Skip initialization if essential elements are missing
-    if (!modalOverlay) {
-        console.error('Modal overlay element not found. Skipping modal initialization.');
-        return;
-    }
-    
-    // Create Team button event
-    safeAddEventListener('createTeamBtn', 'click', function() {
-        if (teamDropdown) teamDropdown.classList.remove('show');
-        if (createTeamModal) showModal(createTeamModal);
+    // Mở modal Create Team khi click vào Create team
+    document.getElementById('createTeamBtn').addEventListener('click', function() {
+        document.getElementById('teamDropdown').classList.remove('show');
+        showModal(createTeamModal);
     });
     
-    // Join Team button event
-    safeAddEventListener('joinTeamBtn', 'click', function() {
-        if (teamDropdown) teamDropdown.classList.remove('show');
-        if (joinTeamModal) showModal(joinTeamModal);
+    // Mở modal Join Team khi click vào Join team
+    document.getElementById('joinTeamBtn').addEventListener('click', function() {
+        document.getElementById('teamDropdown').classList.remove('show');
+        showModal(joinTeamModal);
     });
     
-    // Initialize close buttons if the modals exist
-    if (createTeamModal) {
-        safeAddEventListener('closeCreateTeamModal', 'click', () => hideModal(createTeamModal));
-        safeAddEventListener('cancelCreateTeam', 'click', () => hideModal(createTeamModal));
-    }
+    // Khởi tạo nút đóng cho Create Team modal
+    initModalCloseButtons(
+        createTeamModal,
+        'closeCreateTeamModal',
+        'cancelCreateTeam'
+    );
     
-    if (joinTeamModal) {
-        safeAddEventListener('closeJoinTeamModal', 'click', () => hideModal(joinTeamModal));
-        safeAddEventListener('cancelJoinTeam', 'click', () => hideModal(joinTeamModal));
-    }
+    // Khởi tạo nút đóng cho Join Team modal
+    initModalCloseButtons(
+        joinTeamModal,
+        'closeJoinTeamModal',
+        'cancelJoinTeam'
+    );
     
-    if (editTeamModal) {
-        safeAddEventListener('closeEditTeamModal', 'click', () => hideModal(editTeamModal));
-        safeAddEventListener('cancelEditTeam', 'click', () => hideModal(editTeamModal));
-    }
-    
-    // Join Team submit button
-    safeAddEventListener('joinTeamSubmit', 'click', function() {
-        const teamCodeInput = safeGetElement('teamCode');
-        if (!teamCodeInput) return;
-        
-        const teamCode = teamCodeInput.value;
-        if (!teamCode.trim()) {
-            alert('Please enter a team code.');
-            return;
-        }
+    // Xử lý khi nhấn nút Join
+    document.getElementById('joinTeamSubmit').addEventListener('click', function() {
+        // Lấy dữ liệu từ form
+        const teamCode = document.getElementById('teamCode').value;
         
         console.log('Joining team with code:', teamCode);
         
-        // In a real application, this would call an API to join the team
-        showToast('Attempting to join team with code ' + teamCode);
-        
-        if (joinTeamModal) hideModal(joinTeamModal);
+        // Đóng modal
+        hideModal(joinTeamModal);
         
         // Reset form
-        teamCodeInput.value = '';
+        document.getElementById('teamCode').value = '';
     });
     
-    // Modal overlay click handler
-    if (modalOverlay) {
-        modalOverlay.addEventListener('click', hideAllModals);
-    }
+    // Đóng modal khi click vào overlay
+    modalOverlay.addEventListener('click', function() {
+        hideAllModals();
+    });
     
-    // Escape key handler
+    // Đóng modal khi nhấn Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             hideAllModals();
