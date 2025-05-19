@@ -1,4 +1,4 @@
-// controllers/group-calendar/group-calendar-controller.js
+// Corrected implementation for controllers/group-calendar/group-calendar-controller.js
 
 import { renderCalendar } from "../../views/calendarView.js";
 import { getDate, getView } from "../../models/url.js";
@@ -19,7 +19,80 @@ export function initGroupCalendarController(eventStore) {
   let selectedTeamId = null;
   let teamEventStore = null;
 
-  // Function to refresh the calendar view
+  /**
+   * Fix time display in day and week views for group calendar
+   * @param {string} view - Current view (day, week, month)
+   * @param {HTMLElement} calendarEl - Calendar container element
+   */
+  function fixGroupCalendarTimeDisplay(view, calendarEl) {
+    // If not day or week view, no need for fixes
+    if (view !== 'day' && view !== 'week') return;
+    
+    // Check if the week calendar already has time slots
+    const timeList = calendarEl.querySelector('.week-calendar__time-list');
+    if (!timeList) {
+      console.error('Week calendar time list not found');
+      return;
+    }
+    
+    // Check if time slots already exist
+    if (timeList.children.length > 0) return;
+    
+    // Create time slots for 24 hours
+    const hours = Array.from({length: 24}, (_, i) => i);
+    
+    hours.forEach(hour => {
+      const timeItem = document.createElement('li');
+      timeItem.className = 'week-calendar__time-item';
+      
+      const timeElement = document.createElement('time');
+      timeElement.className = 'week-calendar__time';
+      
+      // Format time as 12-hour with AM/PM
+      const formattedHour = hour % 12 || 12;
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      timeElement.textContent = `${formattedHour}:00 ${ampm}`;
+      
+      timeItem.appendChild(timeElement);
+      timeList.appendChild(timeItem);
+    });
+    
+    // Fix column cells if they're missing
+    const columns = calendarEl.querySelectorAll('.week-calendar__column');
+    columns.forEach(column => {
+      if (column.children.length === 0) {
+        // Create 24 hour cells (1 per hour)
+        for (let hour = 0; hour < 24; hour++) {
+          const cell = document.createElement('div');
+          cell.className = 'week-calendar__cell';
+          cell.dataset.weekCalendarCell = (hour * 60).toString(); // minutes from midnight
+          
+          // Add click handler to create events
+          cell.addEventListener('click', (e) => {
+            if (e.target.closest('[data-event]')) return;
+            
+            // Calculate event time range (1 hour duration)
+            const startTime = hour * 60;
+            const endTime = startTime + 60;
+            
+            // Dispatch event creation request
+            document.dispatchEvent(new CustomEvent('event-create-request', {
+              detail: {
+                date: selectedDate,
+                startTime: startTime,
+                endTime: endTime
+              },
+              bubbles: true
+            }));
+          });
+          
+          column.appendChild(cell);
+        }
+      }
+    });
+  }
+
+  // Function to refresh the calendar view - Enhanced version
   function refreshCalendar() {
     if (!calendarElement) return;
     
@@ -31,6 +104,9 @@ export function initGroupCalendarController(eventStore) {
     // Only render the calendar if a team is selected
     if (selectedTeamId && teamEventStore) {
       renderCalendar(calendarElement, selectedView, selectedDate, teamEventStore, deviceType);
+      
+      // Apply time display fix after rendering
+      fixGroupCalendarTimeDisplay(selectedView, calendarElement);
       
       if (scrollable) {
         const newScrollable = calendarElement.querySelector("[data-calendar-scrollable]");
@@ -204,4 +280,5 @@ export function initGroupCalendarController(eventStore) {
   });
 
   // Initialize with empty calendar
-  updateTeamHeader(null)}
+  updateTeamHeader(null);
+}
