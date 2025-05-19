@@ -167,6 +167,77 @@
 
         <div class="modal-overlay" id="modalOverlay"></div>
     </div>
+    <!-- Add this HTML to public/html/group.html -->
+
+    <!-- Edit Team Modal -->
+    <div class="modal" id="editTeamModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit team</h2>
+                <button class="close-btn" id="closeEditTeamModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editTeamName">Team name</label>
+                    <input type="text" id="editTeamName" placeholder="Enter team name">
+                </div>
+                <div class="form-group">
+                    <label for="editTeamDescription">Description (optional)</label>
+                    <textarea id="editTeamDescription" placeholder="Add a description for your team"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Privacy</label>
+                    <div class="radio-group">
+                        <label class="radio-container">
+                            <input type="radio" name="editPrivacy" value="private" checked>
+                            <span class="radio-label">Private</span>
+                            <span class="radio-description">Only team owners can add members</span>
+                        </label>
+                        <label class="radio-container">
+                            <input type="radio" name="editPrivacy" value="public">
+                            <span class="radio-label">Public</span>
+                            <span class="radio-description">Anyone in the organization can join</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <div class="color-picker">
+                        <label class="color-option">
+                            <input type="radio" name="editColor" value="blue" checked>
+                            <span class="color-circle blue"></span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="editColor" value="orange">
+                            <span class="color-circle orange"></span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="editColor" value="green">
+                            <span class="color-circle green"></span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="editColor" value="purple">
+                            <span class="color-circle purple"></span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="editColor" value="red">
+                            <span class="color-circle red"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="deleteTeam">Delete Team</button>
+                <div class="modal-actions-right">
+                    <button class="btn btn-cancel" id="cancelEditTeam">Cancel</button>
+                    <button class="btn btn-save" id="saveEditTeam">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container for notifications -->
+    <div class="toast-container"></div>
     <!-- Script -->
     <script type="module" src="../../controllers/group/index.js"></script>
 </body>

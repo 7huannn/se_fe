@@ -1,5 +1,8 @@
-// controllers/group/index.js
-import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsController, handleTeamCreate } from './teamController.js';
+// controllers/group/index.js - Updated with new team management controllers
+
+import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsController, 
+         handleTeamCreate, handleTeamEdit, handleTeamDelete, 
+         handleTeamPrivacyUpdate, initEditTeamFormController } from './teamController.js';
 import { initChatController } from './chatController.js';
 import { initModalsController } from './modalController.js';
 import { initDropdownController } from './dropdownController.js';
@@ -21,12 +24,24 @@ export function initGroupControllers() {
     // Khởi tạo form tạo team
     initCreateTeamFormController();
     
+    // Khởi tạo form chỉnh sửa team
+    initEditTeamFormController();
+    
     // Khởi tạo chat UI và controller
     initChatUI();
     initChatController();
     
     // Lắng nghe sự kiện tạo team
     document.addEventListener('team-create', handleTeamCreate);
+    
+    // Lắng nghe sự kiện chỉnh sửa team
+    document.addEventListener('team-edit', handleTeamEdit);
+    
+    // Lắng nghe sự kiện xóa team
+    document.addEventListener('team-delete', handleTeamDelete);
+    
+    // Lắng nghe sự kiện cập nhật quyền riêng tư team
+    document.addEventListener('team-privacy-update', handleTeamPrivacyUpdate);
     
     // Khởi tạo điều hướng sidebar - sử dụng controller chia sẻ
     import('../../controllers/sidebar-navigation.js').then(navModule => {
