@@ -9,7 +9,7 @@ export function handleSidebarNavigation(itemName) {
         case 'Teams':
             window.location.href = "../html/group.html";
             break;
-        case 'Calendar':
+        case 'Personal Calendar':
             window.location.href = "../html/index.html";
             break;
         case 'Settings':
