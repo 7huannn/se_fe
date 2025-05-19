@@ -1,41 +1,58 @@
-// controllers/group/index.js
-import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsController, handleTeamCreate } from './teamController.js';
+// controllers/group/index.js - Updated with improved event handling
+
+import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsController, 
+         handleTeamCreate, handleTeamEdit, handleTeamDelete, 
+         handleTeamPrivacyUpdate, initEditTeamFormController } from './teamController.js';
 import { initChatController } from './chatController.js';
 import { initModalsController } from './modalController.js';
 import { initDropdownController } from './dropdownController.js';
 import { initChatUI } from '../../views/group/chatView.js';
 
 /**
- * Khởi tạo tất cả controllers cho trang group
+ * Initialize all controllers for the group page
  */
 export function initGroupControllers() {
-    // Khởi tạo dropdown
+    // Initialize dropdown
     initDropdownController();
     
-    // Khởi tạo modals
+    // Initialize modals
     initModalsController();
     
-    // Khởi tạo teams list
+    // Initialize teams list (without event listeners, now managed here)
     initTeamsListController();
     
-    // Khởi tạo form tạo team
+    // Initialize create team form
     initCreateTeamFormController();
     
-    // Khởi tạo chat UI và controller
+    // Initialize edit team form
+    initEditTeamFormController();
+    
+    // Initialize chat UI and controller
     initChatUI();
     initChatController();
     
-    // Lắng nghe sự kiện tạo team
+    // Register global event listeners - centralized here to avoid duplication
+    
+    // Listen for team create event
     document.addEventListener('team-create', handleTeamCreate);
     
-    // Khởi tạo điều hướng sidebar - sử dụng controller chia sẻ
+    // Listen for team edit event
+    document.addEventListener('team-edit', handleTeamEdit);
+    
+    // Listen for team delete event
+    document.addEventListener('team-delete', handleTeamDelete);
+    
+    // Listen for team privacy update event
+    document.addEventListener('team-privacy-update', handleTeamPrivacyUpdate);
+    
+    // Initialize sidebar navigation - using shared controller
     import('../../controllers/sidebar-navigation.js').then(navModule => {
         navModule.initSidebarNav();
     });
     
-    // Load saved teams từ localStorage
+    // Load saved teams from localStorage
     loadSavedTeamsController();
 }
 
-// Chạy khi trang được tải
+// Run when page is loaded
 document.addEventListener('DOMContentLoaded', initGroupControllers);

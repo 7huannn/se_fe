@@ -1,4 +1,4 @@
-// views/group/teamView.js
+// views/group/teamView.js - Updated with new team UI functions
 
 /**
  * Tạo DOM element cho team card
@@ -9,6 +9,8 @@
 export function createTeamCardElement(team, teamColorClass) {
     const teamCard = document.createElement('div');
     teamCard.className = 'team-card';
+    teamCard.dataset.teamId = team.id;
+    
     teamCard.innerHTML = `
         <div class="team-card-header">
             <div class="team-icon ${teamColorClass}">${team.initials}</div>
@@ -17,17 +19,17 @@ export function createTeamCardElement(team, teamColorClass) {
                 <div class="team-code">${team.code}</div>
             </div>
             <div class="team-options">
-                <button class="team-options-btn">⋯</button>
+                <button class="team-options-btn" title="Team Options">⋯</button>
             </div>
         </div>
         <div class="team-action-buttons">
-            <button class="team-action-btn">
-                <span class="team-action-icon">📄</span>
+            <button class="team-action-btn" title="Chat">
+                <span class="team-action-icon">💬</span>
             </button>
-            <button class="team-action-btn">
-                <span class="team-action-icon">🔒</span>
+            <button class="team-action-btn privacy-toggle" title="${team.privacy === 'private' ? 'Change to Public' : 'Change to Private'}">
+                <span class="team-action-icon">${team.privacy === 'private' ? '🔒' : '🌐'}</span>
             </button>
-            <button class="team-action-btn">
+            <button class="team-action-btn" title="Edit Team">
                 <span class="team-action-icon">✏️</span>
             </button>
         </div>
@@ -39,7 +41,7 @@ export function createTeamCardElement(team, teamColorClass) {
 /**
  * Tạo cấu trúc grid cho teams
  * @param {HTMLElement} teamsSection - Element chứa section teams
- * @returns {Object} Các elements đã tạo
+ * @returns {Object} Các elements đã tạo hoặc null nếu không tạo được
  */
 export function createTeamsGridStructure(teamsSection) {
     if (!teamsSection) return null;
@@ -93,4 +95,68 @@ export function toggleTeamsContent(teamsContent, teamsChevron, show) {
         teamsContent.style.display = 'none';
         teamsChevron.classList.remove('expanded');
     }
+}
+
+/**
+ * Create DOM element for team options menu
+ * @param {number} teamId - ID of the team
+ * @returns {HTMLElement} Options menu element
+ */
+export function createTeamOptionsMenu(teamId) {
+    const menu = document.createElement('div');
+    menu.className = 'team-options-menu';
+    menu.dataset.teamOptionsMenu = teamId;
+    menu.innerHTML = `
+        <div class="team-option" data-action="edit" data-team-id="${teamId}">
+            <span class="team-option-icon">✏️</span>
+            <span class="team-option-text">Edit Team</span>
+        </div>
+        <div class="team-option" data-action="privacy" data-team-id="${teamId}">
+            <span class="team-option-icon">🔒</span>
+            <span class="team-option-text">Change Privacy</span>
+        </div>
+        <div class="team-option" data-action="delete" data-team-id="${teamId}">
+            <span class="team-option-icon">🗑️</span>
+            <span class="team-option-text">Delete Team</span>
+        </div>
+    `;
+    
+    return menu;
+}
+
+/**
+ * Toggle display of team options menu
+ * @param {HTMLElement} menu - Options menu element
+ * @param {boolean} show - Whether to show or hide
+ */
+export function toggleTeamOptionsMenu(menu, show) {
+    if (!menu) return;
+    
+    if (show) {
+        menu.classList.add('show');
+    } else {
+        menu.classList.remove('show');
+    }
+}
+
+/**
+ * Add privacy indicator to team card
+ * @param {HTMLElement} teamCard - Team card element
+ * @param {string} privacy - 'public' or 'private'
+ */
+export function addPrivacyIndicator(teamCard, privacy) {
+    const teamInfo = teamCard.querySelector('.team-info');
+    if (!teamInfo) return;
+    
+    // Check if privacy indicator already exists
+    let indicator = teamInfo.querySelector('.privacy-indicator');
+    
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.className = 'privacy-indicator';
+        teamInfo.appendChild(indicator);
+    }
+    
+    indicator.textContent = privacy === 'private' ? '🔒' : '🌐';
+    indicator.setAttribute('title', privacy === 'private' ? 'Private Team' : 'Public Team');
 }
