@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teams</title>
     <link rel="stylesheet" href="../styles/group.css">
+    <link rel="stylesheet" href="../styles/profile-dropdown.css">
 </head>
 
 <body>
@@ -66,8 +67,50 @@
                         </div>
                     </div>
                 </div>
-                <div class="profile-badge">
-                    <div class="status-indicator"></div>
+                <div class="profile-dropdown">
+                    <button id="profile-dropdown-button" class="profile-avatar-button">
+                        <div class="avatar-container profile-avatar">
+                            <img src="" alt="Avatar" style="display: none;">
+                            <div class="avatar-fallback">U</div>
+                        </div>
+                        <span class="dropdown-caret"></span>
+                    </button>
+
+                    <div id="profile-menu" class="profile-menu">
+                        <div class="profile-menu-header">
+                            <h3 id="profile-username" class="profile-menu-header-title">Username</h3>
+                            <p id="profile-email" class="profile-menu-header-subtitle">user@example.com</p>
+                        </div>
+
+                        <ul class="profile-menu-list">
+                            <li id="menu-item-account" class="profile-menu-item">
+                                <span class="profile-menu-item-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                                        <path d="M13 13H3c0-2.5 2.5-5 5-5s5 2.5 5 5z" />
+                                    </svg>
+                                </span>
+                                Tài khoản
+                            </li>
+
+                            <div class="profile-menu-divider"></div>
+
+                            <li id="menu-item-logout" class="profile-menu-item">
+                                <span class="profile-menu-item-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M9 1L3 1L3 15L9 15" />
+                                        <path d="M10 11L15 8L10 5" />
+                                        <path d="M14 8L6 8" />
+                                    </svg>
+                                </span>
+                                Đăng xuất
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -245,6 +288,10 @@
     <div class="toast-container"></div>
     <!-- Script -->
     <script type="module" src="../../controllers/group/index.js"></script>
+    <script type="module">
+        import { initProfileController } from "../../controllers/profileController.js";
+        const profileController = initProfileController();
+    </script>
 </body>
 
 </html>

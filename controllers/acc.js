@@ -33,6 +33,25 @@ export class AccountController {
     try {
       const accountData = await AccountModel.getAccountInfo();
       this._populateForm(accountData);
+      
+      // Kiểm tra xem có URL avatar đã lưu trong localStorage không
+      const savedAvatarUrl = localStorage.getItem('user_avatar');
+      if (savedAvatarUrl && !accountData.avatar) {
+        // Nếu có avatar đã lưu nhưng không có trong dữ liệu tài khoản, sử dụng avatar đã lưu
+        this.view.previewAvatar({ src: savedAvatarUrl });
+      } else if (accountData.avatar) {
+        // Nếu tài khoản có avatar, lưu vào localStorage để sử dụng giữa các trang
+        localStorage.setItem('user_avatar', accountData.avatar);
+      }
+      
+      // Lưu thông tin username và email vào localStorage
+      if (accountData.username) {
+        localStorage.setItem('username', accountData.username);
+      }
+      
+      if (accountData.email) {
+        localStorage.setItem('email', accountData.email);
+      }
     } catch (error) {
       console.error('Error loading account data:', error);
       this.view.showError('Failed to load account data. Please try again later.');
@@ -226,11 +245,32 @@ export class AccountController {
         // Update the avatar preview with the new URL
         if (avatarResult.avatarUrl) {
           this.view.previewAvatar({ src: avatarResult.avatarUrl });
+          
+          // Đồng bộ với avatar trong header
+          document.dispatchEvent(new CustomEvent('avatar-updated', {
+            detail: { avatarUrl: avatarResult.avatarUrl },
+            bubbles: true
+          }));
+          
+          // Lưu vào localStorage để giữ xuyên suốt các trang
+          localStorage.setItem('user_avatar', avatarResult.avatarUrl);
         }
         
         // Clear file input
         this.avatarInput.value = '';
       }
+      
+      // Cập nhật thông tin người dùng trong localStorage và thông báo sự kiện
+      localStorage.setItem('username', accountData.username);
+      localStorage.setItem('email', accountData.email);
+      
+      document.dispatchEvent(new CustomEvent('user-info-updated', {
+        detail: { 
+          username: accountData.username,
+          email: accountData.email
+        },
+        bubbles: true
+      }));
 
       // Show success indicator with redirect message
       this.view.showSaveIndicator(this.saveIndicator);
