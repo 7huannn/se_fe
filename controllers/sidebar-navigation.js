@@ -1,4 +1,4 @@
-// controllers/sidebar-navigation.js
+// controllers/sidebar-navigation.js (Updated version)
 
 // Hàm xử lý điều hướng chung cho tất cả các trang
 export function handleSidebarNavigation(itemName) {
@@ -13,6 +13,9 @@ export function handleSidebarNavigation(itemName) {
             break;
         case 'Personal Calendar':
             window.location.href = "../html/index.html";
+            break;
+        case 'Group Calendar':
+            window.location.href = "../html/group-calendar.html";
             break;
         case 'Settings':
             window.location.href = "../html/manageAcc.html";
@@ -56,4 +59,29 @@ export function initSidebarNav() {
             handleSidebarNavigation(itemName);
         });
     });
+    
+    // Find the current page and set the corresponding sidebar item as active
+    const currentPath = window.location.pathname;
+    let activeItem = null;
+    
+    if (currentPath.includes('chat.html')) {
+        activeItem = 'Chat';
+    } else if (currentPath.includes('group.html')) {
+        activeItem = 'Teams';
+    } else if (currentPath.includes('index.html')) {
+        activeItem = 'Personal Calendar';
+    } else if (currentPath.includes('group-calendar.html')) {
+        activeItem = 'Group Calendar';
+    } else if (currentPath.includes('manageAcc.html')) {
+        activeItem = 'Settings';
+    }
+    
+    if (activeItem) {
+        sidebarItems.forEach(item => {
+            const textElement = item.querySelector('.sidebar-text');
+            if (textElement && textElement.textContent.trim() === activeItem) {
+                item.classList.add('active');
+            }
+        });
+    }
 }

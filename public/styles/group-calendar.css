@@ -1,0 +1,240 @@
+/* //Group Calendar Specific Styles / */
+.group-calendar-container {
+display: flex;
+flex: 1;
+overflow: hidden;
+height: calc(100vh - 56px);
+ /* / Adjust based on your nav height */
+}
+/* Teams sidebar */
+.teams-sidebar {
+width: 280px;
+background-color: #f9f9f9;
+border-right: 1px solid #e1e1e1;
+overflow-y: auto;
+padding: 16px;
+}
+.teams-sidebar-title {
+font-size: 18px;
+font-weight: 600;
+margin-bottom: 16px;
+color: #333;
+}
+.teams-list {
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.team-item {
+display: flex;
+align-items: center;
+padding: 12px;
+border-radius: 6px;
+cursor: pointer;
+transition: background-color 0.2s;
+}
+.team-item:hover {
+background-color: #f0f0f0;
+}
+.team-item.active {
+background-color: #e6f7ff;
+border-left: 3px solid #1890ff;
+}
+.team-icon {
+width: 40px;
+height: 40px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 4px;
+margin-right: 12px;
+font-size: 16px;
+font-weight: 600;
+color: white;
+}
+.team-info {
+flex: 1;
+}
+.team-name {
+font-size: 15px;
+font-weight: 500;
+color: #333;
+margin-bottom: 2px;
+}
+.team-privacy {
+font-size: 12px;
+color: #666;
+display: flex;
+align-items: center;
+}
+.team-privacy i {
+margin-right: 4px;
+}
+/* Empty teams message */
+.empty-teams {
+text-align: center;
+padding: 30px 0;
+color: #666;
+}
+.empty-teams p {
+margin-bottom: 15px;
+}
+.empty-teams-button {
+background-color: #0078d4;
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 14px;
+transition: background-color 0.2s;
+}
+.empty-teams-button:hover {
+background-color: #0062ad;
+}
+/* Calendar view */
+.group-calendar-view {
+flex: 1;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+.team-header {
+padding: 16px;
+border-bottom: 1px solid #e1e1e1;
+background-color: white;
+}
+.team-header-info {
+display: flex;
+align-items: center;
+}
+.team-header-icon {
+width: 48px;
+height: 48px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 6px;
+margin-right: 16px;
+font-size: 20px;
+font-weight: 600;
+color: white;
+}
+.team-header-details h2 {
+font-size: 20px;
+font-weight: 600;
+margin-bottom: 4px;
+color: #333;
+}
+.team-header-details p {
+font-size: 14px;
+color: #666;
+}
+.team-header-placeholder {
+text-align: center;
+padding: 20px 0;
+color: #666;
+}
+.team-header-placeholder h2 {
+font-size: 18px;
+font-weight: 500;
+margin-bottom: 8px;
+}
+.team-header-placeholder p {
+font-size: 14px;
+color: #888;
+}
+/* Calendar placeholder when no team is selected */
+.calendar-placeholder {
+display: flex;
+align-items: center;
+justify-content: center;
+height: 100%;
+background-color: #f9f9f9;
+border-radius: 6px;
+margin: 16px;
+}
+.placeholder-content {
+text-align: center;
+padding: 40px;
+max-width: 500px;
+}
+.placeholder-content h3 {
+font-size: 20px;
+font-weight: 600;
+margin-bottom: 12px;
+color: #333;
+}
+.placeholder-content p {
+font-size: 16px;
+color: #666;
+}
+/* Sidebar navigation styles */
+.sidebar-navigation {
+margin: 20px 0;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.sidebar-item {
+display: flex;
+align-items: center;
+padding: 10px 12px;
+border-radius: 6px;
+cursor: pointer;
+transition: background-color 0.2s;
+}
+.sidebar-item:hover {
+background-color: rgba(255, 255, 255, 0.1);
+}
+.sidebar-item.active {
+background-color: rgba(255, 255, 255, 0.2);
+}
+.sidebar-icon {
+margin-right: 12px;
+font-size: 18px;
+}
+.sidebar-text {
+font-size: 14px;
+}
+/* Team colors */
+.team-blue { background-color: #0078d4; }
+.team-purple { background-color: #8378de; }
+.team-pink { background-color: #e83e8c; }
+.team-green { background-color: #28a745; }
+.team-orange { background-color: #fd7e14; }
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+.group-calendar-container {
+flex-direction: column;
+height: auto;
+}
+.teams-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e1e1e1;
+    max-height: 30vh;
+}
+
+.team-item {
+    padding: 10px;
+}
+
+.team-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.calendar-placeholder {
+    margin: 8px;
+}
+
+.placeholder-content {
+    padding: 20px;
+}
+}
+/* Currently active menu card styling */
+.menu-card.active {
+background: #8c519a;
+}
