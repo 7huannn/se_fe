@@ -20,7 +20,81 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Khởi tạo điều hướng sidebar
     initSidebarNav();
+    
+    // Load saved teams từ localStorage
+    loadSavedTeams();
 });
+
+// Hàm lưu teams vào localStorage
+function saveTeams(teams) {
+    localStorage.setItem('schedigo_teams', JSON.stringify(teams));
+}
+
+// Hàm lấy teams từ localStorage
+function loadTeams() {
+    const teamsData = localStorage.getItem('schedigo_teams');
+    return teamsData ? JSON.parse(teamsData) : [];
+}
+
+// Hàm load teams từ localStorage và hiển thị lên UI
+function loadSavedTeams() {
+    const teams = loadTeams();
+    teams.forEach(team => {
+        // Lấy các dữ liệu từ team object
+        const teamName = team.name;
+        const teamCode = team.code;
+        const colorClass = team.color;
+        const colorMap = {
+            'blue': 'team-blue',
+            'orange': 'team-orange',
+            'green': 'team-green',
+            'purple': 'team-purple',
+            'red': 'team-pink'
+        };
+        
+        const teamColorClass = colorMap[colorClass] || 'team-blue';
+        const initials = getInitials(teamName);
+        
+        const teamsGrid = document.querySelector('.teams-grid');
+        if (!teamsGrid) {
+            createTeamsGridStructure();
+            return loadSavedTeams(); // Gọi lại hàm sau khi đã tạo cấu trúc
+        }
+        
+        // Tạo DOM element cho team card
+        const teamCard = document.createElement('div');
+        teamCard.className = 'team-card';
+        teamCard.innerHTML = `
+            <div class="team-card-header">
+                <div class="team-icon ${teamColorClass}">${initials}</div>
+                <div class="team-info">
+                    <div class="team-name">${teamName}</div>
+                    <div class="team-code">${teamCode}</div>
+                </div>
+                <div class="team-options">
+                    <button class="team-options-btn">⋯</button>
+                </div>
+            </div>
+            <div class="team-action-buttons">
+                <button class="team-action-btn">
+                    <span class="team-action-icon">📄</span>
+                </button>
+                <button class="team-action-btn">
+                    <span class="team-action-icon">🔒</span>
+                </button>
+                <button class="team-action-btn">
+                    <span class="team-action-icon">✏️</span>
+                </button>
+            </div>
+        `;
+        
+        // Thêm card vào grid
+        teamsGrid.appendChild(teamCard);
+        
+        // Thêm sự kiện cho team card
+        attachTeamCardEvents(teamCard);
+    });
+}
 
 function initTeamDropdown() {
     const dropdownBtn = document.getElementById('teamDropdownBtn');
@@ -61,28 +135,29 @@ function initSidebarItems() {
             const itemName = this.querySelector('.sidebar-text')?.textContent.trim() || '';
             
             // Xử lý logic tương ứng với từng mục
-            switch(itemName) {
-                case 'Chat':
-                    console.log('Navigate to Chat');
-                    window.location.href = "../html/chat.html";
-                    break;
-                case 'Teams':
-                    console.log('Navigate to Teams');
-                    // Đã ở trang Teams nên không cần điều hướng
-                    break;
-                case 'Calendar':
-                    console.log('Navigate to Calendar');
-                    window.location.href = "../html/index.html";
-                    break;
-                case 'Settings':
-                    console.log('Navigate to Settings');
-                    window.location.href = "../html/manageAcc.html";
-                    break;
-                default:
-                    break;
-            }
+            handleSidebarNavigation(itemName);
         });
     });
+}
+
+// Hàm xử lý điều hướng chung cho tất cả các trang
+function handleSidebarNavigation(itemName) {
+    switch(itemName) {
+        case 'Chat':
+            window.location.href = "../html/chat.html";
+            break;
+        case 'Teams':
+            window.location.href = "../html/group.html";
+            break;
+        case 'Calendar':
+            window.location.href = "../html/index.html";
+            break;
+        case 'Settings':
+            window.location.href = "../html/manageAcc.html";
+            break;
+        default:
+            break;
+    }
 }
 
 function initModals() {
@@ -312,6 +387,16 @@ function addNewTeamCard(teamName, teamCode, colorClass) {
     
     // Thêm sự kiện cho team card và các nút của nó
     attachTeamCardEvents(teamCard);
+    
+    // Lưu team vào localStorage
+    const teams = loadTeams();
+    teams.push({
+        name: teamName,
+        code: teamCode,
+        color: colorClass,
+        initials: initials
+    });
+    saveTeams(teams);
 }
 
 function getInitials(name) {
@@ -485,27 +570,8 @@ function initSidebarNav() {
             const itemName = this.querySelector('.sidebar-text')?.textContent.trim() || '';
             console.log("Clicked on:", itemName); // Debug
             
-            // Xử lý chuyển trang
-            switch(itemName) {
-                case 'Chat':
-                    // Chuyển đến trang Chat
-                    window.location.href = "../html/chat.html";
-                    break;
-                case 'Teams':
-                    // Đã ở trang Teams
-                    // window.location.href = "../html/group.html";
-                    break;
-                case 'Calendar':
-                    // Chuyển đến trang Calendar
-                    window.location.href = "../html/index.html";
-                    break;
-                case 'Settings':
-                    // Chuyển đến trang Settings
-                    window.location.href = "../html/manageAcc.html";
-                    break;
-                default:
-                    break;
-            }
+            // Sử dụng hàm xử lý chung
+            handleSidebarNavigation(itemName);
         });
     });
 }
