@@ -1,6 +1,6 @@
-// controllers/group-calendar/index.js
+// controllers/group-calendar/index.js (Updated)
 
-// Import controllers
+// Import existing controllers
 import { initUrlSync } from "../../models/url.js";
 import { initEventStore } from "../event-store.js";
 import { initResponsiveController } from "../responsive.js";
@@ -16,6 +16,7 @@ import { initEventDeleteController } from "../event-delete-dialog.js";
 import { initEventDetailsController } from "../event-details-dialog.js";
 import { initEventFormController } from "../event-form-dialog.js";
 import { initGroupCalendarSidebar } from "./group-calendar-sidebar.js";
+import { initGroupCalendarNavigation } from "./navigation-controller.js"; // Import the new navigation controller
 
 // Initialize URL sync and Event Store
 initUrlSync();
@@ -29,6 +30,9 @@ initMiniCalendars();
 initMobileSidebarController();
 initHamburger();
 initSidebarToggleView();
+
+// Initialize navigation controller
+initGroupCalendarNavigation(); // Initialize the new navigation controller
 
 // Initialize event-related controllers
 initEventCreateController();
