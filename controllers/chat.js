@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
         viewModule.initChatView();
     });
     
-    // Khởi tạo điều hướng
+    // Khởi tạo điều hướng - sử dụng controller chia sẻ
     import("../controllers/sidebar-navigation.js").then(navModule => {
         navModule.initSidebarNav();
     });

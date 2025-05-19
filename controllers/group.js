@@ -1,12 +1,9 @@
-// JavaScript để xử lý dropdown menu và modals
+// controllers/group.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Xử lý dropdown menu "Join or create team"
+    // Khởi tạo view
     initTeamDropdown();
     
-    // Xử lý sự kiện khi click vào các mục sidebar
-    initSidebarItems();
-    
-    // Xử lý các modal
+    // Khởi tạo các modal
     initModals();
     
     // Khởi tạo danh sách teams
@@ -18,8 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Khởi tạo UI chat
     initChatUI();
     
-    // Khởi tạo điều hướng sidebar
-    initSidebarNav();
+    // Khởi tạo điều hướng sidebar - sử dụng controller chia sẻ
+    import("../controllers/sidebar-navigation.js").then(navModule => {
+        navModule.initSidebarNav();
+    });
     
     // Load saved teams từ localStorage
     loadSavedTeams();
@@ -117,47 +116,6 @@ function initTeamDropdown() {
     dropdown.addEventListener('click', function(e) {
         e.stopPropagation();
     });
-}
-
-function initSidebarItems() {
-    // Xử lý sự kiện khi click vào các mục sidebar
-    const sidebarItems = document.querySelectorAll('.sidebar-item');
-    
-    sidebarItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // Xóa trạng thái active khỏi tất cả các mục
-            sidebarItems.forEach(si => si.classList.remove('active'));
-            
-            // Thêm trạng thái active cho mục được chọn
-            this.classList.add('active');
-            
-            // Lấy tên của mục được chọn (từ sidebar-text)
-            const itemName = this.querySelector('.sidebar-text')?.textContent.trim() || '';
-            
-            // Xử lý logic tương ứng với từng mục
-            handleSidebarNavigation(itemName);
-        });
-    });
-}
-
-// Hàm xử lý điều hướng chung cho tất cả các trang
-function handleSidebarNavigation(itemName) {
-    switch(itemName) {
-        case 'Chat':
-            window.location.href = "../html/chat.html";
-            break;
-        case 'Teams':
-            window.location.href = "../html/group.html";
-            break;
-        case 'Calendar':
-            window.location.href = "../html/index.html";
-            break;
-        case 'Settings':
-            window.location.href = "../html/manageAcc.html";
-            break;
-        default:
-            break;
-    }
 }
 
 function initModals() {
@@ -552,26 +510,4 @@ function initChatUI() {
             }
         }
     }
-}
-
-function initSidebarNav() {
-    // Xử lý chuyển trang khi nhấp vào các mục trong sidebar
-    const sidebarItems = document.querySelectorAll('.sidebar-item');
-    
-    sidebarItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // Xóa trạng thái active khỏi tất cả các mục
-            sidebarItems.forEach(si => si.classList.remove('active'));
-            
-            // Thêm trạng thái active cho mục được chọn
-            this.classList.add('active');
-            
-            // Lấy tên của mục được chọn (từ sidebar-text)
-            const itemName = this.querySelector('.sidebar-text')?.textContent.trim() || '';
-            console.log("Clicked on:", itemName); // Debug
-            
-            // Sử dụng hàm xử lý chung
-            handleSidebarNavigation(itemName);
-        });
-    });
 }
