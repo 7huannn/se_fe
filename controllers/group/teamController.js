@@ -1,4 +1,4 @@
-// controllers/group/teamController.js - Updated with new team management features
+// controllers/group/teamController.js - Updated with removed chat references
 
 import { loadTeams, saveTeams, generateTeamCode, getInitials, addTeam, getColorClass, 
          getTeamById, updateTeam, deleteTeam, updateTeamPrivacy } from '../../models/group/team.js';
@@ -439,11 +439,11 @@ export function attachTeamCardEvents(teamCard, teamId) {
             
             // Determine action based on index
             switch (index) {
-                case 0: // Chat button (nút đầu tiên)
-                    window.location.href = "../html/chat.html";
+                case 0: // First button - redirect to group calendar
+                    window.location.href = "group-calendar.html";
                     break;
                     
-                case 1: // Privacy toggle button (nút thứ hai)
+                case 1: // Privacy toggle button (second button)
                     // Get current team
                     const team = getTeamById(teamId);
                     if (!team) return;
@@ -458,7 +458,7 @@ export function attachTeamCardEvents(teamCard, teamId) {
                     }));
                     break;
                     
-                case 2: // Edit button (nút thứ ba)
+                case 2: // Edit button (third button)
                     openEditTeamModal(teamId);
                     break;
             }
@@ -467,8 +467,8 @@ export function attachTeamCardEvents(teamCard, teamId) {
     
     // Xử lý khi click vào card
     teamCard.addEventListener('click', function() {
-        // Chuyển đến trang chat.html khi click vào team card
-        window.location.href = "../html/chat.html";
+        // Redirect to group calendar instead of chat
+        window.location.href = "group-calendar.html";
     });
 }
 

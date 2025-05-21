@@ -1,9 +1,9 @@
 // views/menuNavigateView.js (Updated version)
+// Removed chat references
 
 import {
   goToAcc,
   goToTeams,
-  goToChatBox,
   goToEvents,
   goToTasks,
   goToStats,
@@ -24,12 +24,6 @@ export function initMenuNavigateView() {
       btnTeams.addEventListener("click", goToTeams);
     }
 
-    // Navigate to ChatBox
-    const btnChatbox = document.getElementById("btn-chatbox");
-    if (btnChatbox) {
-      btnChatbox.addEventListener("click", goToChatBox);
-    }
-
     // Navigate to Events
     const btnEvents = document.getElementById("btn-events");
     if (btnEvents) {
@@ -48,7 +42,7 @@ export function initMenuNavigateView() {
       btnStats.addEventListener("click", goToStats);
     }
     
-    // Navigate to Group Calendar (new)
+    // Navigate to Group Calendar
     const btnGroupCalendar = document.getElementById("btn-group-calendar");
     if (btnGroupCalendar) {
       btnGroupCalendar.addEventListener("click", goToGroupCalendar);
@@ -75,10 +69,6 @@ export function initMenuNavigateView() {
     else if (currentPath.includes('group.html')) {
       const btnTeams = document.getElementById("btn-teams");
       if (btnTeams) btnTeams.classList.add('active');
-    }
-    else if (currentPath.includes('chat.html')) {
-      const btnChatbox = document.getElementById("btn-chatbox");
-      if (btnChatbox) btnChatbox.classList.add('active');
     }
     else if (currentPath.includes('events.html')) {
       const btnEvents = document.getElementById("btn-events");

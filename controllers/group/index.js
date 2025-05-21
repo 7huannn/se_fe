@@ -1,12 +1,10 @@
-// controllers/group/index.js - Updated with new team management controllers
+// controllers/group/index.js - Updated with removed chat functionality
 
 import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsController, 
          handleTeamCreate, handleTeamEdit, handleTeamDelete, 
          handleTeamPrivacyUpdate, initEditTeamFormController } from './teamController.js';
-import { initChatController } from './chatController.js';
 import { initModalsController } from './modalController.js';
 import { initDropdownController } from './dropdownController.js';
-import { initChatUI } from '../../views/group/chatView.js';
 
 /**
  * Khởi tạo tất cả controllers cho trang group
@@ -26,10 +24,6 @@ export function initGroupControllers() {
     
     // Khởi tạo form chỉnh sửa team
     initEditTeamFormController();
-    
-    // Khởi tạo chat UI và controller
-    initChatUI();
-    initChatController();
     
     // Lắng nghe sự kiện tạo team
     document.addEventListener('team-create', handleTeamCreate);

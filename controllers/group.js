@@ -1,4 +1,4 @@
-// controllers/group.js
+// controllers/group.js - Updated with removed chat functionality
 document.addEventListener('DOMContentLoaded', function() {
     // Khởi tạo view
     initTeamDropdown();
@@ -11,9 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Khởi tạo form tạo team
     initCreateTeamForm();
-    
-    // Khởi tạo UI chat
-    initChatUI();
     
     // Khởi tạo điều hướng sidebar - sử dụng controller chia sẻ
     import("../controllers/sidebar-navigation.js").then(navModule => {
@@ -427,10 +424,10 @@ function attachTeamCardEvents(teamCard) {
             e.stopPropagation(); // Ngăn event bubble lên card
             console.log('Action button clicked', index);
             
-            // Nếu là nút chat (nút đầu tiên)
+            // Nếu là nút đầu tiên (thay vì chuyển đến chat, chuyển đến group calendar)
             if (index === 0) {
-                // Chuyển đến trang chat.html
-                window.location.href = "../html/chat.html";
+                // Chuyển đến trang group-calendar.html thay vì chat.html
+                window.location.href = "group-calendar.html";
             }
         });
     });
@@ -438,76 +435,7 @@ function attachTeamCardEvents(teamCard) {
     // Xử lý khi click vào card
     teamCard.addEventListener('click', function() {
         console.log('Team card clicked');
-        // Chuyển đến trang chat.html khi click vào team card
-        window.location.href = "../html/chat.html";
+        // Chuyển đến trang group-calendar.html thay vì chat.html
+        window.location.href = "group-calendar.html";
     });
-}
-
-function initChatUI() {
-    // Xử lý toggle các section
-    const sectionHeaders = document.querySelectorAll('.section-header');
-    sectionHeaders.forEach(header => {
-        header.addEventListener('click', function() {
-            const content = this.nextElementSibling;
-            const toggle = this.querySelector('.section-toggle');
-            
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                toggle.textContent = '▼';
-            } else {
-                content.style.display = 'none';
-                toggle.textContent = '►';
-            }
-        });
-    });
-    
-    // Xử lý khi nhấn nút gửi
-    const sendButton = document.querySelector('.send-button');
-    const chatInput = document.querySelector('.chat-input');
-    
-    if (sendButton && chatInput) {
-        sendButton.addEventListener('click', function() {
-            sendMessage();
-        });
-        
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-    }
-    
-    function sendMessage() {
-        const message = chatInput.value.trim();
-        if (message) {
-            console.log('Sending message:', message);
-            // Thêm code để xử lý tin nhắn
-            
-            // Xóa nội dung input
-            chatInput.value = '';
-            
-            // Xóa trạng thái trống
-            const emptyChat = document.querySelector('.empty-chat');
-            if (emptyChat) {
-                emptyChat.style.display = 'none';
-            }
-            
-            // Hiển thị tin nhắn (đây chỉ là mẫu, bạn cần thêm code để hiển thị tin nhắn thực tế)
-            const chatContent = document.querySelector('.chat-content');
-            if (chatContent) {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message-container sent';
-                messageElement.innerHTML = `
-                    <div class="message-bubble">
-                        <div class="message-text">${message}</div>
-                        <div class="message-time">Just now</div>
-                    </div>
-                `;
-                chatContent.appendChild(messageElement);
-                
-                // Scroll xuống cuối
-                chatContent.scrollTop = chatContent.scrollHeight;
-            }
-        }
-    }
 }

@@ -1,6 +1,7 @@
 /**
  * Controller for group calendar navigation
  * Follows MVC pattern by separating navigation logic from view
+ * Removed chat references
  */
 export function initGroupCalendarNavigation() {
     // Handle navigation in the sidebar
@@ -52,8 +53,6 @@ function getTargetPageFromName(itemName) {
             return 'manageAcc.html';
         case 'Teams':
             return 'group.html';
-        case 'Chat':
-            return 'chat.html';
         case 'Personal Calendar':
             return 'index.html';
         case 'Group Calendar':
@@ -75,8 +74,6 @@ function getTargetPageFromId(id) {
             return 'manageAcc.html';
         case 'btn-teams':
             return 'group.html';
-        case 'btn-chatbox':
-            return 'chat.html';
         case 'btn-events':
         case 'btn-personal-calendar':
             return 'index.html';
@@ -99,8 +96,6 @@ function setActiveNavigationItem() {
     let currentPage = '';
     if (currentPath.includes('group-calendar.html')) {
         currentPage = 'Group Calendar';
-    } else if (currentPath.includes('chat.html')) {
-        currentPage = 'Chat';
     } else if (currentPath.includes('group.html')) {
         currentPage = 'Teams';
     } else if (currentPath.includes('manageAcc.html')) {
@@ -126,7 +121,6 @@ function setActiveNavigationItem() {
         // Set active class on menu-card elements
         const btnMapping = {
             'Group Calendar': 'btn-group-calendar',
-            'Chat': 'btn-chatbox',
             'Teams': 'btn-teams',
             'Account': 'btn-acc',
             'Personal Calendar': 'btn-events'

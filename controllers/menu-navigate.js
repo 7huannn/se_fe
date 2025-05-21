@@ -1,14 +1,12 @@
 // controllers/menu-navigate.js (Updated version)
+// Removed chat function
+
 export function goToAcc() {
   window.open("manageAcc.html", "_self");
 }
 
 export function goToTeams() {
   window.open("group.html",  "_self");
-}
-
-export function goToChatBox() {
-  window.open("chat.html", "_self");
 }
 
 export function goToEvents() {
@@ -23,7 +21,7 @@ export function goToStats() {
   window.open("statistics.html", "_self");
 }
 
-// New function for Group Calendar navigation
+// Function for Group Calendar navigation
 export function goToGroupCalendar() {
   window.open("group-calendar.html", "_self");
 }

@@ -1,4 +1,5 @@
 // Updated event handlers for sidebar navigation in sidebar-navigation.js
+// Removed chat references
 
 export function initSidebarNav() {
     // Xử lý chuyển trang khi nhấp vào các mục trong sidebar
@@ -38,9 +39,7 @@ export function initSidebarNav() {
     const currentPath = window.location.pathname;
     let activeItem = null;
     
-    if (currentPath.includes('chat.html')) {
-        activeItem = 'Chat';
-    } else if (currentPath.includes('group.html')) {
+    if (currentPath.includes('group.html')) {
         activeItem = 'Teams';
     } else if (currentPath.includes('index.html') || currentPath.endsWith('/')) {
         activeItem = 'Personal Calendar';
@@ -64,9 +63,6 @@ export function handleSidebarNavigation(itemName) {
     console.log("Navigation requested to:", itemName); // For debugging
     
     switch(itemName) {
-        case 'Chat':
-            window.location.href = "chat.html";
-            break;
         case 'Teams':
             window.location.href = "group.html";
             break;
