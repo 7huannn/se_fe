@@ -1,10 +1,11 @@
-// controllers/group/index.js - Updated with removed chat functionality
+// controllers/group/index.js - Updated to include members controller
 
 import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsController, 
          handleTeamCreate, handleTeamEdit, handleTeamDelete, 
          handleTeamPrivacyUpdate, initEditTeamFormController } from './teamController.js';
 import { initModalsController } from './modalController.js';
 import { initDropdownController } from './dropdownController.js';
+import { initTeamMembersController } from './membersController.js';
 
 /**
  * Khởi tạo tất cả controllers cho trang group
@@ -24,6 +25,9 @@ export function initGroupControllers() {
     
     // Khởi tạo form chỉnh sửa team
     initEditTeamFormController();
+    
+    // Khởi tạo controller quản lý thành viên
+    initTeamMembersController();
     
     // Lắng nghe sự kiện tạo team
     document.addEventListener('team-create', handleTeamCreate);

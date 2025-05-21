@@ -5,7 +5,7 @@ import { loadTeams, saveTeams, generateTeamCode, getInitials, addTeam, getColorC
 import { createTeamCardElement, createTeamsGridStructure, toggleTeamsContent, 
          createTeamOptionsMenu, toggleTeamOptionsMenu, addPrivacyIndicator } from '../../views/group/teamView.js';
 import { hideModal, showModal } from '../../views/group/modalView.js';
-
+import { openTeamMembersModal } from './membersController.js';
 /**
  * Khởi tạo controller cho team list
  */
@@ -351,6 +351,11 @@ function updateTeamCardUI(teamCard, updateData) {
  * @param {HTMLElement} teamCard - Team card element
  * @param {number} teamId - ID of the team
  */
+/**
+ * Gắn các sự kiện cho team card
+ * @param {HTMLElement} teamCard - Team card element
+ * @param {number} teamId - ID of the team
+ */
 export function attachTeamCardEvents(teamCard, teamId) {
     // Options button event
     const optionButton = teamCard.querySelector('.team-options-btn');
@@ -366,9 +371,18 @@ export function attachTeamCardEvents(teamCard, teamId) {
                 teamCard.appendChild(optionsMenu);
                 
                 // Add event listeners to menu options
+                const membersOption = optionsMenu.querySelector('[data-action="members"]');
                 const editOption = optionsMenu.querySelector('[data-action="edit"]');
                 const privacyOption = optionsMenu.querySelector('[data-action="privacy"]');
                 const deleteOption = optionsMenu.querySelector('[data-action="delete"]');
+                
+                if (membersOption) {
+                    membersOption.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openTeamMembersModal(teamId);
+                        toggleTeamOptionsMenu(optionsMenu, false);
+                    });
+                }
                 
                 if (editOption) {
                     editOption.addEventListener('click', (e) => {
@@ -437,37 +451,46 @@ export function attachTeamCardEvents(teamCard, teamId) {
         button.addEventListener('click', function(e) {
             e.stopPropagation(); // Prevent event from bubbling to card
             
-            // Determine action based on index
-            switch (index) {
-                case 0: // First button - redirect to group calendar
-                    window.location.href = "group-calendar.html";
-                    break;
-                    
-                case 1: // Privacy toggle button (second button)
-                    // Get current team
-                    const team = getTeamById(teamId);
-                    if (!team) return;
-                    
-                    // Toggle privacy
-                    const newPrivacy = team.privacy === 'private' ? 'public' : 'private';
-                    
-                    // Dispatch event to update privacy
-                    document.dispatchEvent(new CustomEvent('team-privacy-update', {
-                        detail: { teamId, privacy: newPrivacy },
-                        bubbles: true
-                    }));
-                    break;
-                    
-                case 2: // Edit button (third button)
-                    openEditTeamModal(teamId);
-                    break;
+            // Calendar button (first button)
+            if (index === 0) {
+                window.location.href = "group-calendar.html";
+                return;
+            }
+            
+            // Members button (second button)
+            if (index === 1 || button.classList.contains('members-btn')) {
+                openTeamMembersModal(teamId);
+                return;
+            }
+            
+            // Privacy toggle button (third button)
+            if (index === 2 || button.classList.contains('privacy-toggle')) {
+                // Get current team
+                const team = getTeamById(teamId);
+                if (!team) return;
+                
+                // Toggle privacy
+                const newPrivacy = team.privacy === 'private' ? 'public' : 'private';
+                
+                // Dispatch event to update privacy
+                document.dispatchEvent(new CustomEvent('team-privacy-update', {
+                    detail: { teamId, privacy: newPrivacy },
+                    bubbles: true
+                }));
+                return;
+            }
+            
+            // Edit button (fourth button)
+            if (index === 3) {
+                openEditTeamModal(teamId);
+                return;
             }
         });
     });
     
     // Xử lý khi click vào card
     teamCard.addEventListener('click', function() {
-        // Redirect to group calendar instead of chat
+        // Redirect to group calendar
         window.location.href = "group-calendar.html";
     });
 }

@@ -228,3 +228,113 @@ export async function createTeamAPI(teamData) {
     }
 }
 */
+
+// Updated models/group/team.js with member management functions
+
+/**
+ * Add a member to a team
+ * @param {number} teamId - ID of the team
+ * @param {Object} memberData - Member data (email, name, etc.)
+ * @returns {boolean} Success status
+ */
+export function addTeamMember(teamId, memberData) {
+    if (!teamId || !memberData || !memberData.email) return false;
+    
+    // Validate email
+    if (!isValidEmail(memberData.email)) return false;
+    
+    const teams = loadTeams();
+    const teamIndex = teams.findIndex(team => team.id === teamId);
+    
+    if (teamIndex === -1) return false;
+    
+    // Initialize members array if it doesn't exist
+    if (!teams[teamIndex].members) {
+        teams[teamIndex].members = [];
+    }
+    
+    // Check if member already exists
+    const existingMember = teams[teamIndex].members.find(
+        member => member.email.toLowerCase() === memberData.email.toLowerCase()
+    );
+    
+    if (existingMember) return false;
+    
+    // Add new member
+    const newMember = {
+        id: Date.now(), // Generate unique ID
+        email: memberData.email,
+        name: memberData.name || getNameFromEmail(memberData.email),
+        avatar: memberData.avatar || null,
+        role: memberData.role || 'member',
+        addedAt: new Date().toISOString()
+    };
+    
+    teams[teamIndex].members.push(newMember);
+    saveTeams(teams);
+    
+    return true;
+}
+
+/**
+ * Remove a member from a team
+ * @param {number} teamId - ID of the team
+ * @param {number} memberId - ID of the member to remove
+ * @returns {boolean} Success status
+ */
+export function removeTeamMember(teamId, memberId) {
+    const teams = loadTeams();
+    const teamIndex = teams.findIndex(team => team.id === teamId);
+    
+    if (teamIndex === -1) return false;
+    if (!teams[teamIndex].members) return false;
+    
+    const memberIndex = teams[teamIndex].members.findIndex(member => member.id === memberId);
+    
+    if (memberIndex === -1) return false;
+    
+    // Remove member
+    teams[teamIndex].members.splice(memberIndex, 1);
+    saveTeams(teams);
+    
+    return true;
+}
+
+/**
+ * Get all members of a team
+ * @param {number} teamId - ID of the team
+ * @returns {Array|null} Array of team members or null if team not found
+ */
+export function getTeamMembers(teamId) {
+    const team = getTeamById(teamId);
+    if (!team) return null;
+    
+    return team.members || [];
+}
+
+/**
+ * Validate email format
+ * @param {string} email - Email to validate
+ * @returns {boolean} True if email is valid
+ */
+export function isValidEmail(email) {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
+/**
+ * Extract a display name from an email address
+ * @param {string} email - Email address
+ * @returns {string} Display name
+ */
+export function getNameFromEmail(email) {
+    if (!email) return '';
+    
+    // Extract the part before @ and capitalize the first letter of each word
+    const namePart = email.split('@')[0];
+    
+    return namePart
+        .split(/[._-]/) // Split by common email name separators
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join(' ');
+}
