@@ -319,3 +319,73 @@ background: #8c519a;
   padding: 0 0.5rem 0.125rem;
   font-size: 0.75rem;
 }
+
+/* Search Integration for Group Calendar */
+.nav__search {
+  margin-right: 1rem;
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  z-index: 1;
+  color: var(--color-gray-400);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 200px;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  transition: all 0.2s ease;
+  background-color: var(--color-white);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-blue-600);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  width: 250px;
+}
+
+.search-input::placeholder {
+  color: var(--color-gray-400);
+}
+
+/* Mobile search adjustments */
+@media (max-width: 768px) {
+  .search-input {
+    width: 150px;
+  }
+  
+  .search-input:focus {
+    width: 180px;
+  }
+}
+
+/* Team context indicator in search results */
+.search-team-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--color-blue-600);
+  background-color: var(--color-blue-50);
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+.search-result-item[data-team-event="true"] .search-result-title::after {
+  content: "👥";
+  margin-left: 8px;
+  opacity: 0.7;
+}

@@ -16,7 +16,7 @@
 @import "./toaster.css";
 @import "./week-calendar.css";
 @import "./responsive.css";
-
+@import "./event-search.css"; 
 * {
   font-family: ui-sans-serif, system-ui, sans-serif;
   margin: 0;

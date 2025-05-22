@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <script type="module" src="../../controllers/group-calendar/index.js" defer></script>
     <script type="module" src="../../controllers/chat-bubbleController.js"></script>
 </head>
+
 <body>
     <div class="app">
         <div class="sidebar desktop-only">
@@ -34,12 +36,12 @@
                     <div class="sidebar-icon">👥</div>
                     <div class="sidebar-text">Teams</div>
                 </div>
-                
+
                 <div class="sidebar-item" data-sidebar-item="personal-calendar">
                     <div class="sidebar-icon">📅</div>
                     <div class="sidebar-text">Personal Calendar</div>
                 </div>
-                
+
                 <div class="sidebar-item active" data-sidebar-item="group-calendar">
                     <div class="sidebar-icon">🗓️</div>
                     <div class="sidebar-text">Group Calendar</div>
@@ -51,18 +53,19 @@
                     <time class="mini-calendar__date" data-mini-calendar-date></time>
 
                     <div class="mini-calendar__controls">
-                        <button class="button button--icon button--secondary button--sm" data-mini-calendar-previous-button>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="button__icon">
+                        <button class="button button--icon button--secondary button--sm"
+                            data-mini-calendar-previous-button>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="button__icon">
                                 <path d="m15 18-6-6 6-6" />
                             </svg>
                         </button>
 
                         <button class="button button--icon button--secondary button--sm" data-mini-calendar-next-button>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="button__icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="button__icon">
                                 <path d="m9 18 6-6-6-6" />
                             </svg>
                         </button>
@@ -89,7 +92,8 @@
             <div class="nav">
                 <button class="button button--icon button--secondary mobile-only" data-hamburger-button>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button__icon">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="button__icon">
                         <line x1="4" x2="20" y1="12" y2="12" />
                         <line x1="4" x2="20" y1="6" y2="6" />
                         <line x1="4" x2="20" y1="18" y2="18" />
@@ -100,9 +104,9 @@
                     <div class="nav__controls">
                         <button class="button button--secondary desktop-only" data-nav-today-button>Today</button>
                         <button class="button button--icon button--secondary mobile-only" data-nav-today-button>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="button__icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="button__icon">
                                 <path d="M8 2v4" />
                                 <path d="M16 2v4" />
                                 <rect width="18" height="18" x="3" y="4" rx="2" />
@@ -118,16 +122,16 @@
 
                         <div class="nav__arrows">
                             <button class="button button--icon button--secondary" data-nav-previous-button>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    class="button__icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="button__icon">
                                     <path d="m15 18-6-6 6-6" />
                                 </svg>
                             </button>
                             <button class="button button--icon button--secondary" data-nav-next-button>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    class="button__icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="button__icon">
                                     <path d="m9 18 6-6-6-6" />
                                 </svg>
                             </button>
@@ -135,7 +139,20 @@
                     </div>
                     <time class="nav__date" data-nav-date></time>
                 </div>
-
+                <div class="nav__search">
+                    <div class="search-container">
+                        <svg class="search-icon" viewBox="0 -0.5 25 25" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            width="16" height="16" stroke="#000">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M5.5 10.7655C5.50003 8.01511 7.44296 5.64777 10.1405 5.1113C12.8381 4.57483 15.539 6.01866 16.5913 8.55977C17.6437 11.1009 16.7544 14.0315 14.4674 15.5593C12.1804 17.0871 9.13257 16.7866 7.188 14.8415C6.10716 13.7604 5.49998 12.2942 5.5 10.7655Z"
+                                stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M17.029 16.5295L19.5 19.0005" stroke="#000" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <input type="text" id="search-input" class="search-input" placeholder="Search team events..."
+                            autocomplete="off" />
+                    </div>
+                </div>
                 <div class="select desktop-only">
                     <select class="select__select" data-view-select>
                         <option value="day">Day</option>
@@ -143,12 +160,13 @@
                         <option value="month" selected>Month</option>
                     </select>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="select__icon">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="select__icon">
                         <path d="m6 9 6 6 6-6" />
                     </svg>
                 </div>
             </div>
-            
+
             <div class="group-calendar-container">
                 <!-- Teams List Sidebar -->
                 <div class="teams-sidebar">
@@ -157,7 +175,7 @@
                         <!-- Teams will be dynamically added here -->
                     </div>
                 </div>
-                
+
                 <!-- Calendar View -->
                 <div class="group-calendar-view">
                     <div class="team-header" data-team-header>
@@ -167,7 +185,7 @@
                             <p>Choose a team from the list on the left</p>
                         </div>
                     </div>
-                    
+
                     <div class="calendar" data-calendar>
                         <!-- Calendar will be rendered here -->
                     </div>
@@ -177,8 +195,8 @@
     </div>
 
     <button class="fab mobile-only" data-event-create-button>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fab__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fab__icon">
             <path d="M5 12h14" />
             <path d="M12 5v14" />
         </svg>
@@ -194,10 +212,11 @@
             <button id="btn-teams" class="menu-card"><i class="icon">👥</i><span>Teams</span></button>
             <!-- <button id="btn-chatbox" class="menu-card"><i class="icon">💬</i><span>ChatBox</span></button>
             <button id="btn-events" class="menu-card"><i class="icon">📅</i><span>Events</span></button> -->
-            <button id="btn-group-calendar" class="menu-card active"><i class="icon">🗓️</i><span>Group Calendar</span></button>
+            <button id="btn-group-calendar" class="menu-card active"><i class="icon">🗓️</i><span>Group
+                    Calendar</span></button>
         </div>
     </div>
-    
+
     <!-- Event Dialogs -->
     <dialog class="dialog" data-dialog="event-form">
         <form class="form" data-event-form>
@@ -220,8 +239,8 @@
 
                         <div class="form__field">
                             <label class="form__label" for="title">Title</label>
-                            <input class="input input--fill" id="title" name="title" type="text" placeholder="My awesome event!"
-                                required autofocus />
+                            <input class="input input--fill" id="title" name="title" type="text"
+                                placeholder="My awesome event!" required autofocus />
                         </div>
 
                         <div class="form__field">
@@ -236,9 +255,9 @@
                                     <select class="select__select" id="start-time" name="start-time">
                                         <!-- Time options will be here -->
                                     </select>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                        class="select__icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="select__icon">
                                         <path d="m6 9 6 6 6-6" />
                                     </svg>
                                 </div>
@@ -250,9 +269,9 @@
                                     <select class="select__select" id="end-time" name="end-time">
                                         <!-- Time options will be here -->
                                     </select>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                        class="select__icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="select__icon">
                                         <path d="m6 9 6 6 6-6" />
                                     </svg>
                                 </div>
@@ -263,7 +282,8 @@
                             <label class="form__label" for="color">Color</label>
                             <div class="color-select">
                                 <label class="color-select__item" style="--color-select-item-color: #2563eb">
-                                    <input class="color-select__input" type="radio" name="color" value="#2563eb" checked />
+                                    <input class="color-select__input" type="radio" name="color" value="#2563eb"
+                                        checked />
                                     <div class="color-select__color">
                                         <div class="color-select__color-inner"></div>
                                     </div>
@@ -367,7 +387,8 @@
 
                 <button class="button button--icon button--secondary" data-dialog-close-button autofocus>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button__icon">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="button__icon">
                         <path d="M18 6 6 18" />
                         <path d="m6 6 12 12" />
                     </svg>
@@ -395,18 +416,20 @@
                         <time class="mini-calendar__date" data-mini-calendar-date></time>
 
                         <div class="mini-calendar__controls">
-                            <button class="button button--icon button--secondary button--sm" data-mini-calendar-previous-button>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    class="button__icon">
+                            <button class="button button--icon button--secondary button--sm"
+                                data-mini-calendar-previous-button>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="button__icon">
                                     <path d="m15 18-6-6 6-6" />
                                 </svg>
                             </button>
 
-                            <button class="button button--icon button--secondary button--sm" data-mini-calendar-next-button>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    class="button__icon">
+                            <button class="button button--icon button--secondary button--sm"
+                                data-mini-calendar-next-button>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="button__icon">
                                     <path d="m9 18 6-6-6-6" />
                                 </svg>
                             </button>
@@ -522,4 +545,5 @@
         </li>
     </template>
 </body>
+
 </html>

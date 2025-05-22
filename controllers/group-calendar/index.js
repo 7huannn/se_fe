@@ -1,3 +1,5 @@
+// Cập nhật controllers/group-calendar/index.js - Thêm search controller
+
 // controllers/group-calendar/index.js (Updated)
 
 // Import existing controllers
@@ -16,7 +18,8 @@ import { initEventDeleteController } from "../event-delete-dialog.js";
 import { initEventDetailsController } from "../event-details-dialog.js";
 import { initEventFormController } from "../event-form-dialog.js";
 import { initGroupCalendarSidebar } from "./group-calendar-sidebar.js";
-import { initGroupCalendarNavigation } from "./navigation-controller.js"; // Import the new navigation controller
+import { initGroupCalendarNavigation } from "./navigation-controller.js";
+import { initEventSearchController } from "../event-search.js"; // Import search controller
 
 // Initialize URL sync and Event Store
 initUrlSync();
@@ -32,7 +35,7 @@ initHamburger();
 initSidebarToggleView();
 
 // Initialize navigation controller
-initGroupCalendarNavigation(); // Initialize the new navigation controller
+initGroupCalendarNavigation();
 
 // Initialize event-related controllers
 initEventCreateController();
@@ -40,6 +43,18 @@ initEventDeleteController();
 initEventDetailsController();
 initEventFormController();
 
+// Initialize search controller - NEW
+const searchController = initEventSearchController('search-input');
+
 // Initialize Group Calendar specific controllers
 initGroupCalendarSidebar();
 initGroupCalendarController(eventStore);
+
+// Setup search for group calendar context
+document.addEventListener('team-select', (event) => {
+  if (event.detail.team) {
+    searchController.setSearchType('team', event.detail.team.id);
+  } else {
+    searchController.setSearchType('personal');
+  }
+});

@@ -1,3 +1,5 @@
+// Cập nhật controllers/index.js - Thêm search controller
+
 // controllers/index.js
 
 // 1. Model: URL‐sync và Event Store
@@ -23,7 +25,7 @@ import { initEventDetailsController }  from "./event-details-dialog.js";
 import { initEventFormController }     from "./event-form-dialog.js";
 import { initAccountController } from "./acc.js";
 import { initCalendar }                from "./calendar.js";
-
+import { initEventSearchController } from "./event-search.js"; // Import search controller
 
 // a) UI‐wide controllers
 initResponsiveController();    
@@ -36,11 +38,15 @@ initNotificationsController();
 initSidebarToggleView();    // hoặc initSidebarToggleController() nếu bạn có controller cho sidebar
 initMenuNavigateView();
 initAccountController();
+
 // b) Form & dialog controllers
 initEventCreateController();
 initEventDeleteController();
 initEventDetailsController();
 initEventFormController();
+
+// c) Search controller - NEW
+initEventSearchController('search-input');
 
 // 3. Vẽ Calendar
 initCalendar(eventStore);
