@@ -1,40 +1,39 @@
+/* notifications.css */
+
+/* Container chứa icon */
 .notifications-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 10px;
+  /* Khoảng cách so với phần search ở bên trái */
+  margin-left: 1rem;    /* bạn có thể điều chỉnh giá trị này tuỳ ý */
   height: 100%;
 }
 
+/* Button bọc SVG */
 .notification-btn {
-  background: none;
-  border: none;
+  background: transparent !important;  /* xóa background */
+  border: none !important;            /* xóa border */
+  padding: 0 !important;              /* xóa padding */
+  margin: 0 !important;               /* xóa margin */
+  outline: none !important;           /* xóa outline khi focus */
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  padding: 5px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  width: 24px;
-  height: 24px;
 }
 
-/* Remove any margins that might create spacing */
+/* SVG chuông */
 .notification-btn svg {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 24px;     /* kích thước icon */
+  height: 24px;
+  fill: currentColor;  /* để icon lấy màu từ màu chữ của button */
 }
 
-/* If you need to adjust spacing with the search box */
-.nav__search {
-  display: flex;
-  align-items: center;
-}
-
-/* Make sure there's no margin on the search container */
+/* Nếu cần canh lại hoặc xóa margin/padding mặc định của vùng search: */
+.nav__search,
 .search-container {
-  margin-left: 0;
+  margin: 0;
+  padding: 0;
 }

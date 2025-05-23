@@ -3,6 +3,7 @@
 /* Search Input Styling */
 .nav__search {
   position: relative;
+  margin-left: 1rem;
 }
 
 .search-input {
