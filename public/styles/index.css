@@ -17,7 +17,6 @@
 @import "./week-calendar.css";
 @import "./responsive.css";
 @import "./event-search.css"; 
-@import "./nofication.css";
 * {
   font-family: ui-sans-serif, system-ui, sans-serif;
   margin: 0;
