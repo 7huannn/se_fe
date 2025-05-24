@@ -1,4 +1,4 @@
-// models/group/team-calendar.js
+// models/group/team-calendar.js - FIXED VERSION
 
 import { isTheSameDay } from "../date.js";
 
@@ -15,11 +15,12 @@ export function saveTeamEvents(teamId, events) {
   const storageKey = `${TEAM_EVENTS_KEY_PREFIX}${teamId}`;
   const eventsToSave = events.map(evt => ({
     ...evt,
-    date: evt.date.toISOString()
+    date: evt.date instanceof Date ? evt.date.toISOString() : evt.date
   }));
   
   try {
     localStorage.setItem(storageKey, JSON.stringify(eventsToSave));
+    console.log(`Saved ${eventsToSave.length} events for team ${teamId}`);
   } catch (e) {
     console.error("Error saving team events:", e);
   }
@@ -40,10 +41,12 @@ export function getTeamEvents(teamId) {
   
   try {
     const parsed = JSON.parse(rawEvents);
-    return parsed.map(evt => ({
+    const events = parsed.map(evt => ({
       ...evt,
       date: new Date(evt.date)
     }));
+    console.log(`Retrieved ${events.length} events for team ${teamId}`);
+    return events;
   } catch (e) {
     console.error("Error parsing team events:", e);
     return [];
@@ -58,7 +61,9 @@ export function getTeamEvents(teamId) {
  */
 export function getTeamEventsByDate(teamId, date) {
   const allEvents = getTeamEvents(teamId);
-  return allEvents.filter(evt => isTheSameDay(evt.date, date));
+  const dateEvents = allEvents.filter(evt => isTheSameDay(evt.date, date));
+  console.log(`Found ${dateEvents.length} events for team ${teamId} on date ${date.toISOString().slice(0,10)}`);
+  return dateEvents;
 }
 
 /**
@@ -70,10 +75,27 @@ export function getTeamEventsByDate(teamId, date) {
 export function addTeamEvent(teamId, event) {
   if (!teamId || !event) return [];
   
-  const events = getTeamEvents(teamId);
-  events.push(event);
-  saveTeamEvents(teamId, events);
+  // Ensure event date is a Date object
+  if (!(event.date instanceof Date)) {
+    event.date = new Date(event.date);
+  }
   
+  const events = getTeamEvents(teamId);
+  
+  // Check if event with this ID already exists
+  const existingIndex = events.findIndex(e => e.id === event.id);
+  
+  if (existingIndex >= 0) {
+    // Update existing event
+    events[existingIndex] = event;
+    console.log(`Updated existing event ${event.id} for team ${teamId}`);
+  } else {
+    // Add new event
+    events.push(event);
+    console.log(`Added new event ${event.id} for team ${teamId}`);
+  }
+  
+  saveTeamEvents(teamId, events);
   return events;
 }
 
@@ -86,11 +108,17 @@ export function addTeamEvent(teamId, event) {
 export function updateTeamEvent(teamId, updatedEvent) {
   if (!teamId || !updatedEvent || !updatedEvent.id) return [];
   
+  // Ensure event date is a Date object
+  if (!(updatedEvent.date instanceof Date)) {
+    updatedEvent.date = new Date(updatedEvent.date);
+  }
+  
   const events = getTeamEvents(teamId);
   const updatedEvents = events.map(evt => 
     evt.id === updatedEvent.id ? updatedEvent : evt
   );
   
+  console.log(`Updated event ${updatedEvent.id} for team ${teamId}`);
   saveTeamEvents(teamId, updatedEvents);
   
   return updatedEvents;
@@ -108,6 +136,7 @@ export function deleteTeamEvent(teamId, eventId) {
   const events = getTeamEvents(teamId);
   const filteredEvents = events.filter(evt => evt.id !== eventId);
   
+  console.log(`Deleted event ${eventId} for team ${teamId}`);
   saveTeamEvents(teamId, filteredEvents);
   
   return filteredEvents;

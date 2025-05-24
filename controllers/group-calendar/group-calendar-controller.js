@@ -1,4 +1,4 @@
-// controllers/group-calendar/group-calendar-controller.js - Updated with permissions
+// controllers/group-calendar/group-calendar-controller.js - FIXED VERSION
 
 import { renderCalendar } from "../../views/calendarView.js";
 import { getDate, getView } from "../../models/url.js";
@@ -59,46 +59,6 @@ export function initGroupCalendarController(eventStore) {
       timeItem.appendChild(timeElement);
       timeList.appendChild(timeItem);
     });
-    
-    // Fix column cells if they're missing
-    const columns = calendarEl.querySelectorAll('.week-calendar__column');
-    columns.forEach(column => {
-      if (column.children.length === 0) {
-        // Create 24 hour cells (1 per hour)
-        for (let hour = 0; hour < 24; hour++) {
-          const cell = document.createElement('div');
-          cell.className = 'week-calendar__cell';
-          cell.dataset.weekCalendarCell = (hour * 60).toString(); // minutes from midnight
-          
-          // Add click handler to create events only if user has permission
-          if (userCanCreateEvents) {
-            cell.addEventListener('click', (e) => {
-              if (e.target.closest('[data-event]')) return;
-              
-              // Calculate event time range (1 hour duration)
-              const startTime = hour * 60;
-              const endTime = startTime + 60;
-              
-              // Dispatch event creation request
-              document.dispatchEvent(new CustomEvent('event-create-request', {
-                detail: {
-                  date: selectedDate,
-                  startTime: startTime,
-                  endTime: endTime
-                },
-                bubbles: true
-              }));
-            });
-          } else {
-            // Add a visual indicator that creating events is not allowed
-            cell.classList.add('calendar-cell-no-create');
-            cell.title = 'Only team leaders can create events';
-          }
-          
-          column.appendChild(cell);
-        }
-      }
-    });
   }
 
   // Function to refresh the calendar view - Enhanced version
@@ -131,6 +91,9 @@ export function initGroupCalendarController(eventStore) {
           button.style.display = 'none';
         });
         
+        // Disable event creation on week/day calendar cells
+        disableCalendarCellCreation(calendarElement);
+        
         // For day/week view, add a message about permissions
         if (selectedView === 'day' || selectedView === 'week') {
           const permissionMsg = document.createElement('div');
@@ -151,6 +114,51 @@ export function initGroupCalendarController(eventStore) {
       `;
       calendarElement.appendChild(placeholderElement);
     }
+  }
+
+  /**
+   * Disable event creation by removing click handlers from calendar cells
+   * @param {HTMLElement} calendarEl - Calendar container element
+   */
+  function disableCalendarCellCreation(calendarEl) {
+    // For week view cells
+    const weekCells = calendarEl.querySelectorAll('.week-calendar__cell');
+    weekCells.forEach(cell => {
+      // Remove existing click listeners and add new ones that show toast
+      const newCell = cell.cloneNode(true);
+      cell.parentNode.replaceChild(newCell, cell);
+      
+      newCell.classList.add('calendar-cell-no-create');
+      newCell.title = 'Only team leaders can create events';
+      
+      // Add click listener to show toast
+      newCell.addEventListener('click', (e) => {
+        if (e.target.closest('[data-event]')) return;
+        showPermissionToast();
+      });
+    });
+    
+    // For month view cells
+    const monthWrappers = calendarEl.querySelectorAll('[data-month-calendar-event-list-wrapper]');
+    monthWrappers.forEach(wrapper => {
+      const newWrapper = wrapper.cloneNode(true);
+      wrapper.parentNode.replaceChild(newWrapper, wrapper);
+      
+      newWrapper.classList.add('calendar-cell-no-create');
+      newWrapper.title = 'Only team leaders can create events';
+      
+      // Add click listener to show toast
+      newWrapper.addEventListener('click', (e) => {
+        if (e.target.closest('[data-event]')) return;
+        showPermissionToast();
+      });
+    });
+  }
+
+  // Helper function to show permission denied toast
+  function showPermissionToast() {
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+    showToast('Only team leaders can create events', 'error', toastContainer);
   }
 
   // Update team header when a team is selected
@@ -178,7 +186,7 @@ export function initGroupCalendarController(eventStore) {
               ${leaderCount > 0 ? `(${leaderCount} leader${leaderCount !== 1 ? 's' : ''})` : ''}
             </p>
           </div>
-          ${userCanCreateEvents ? '' : '<div class="leader-only-badge">Only leaders can create events</div>'}
+          ${userCanCreateEvents ? '<div class="leader-badge">You can create events</div>' : '<div class="leader-only-badge">Only leaders can create events</div>'}
         </div>
       `;
       
@@ -217,10 +225,13 @@ export function initGroupCalendarController(eventStore) {
     // Get team data and check permissions
     const team = getTeamById(teamId);
     const currentUser = getCurrentUser();
-    const canCreate = canCreateEvents(team, currentUser.email);
+    userCanCreateEvents = canCreateEvents(team, currentUser.email);
     
-    // Only register event handlers if the user has permission
-    if (canCreate) {
+    // FIX: Always listen for event-create-request to intercept unauthorized attempts
+    document.addEventListener("event-create-request", handleEventCreateRequest);
+    
+    // Only register event creation handlers if the user has permission
+    if (userCanCreateEvents) {
       // Handle event creation
       document.addEventListener("event-create", handleTeamEventCreate);
       
@@ -229,19 +240,20 @@ export function initGroupCalendarController(eventStore) {
       
       // Handle event deletion
       document.addEventListener("event-delete", handleTeamEventDelete);
-    } else {
-      // Add a listener to intercept create requests and show permission message
-      document.addEventListener("event-create-request", handleUnauthorizedCreate);
     }
   }
   
-  // Handle unauthorized create attempts
-  function handleUnauthorizedCreate(event) {
-    event.stopPropagation();
-    
-    // Show a toast message
-    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
-    showToast('Only team leaders can create events', 'error', toastContainer);
+  // FIX: Handle event creation requests with permission check
+  function handleEventCreateRequest(event) {
+    // Don't stop propagation yet - we need to check permissions first
+    if (!userCanCreateEvents) {
+      // Prevent the event from propagating to form dialog handler
+      event.stopPropagation();
+      
+      // Show a toast message
+      showPermissionToast();
+    }
+    // If user has permission, allow event to propagate to form dialog handler
   }
   
   // Helper function to create toast container
@@ -272,16 +284,17 @@ export function initGroupCalendarController(eventStore) {
   
   // Remove team event handlers
   function removeTeamEventHandlers() {
+    document.removeEventListener("event-create-request", handleEventCreateRequest);
     document.removeEventListener("event-create", handleTeamEventCreate);
     document.removeEventListener("event-edit", handleTeamEventEdit);
     document.removeEventListener("event-delete", handleTeamEventDelete);
-    document.removeEventListener("event-create-request", handleUnauthorizedCreate);
   }
   
   // Handler for creating team events
   function handleTeamEventCreate(event) {
-    if (!selectedTeamId || !teamEventStore) return;
+    if (!selectedTeamId || !teamEventStore || !userCanCreateEvents) return;
     
+    // FIX: Get the event data correctly regardless of format
     const newEvent = event.detail.event || event.detail;
     
     // Add team ID to the event
@@ -289,11 +302,14 @@ export function initGroupCalendarController(eventStore) {
     
     // Add the event to the team event store
     teamEventStore.addEvent(newEvent);
+    
+    // FIX: Force refresh the calendar to show the new event
+    refreshCalendar();
   }
   
   // Handler for editing team events
   function handleTeamEventEdit(event) {
-    if (!selectedTeamId || !teamEventStore) return;
+    if (!selectedTeamId || !teamEventStore || !userCanCreateEvents) return;
     
     const updatedEvent = event.detail.event || event.detail;
     
@@ -302,16 +318,22 @@ export function initGroupCalendarController(eventStore) {
     
     // Update the event in the team event store
     teamEventStore.updateEvent(updatedEvent);
+    
+    // Force refresh the calendar
+    refreshCalendar();
   }
   
   // Handler for deleting team events
   function handleTeamEventDelete(event) {
-    if (!selectedTeamId || !teamEventStore) return;
+    if (!selectedTeamId || !teamEventStore || !userCanCreateEvents) return;
     
     const eventToDelete = event.detail.event || event.detail;
     
     // Delete the event from the team event store
     teamEventStore.deleteEvent(eventToDelete.id);
+    
+    // Force refresh the calendar
+    refreshCalendar();
   }
 
   // Helper function to map color code to CSS class
@@ -389,8 +411,18 @@ function addLeaderOnlyStyles() {
       display: inline-block;
     }
     
+    .leader-badge {
+      background-color: #4CAF50;
+      color: white;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-left: 10px;
+      display: inline-block;
+    }
+    
     .calendar-cell-no-create {
-      cursor: not-allowed;
+      cursor: not-allowed !important;
       position: relative;
     }
     
@@ -419,6 +451,51 @@ function addLeaderOnlyStyles() {
       font-size: 14px;
       z-index: 1000;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .toast {
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: white;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      animation: toast-in 0.3s ease;
+    }
+    
+    .toast-info {
+      background-color: #2196F3;
+    }
+    
+    .toast-success {
+      background-color: #4CAF50;
+    }
+    
+    .toast-error {
+      background-color: #F44336;
+    }
+    
+    .toast.fade-out {
+      animation: toast-out 0.3s ease forwards;
+    }
+    
+    @keyframes toast-in {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes toast-out {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(-20px); opacity: 0; }
     }
   `;
   

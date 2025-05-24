@@ -1,4 +1,4 @@
-// models/group/team-permissions.js
+// models/group/team-permissions.js - FIXED VERSION
 
 /**
  * Team member roles and their permission levels
@@ -20,8 +20,10 @@ export function isTeamLeader(team, userEmail) {
     // Get team members
     const members = team.members || [];
     
-    // Find the member with the matching email
-    const member = members.find(m => m.email.toLowerCase() === userEmail.toLowerCase());
+    // Find the member with the matching email (case-insensitive)
+    const member = members.find(m => 
+        m.email && m.email.toLowerCase() === userEmail.toLowerCase()
+    );
     
     // Check if the member exists and has the leader role
     return member ? member.role === TEAM_ROLES.LEADER : false;
@@ -35,7 +37,9 @@ export function isTeamLeader(team, userEmail) {
  */
 export function canCreateEvents(team, userEmail) {
     // Only leaders can create events
-    return isTeamLeader(team, userEmail);
+    const result = isTeamLeader(team, userEmail);
+    console.log(`Checking if ${userEmail} can create events in team ${team?.id}: ${result}`);
+    return result;
 }
 
 /**
@@ -79,6 +83,7 @@ export function getCurrentUser() {
     const email = localStorage.getItem('email') || '';
     const username = localStorage.getItem('username') || 'Current User';
     
+    console.log(`Current user: ${username} (${email})`);
     return {
         email,
         name: username
