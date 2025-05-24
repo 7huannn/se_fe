@@ -1,4 +1,4 @@
-// views/notificationsView.js
+// views/notificationsView.js - Updated version
 import { initToaster } from "./toasterView.js";
 
 /**
@@ -12,6 +12,12 @@ export function initNotificationsView() {
   
   // Khởi tạo toaster
   const toaster = initToaster(document.body);
+  
+  // Đảm bảo container có positioning
+  const notificationsIcon = notificationBtn.closest('.notifications-icon');
+  if (notificationsIcon) {
+    notificationsIcon.style.position = 'relative';
+  }
   
   // Tìm hoặc tạo badge
   let notificationBadge = notificationBtn.querySelector('.notification-badge');
@@ -36,15 +42,16 @@ export function initNotificationsView() {
       </div>
       <div class="notification-list-container">
         <ul class="notification-list"></ul>
-        <div class="empty-noti">No notifications</div>
+        <div class="empty-noti hidden">No notifications</div>
       </div>
     `;
     
-    // Thêm vào parent container
-    const notificationsIcon = notificationBtn.closest('.notifications-icon');
+    // Thêm vào container thay vì body
     if (notificationsIcon) {
-      notificationsIcon.style.position = 'relative';
       notificationsIcon.appendChild(notificationDropdown);
+    } else {
+      // Fallback: thêm vào body với positioning tuyệt đối
+      document.body.appendChild(notificationDropdown);
     }
   }
   
@@ -61,32 +68,107 @@ export function initNotificationsView() {
     });
   }
   
+  // Thêm styles ngay khi khởi tạo
+  if (!document.getElementById('notification-styles')) {
+    addNotificationStyles();
+  }
+  
   /**
    * Toggle dropdown hiển thị
    */
   function toggleDropdown() {
     if (!notificationDropdown) return;
     
-    notificationDropdown.classList.toggle('show');
+    const isShowing = notificationDropdown.classList.contains('show');
     
-    // Thêm style cho notification dropdown nếu chưa có
-    if (!document.getElementById('notification-styles')) {
-      addNotificationStyles();
+    if (isShowing) {
+      notificationDropdown.classList.remove('show');
+    } else {
+      // Đóng các dropdown khác trước khi mở
+      closeOtherDropdowns();
+      notificationDropdown.classList.add('show');
+      
+      // Tính toán vị trí nếu cần thiết
+      positionDropdown();
     }
   }
   
   /**
-   * Thêm CSS styles nếu chưa có
+   * Đóng các dropdown khác
+   */
+  function closeOtherDropdowns() {
+    // Đóng team dropdown nếu có
+    const teamDropdown = document.getElementById('teamDropdown');
+    if (teamDropdown) {
+      teamDropdown.classList.remove('show');
+    }
+    
+    // Đóng profile dropdown nếu có
+    const profileMenu = document.getElementById('profile-menu');
+    if (profileMenu) {
+      profileMenu.classList.remove('show');
+    }
+  }
+  
+  /**
+   * Tính toán và điều chỉnh vị trí dropdown
+   */
+  function positionDropdown() {
+    if (!notificationDropdown || !notificationBtn) return;
+    
+    const btnRect = notificationBtn.getBoundingClientRect();
+    const dropdownRect = notificationDropdown.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    
+    // Nếu dropdown vượt quá màn hình bên phải, điều chỉnh
+    if (btnRect.right + dropdownRect.width > viewportWidth) {
+      notificationDropdown.style.right = '0';
+      notificationDropdown.style.left = 'auto';
+    }
+  }
+  
+  /**
+   * Thêm CSS styles - PHIÊN BẢN CẬP NHẬT
    */
   function addNotificationStyles() {
     const styleEl = document.createElement('style');
     styleEl.id = 'notification-styles';
     styleEl.textContent = `
+      /* Container chứa notification */
+      .notifications-icon {
+        position: relative !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        height: 100%;
+      }
+      
+      /* Notification Button */
+      .notification-btn {
+        position: relative;
+        background: transparent !important;
+        border: none !important;
+        padding: 8px !important;
+        margin: 0 !important;
+        outline: none !important;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+      }
+      
+      .notification-btn:hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+      }
+      
       /* Notification Badge */
       .notification-badge {
         position: absolute;
-        top: 0;
-        right: 0;
+        top: 2px;
+        right: 2px;
         background-color: #e74c3c;
         color: white;
         font-size: 10px;
@@ -97,35 +179,37 @@ export function initNotificationsView() {
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        transform: translate(25%, -25%);
         opacity: 0;
         transition: opacity 0.2s;
+        z-index: 1;
       }
       
       .notification-badge.has-notifications {
         opacity: 1;
       }
       
-      /* Notification Dropdown */
+      /* Notification Dropdown - FIX CHÍNH */
       .notification-dropdown {
-        position: absolute;
-        top: 100%;
-        right: 0;
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        right: 0 !important;
         background: #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        width: 300px;
+        border: 1px solid #e1e1e1;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        width: 320px;
         max-height: 400px;
-        overflow-y: auto;
-        border-radius: 4px;
-        z-index: 100;
+        overflow: visible;
+        z-index: 2100 !important;
         display: none;
-        animation: fadeInDown 0.3s;
+        animation: fadeInDown 0.2s ease;
       }
       
       .notification-dropdown.show {
-        display: block;
+        display: block !important;
       }
       
+      /* Header của dropdown */
       .notification-header {
         display: flex;
         justify-content: space-between;
@@ -133,12 +217,14 @@ export function initNotificationsView() {
         padding: 12px 16px;
         border-bottom: 1px solid #eee;
         background-color: #f9f9f9;
+        border-radius: 8px 8px 0 0;
       }
       
       .notification-header h3 {
         margin: 0;
         font-size: 16px;
         color: #333;
+        font-weight: 600;
       }
       
       .notification-clear-btn {
@@ -148,10 +234,19 @@ export function initNotificationsView() {
         cursor: pointer;
         font-size: 14px;
         padding: 4px 8px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
       }
       
       .notification-clear-btn:hover {
+        background-color: rgba(0, 120, 212, 0.1);
         text-decoration: underline;
+      }
+      
+      /* List container */
+      .notification-list-container {
+        max-height: 320px;
+        overflow-y: auto;
       }
       
       .notification-list {
@@ -164,6 +259,7 @@ export function initNotificationsView() {
         padding: 12px 16px;
         border-bottom: 1px solid #eee;
         transition: background-color 0.2s;
+        cursor: pointer;
       }
       
       .notification-item:hover {
@@ -177,6 +273,8 @@ export function initNotificationsView() {
       .notification-message {
         font-size: 14px;
         margin-bottom: 4px;
+        color: #333;
+        line-height: 1.4;
       }
       
       .notification-time {
@@ -186,6 +284,7 @@ export function initNotificationsView() {
       
       .notification-item.unread {
         background-color: #f0f7ff;
+        border-left: 3px solid #0078d4;
       }
       
       .notification-item.unread:hover {
@@ -193,15 +292,17 @@ export function initNotificationsView() {
       }
       
       .empty-noti {
-        padding: 16px;
+        padding: 32px 16px;
         text-align: center;
         color: #999;
+        font-style: italic;
       }
       
       .hidden {
-        display: none;
+        display: none !important;
       }
       
+      /* Animation */
       @keyframes fadeInDown {
         from {
           opacity: 0;
@@ -210,6 +311,14 @@ export function initNotificationsView() {
         to {
           opacity: 1;
           transform: translateY(0);
+        }
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .notification-dropdown {
+          width: 280px;
+          right: -20px;
         }
       }
     `;
@@ -251,6 +360,11 @@ export function initNotificationsView() {
     
     // Cập nhật badge
     updateBadge(0);
+    
+    // Đóng dropdown
+    if (notificationDropdown) {
+      notificationDropdown.classList.remove('show');
+    }
   }
   
   return {
@@ -265,19 +379,13 @@ export function initNotificationsView() {
   };
 }
 
-/**
- * Render một notification item
- * @param {Object} notification - Thông tin notification
- * @returns {HTMLElement} Element đã render
- */
+// Các function khác giữ nguyên như cũ...
 export function renderNotificationItem(notification) {
   const item = document.createElement('li');
   item.className = `notification-item ${notification.read ? '' : 'unread'}`;
   
-  // Format thời gian
   const timeAgo = formatTimeAgo(notification.timestamp);
   
-  // Thêm icon phù hợp với loại thông báo
   let icon = '📅';
   if (notification.type === 'create') icon = '➕';
   else if (notification.type === 'edit') icon = '✏️';
@@ -291,11 +399,6 @@ export function renderNotificationItem(notification) {
   return item;
 }
 
-/**
- * Format timestamp thành định dạng "x phút/giờ/ngày trước"
- * @param {number} timestamp - Timestamp cần format
- * @returns {string} Chuỗi đã format
- */
 function formatTimeAgo(timestamp) {
   const now = Date.now();
   const diff = now - timestamp;
@@ -316,10 +419,6 @@ function formatTimeAgo(timestamp) {
   }
 }
 
-/**
- * View layer cho notifications toast:
- * - Sử dụng instance toaster để hiển thị thông báo
- */
 export function notifyEventCreated(toaster) {
   toaster.success("Event has been created");
 }
