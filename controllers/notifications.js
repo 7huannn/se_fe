@@ -1,4 +1,4 @@
-// controllers/notifications.js
+// controllers/notifications.js - FIXED VERSION
 import { initNotificationsView, renderNotificationItem } from "../views/notificationsView.js";
 
 /**
@@ -8,6 +8,14 @@ import { initNotificationsView, renderNotificationItem } from "../views/notifica
  */
 export function initNotificationsController() {
   // Khởi tạo view, lấy các elements và API
+  const notificationsAPI = initNotificationsView();
+  
+  // FIX: Kiểm tra API có tồn tại không
+  if (!notificationsAPI || !notificationsAPI.notificationBtn) {
+    console.warn("Notifications view initialization failed");
+    return {};
+  }
+  
   const { 
     notificationBtn, 
     notificationBadge,
@@ -17,9 +25,7 @@ export function initNotificationsController() {
     toggleDropdown, 
     updateBadge,
     toaster
-  } = initNotificationsView();
-  
-  if (!notificationBtn) return;
+  } = notificationsAPI;
   
   // Mảng lưu trữ thông báo
   let notifications = loadNotifications();
@@ -49,43 +55,43 @@ export function initNotificationsController() {
     }
   });
   
-  // Lắng nghe sự kiện tạo event để thêm notification
+  // FIX: Lắng nghe sự kiện tạo event với format mới
   document.addEventListener("event-create", (e) => {
-    const eventData = e.detail;
+    const eventData = e.detail.event || e.detail; // Support both formats
     addNotification({
       type: 'create',
-      message: `Event "${eventData.event.title}" created`,
+      message: `Event "${eventData.title}" created`,
       timestamp: Date.now(),
       read: false,
-      eventId: eventData.event.id
+      eventId: eventData.id
     });
     
     // Hiển thị toast nếu đã khởi tạo
-    if (toaster) {
+    if (toaster && toaster.success) {
       toaster.success("Event has been created");
     }
   });
   
-  // Lắng nghe sự kiện sửa event
+  // FIX: Lắng nghe sự kiện sửa event với format mới
   document.addEventListener("event-edit", (e) => {
-    const eventData = e.detail;
+    const eventData = e.detail.event || e.detail; // Support both formats
     addNotification({
       type: 'edit',
-      message: `Event "${eventData.event.title}" updated`,
+      message: `Event "${eventData.title}" updated`,
       timestamp: Date.now(),
       read: false,
-      eventId: eventData.event.id
+      eventId: eventData.id
     });
     
     // Hiển thị toast nếu đã khởi tạo
-    if (toaster) {
+    if (toaster && toaster.success) {
       toaster.success("Event has been edited");
     }
   });
   
-  // Lắng nghe sự kiện xoá event
+  // FIX: Lắng nghe sự kiện xoá event với format mới
   document.addEventListener("event-delete", (e) => {
-    const eventData = e.detail;
+    const eventData = e.detail.event || e.detail; // Support both formats
     addNotification({
       type: 'delete',
       message: `Event "${eventData.title || 'Event'}" deleted`,
@@ -94,7 +100,7 @@ export function initNotificationsController() {
     });
     
     // Hiển thị toast nếu đã khởi tạo
-    if (toaster) {
+    if (toaster && toaster.success) {
       toaster.success("Event has been deleted");
     }
   });

@@ -1,9 +1,9 @@
-// views/event-formView.js
+// views/event-form-dialogView.js - FIXED VERSION
 import { generateEventId } from "../models/event.js";
 
 /**
  * Khởi tạo logic cho form tạo/sửa event và emit sự kiện tương ứng
- * @param {{ toast: (msg: string, type?: string) => void }} toaster
+ * @param {{ success: (msg: string) => void, error: (msg: string) => void }} toaster
  * @returns {{
  *   formElement: HTMLFormElement,
  *   switchToCreateMode: (date: Date, startTime: number, endTime: number) => void,
@@ -13,6 +13,13 @@ import { generateEventId } from "../models/event.js";
  */
 export function initEventForm(toaster) {
   const formElement = document.querySelector("[data-event-form]");
+  
+  // FIX: Kiểm tra formElement có tồn tại không
+  if (!formElement) {
+    console.error("Event form element not found");
+    return null;
+  }
+  
   const titleInput = formElement.querySelector("#title");
   const dateInput = formElement.querySelector("#date");
   const startInput = formElement.querySelector("#start-time");
@@ -23,21 +30,22 @@ export function initEventForm(toaster) {
   function switchToCreateMode(date, startTime, endTime) {
     formElement.dataset.mode = "create";
     delete formElement.dataset.id;               // Xóa id cũ nếu có
-    titleInput.value = "";
-    dateInput.value = date.toISOString().slice(0, 10);
-    startInput.value = startTime;
-    endInput.value = endTime;
-    colorInputs[0].checked = true;
+    if (titleInput) titleInput.value = "";
+    if (dateInput) dateInput.value = date.toISOString().slice(0, 10);
+    if (startInput) startInput.value = startTime;
+    if (endInput) endInput.value = endTime;
+    if (colorInputs.length > 0) colorInputs[0].checked = true;
   }
 
   // Chuyển form về mode "Edit", với dữ liệu event hiện có
   function switchToEditMode(eventData) {
     formElement.dataset.mode = "edit";
     formElement.dataset.id = eventData.id;        // Giữ lại id
-    titleInput.value = eventData.title;
-    dateInput.value = eventData.date.toISOString().slice(0, 10);
-    startInput.value = eventData.startTime;
-    endInput.value = eventData.endTime;
+    if (titleInput) titleInput.value = eventData.title;
+    if (dateInput) dateInput.value = eventData.date.toISOString().slice(0, 10);
+    if (startInput) startInput.value = eventData.startTime;
+    if (endInput) endInput.value = eventData.endTime;
+    
     const matched = Array.from(colorInputs).find(
       inp => inp.value === eventData.color
     );
@@ -58,26 +66,36 @@ export function initEventForm(toaster) {
 
     // Xây dựng detail payload
     const detail = {
-      title: titleInput.value.trim(),
-      date: new Date(dateInput.value),
-      startTime: Number(startInput.value),
-      endTime: Number(endInput.value),
-      color: formElement.querySelector(
-        ".color-select__input:checked"
-      ).value
+      event: {
+        title: titleInput ? titleInput.value.trim() : "",
+        date: dateInput ? new Date(dateInput.value) : new Date(),
+        startTime: startInput ? Number(startInput.value) : 0,
+        endTime: endInput ? Number(endInput.value) : 60,
+        color: formElement.querySelector(".color-select__input:checked")?.value || "#2563eb"
+      }
     };
 
     if (mode === "create") {
       // Tạo id mới
-      detail.id = generateEventId();
-      toaster.toast("Event created!", "success");
+      detail.event.id = generateEventId();
+      
+      // FIX: Sử dụng đúng method của toaster
+      if (toaster && toaster.success) {
+        toaster.success("Event created!");
+      }
+      
       formElement.dispatchEvent(
         new CustomEvent("event-create", { detail, bubbles: true })
       );
     } else {
       // Giữ nguyên id cũ
-      detail.id = Number(formElement.dataset.id);  // 5 (number), will match evt.id === 5
-      toaster.toast("Event updated!", "success");
+      detail.event.id = Number(formElement.dataset.id);
+      
+      // FIX: Sử dụng đúng method của toaster
+      if (toaster && toaster.success) {
+        toaster.success("Event updated!");
+      }
+      
       formElement.dispatchEvent(
         new CustomEvent("event-edit", { detail, bubbles: true })
       );

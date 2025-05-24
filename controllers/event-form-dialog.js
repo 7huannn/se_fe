@@ -1,6 +1,4 @@
-// The best implementation approach for fixing time dropdowns in group calendar
-
-// Add this to the controllers/event-form-dialog.js file
+// controllers/event-form-dialog.js - FIXED VERSION
 
 import { initDialog } from "../views/dialogView.js";
 import { initEventForm } from "../views/event-form-dialogView.js";
@@ -18,6 +16,11 @@ export function initEventFormController() {
   const eventForm = initEventForm(toaster);
   const titleEl = dialogElement.querySelector("[data-dialog-title]");
   
+  // FIX: Kiểm tra eventForm có tồn tại không
+  if (!eventForm || !eventForm.formElement) {
+    console.error("Event form initialization failed");
+    return;
+  }
 
   document.addEventListener("event-create-request", e => {
     titleEl.textContent = "Create event";
