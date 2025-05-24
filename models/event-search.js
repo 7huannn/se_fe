@@ -40,7 +40,7 @@ export class EventSearchModel {
    * @returns {Array} Danh sách events đã được sắp xếp theo độ liên quan
    */
   searchEvents(events, query) {
-    if (!query.trim()) return [];
+    if (!query || !query.trim()) return [];
     
     const queryLower = query.toLowerCase();
     
@@ -50,23 +50,49 @@ export class EventSearchModel {
         return true;
       }
       
-      // Tìm theo ngày
-      const eventDate = new Date(event.date);
-      const dateStrings = [
-        eventDate.toLocaleDateString('en-GB'), // dd/mm/yyyy
-        eventDate.toLocaleDateString('en-US'), // mm/dd/yyyy
-        eventDate.toISOString().split('T')[0], // yyyy-mm-dd
-        eventDate.toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        }).toLowerCase()
-      ];
+      // Tìm theo date
+      if (event.date instanceof Date) {
+        const eventDate = event.date;
+        const dateStrings = [
+          eventDate.toLocaleDateString('en-GB'), // dd/mm/yyyy
+          eventDate.toLocaleDateString('en-US'), // mm/dd/yyyy
+          eventDate.toISOString().split('T')[0], // yyyy-mm-dd
+          eventDate.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }).toLowerCase()
+        ];
+        
+        return dateStrings.some(dateStr => 
+          dateStr.toLowerCase().includes(queryLower)
+        );
+      } else if (typeof event.date === 'string') {
+        // If date is stored as string
+        try {
+          const eventDate = new Date(event.date);
+          const dateStrings = [
+            eventDate.toLocaleDateString('en-GB'),
+            eventDate.toLocaleDateString('en-US'),
+            eventDate.toISOString().split('T')[0],
+            eventDate.toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }).toLowerCase()
+          ];
+          
+          return dateStrings.some(dateStr => 
+            dateStr.toLowerCase().includes(queryLower)
+          );
+        } catch (e) {
+          return false;
+        }
+      }
       
-      return dateStrings.some(dateStr => 
-        dateStr.toLowerCase().includes(queryLower)
-      );
+      return false;
     });
 
     // Sắp xếp theo độ liên quan
@@ -89,7 +115,10 @@ export class EventSearchModel {
       }
       
       // Nếu độ liên quan bằng nhau, sắp xếp theo thời gian gần nhất
-      return new Date(b.date) - new Date(a.date);
+      const aDate = a.date instanceof Date ? a.date : new Date(a.date);
+      const bDate = b.date instanceof Date ? b.date : new Date(b.date);
+      
+      return bDate - aDate;
     });
   }
 
@@ -119,27 +148,14 @@ export class EventSearchModel {
     }
     
     // Boost recent events
-    const daysDiff = Math.abs(new Date() - new Date(event.date)) / (1000 * 60 * 60 * 24);
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    const daysDiff = Math.abs(now - eventDate) / (1000 * 60 * 60 * 24);
+    
     if (daysDiff <= 7) relevance += 10;
     else if (daysDiff <= 30) relevance += 5;
     
     return relevance;
-  }
-
-  /**
-   * Nhóm kết quả theo ngày
-   * @param {Array} events - Danh sách events
-   * @returns {Object} Object với key là ngày, value là array events
-   */
-  groupEventsByDate(events) {
-    return events.reduce((groups, event) => {
-      const dateKey = new Date(event.date).toDateString();
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(event);
-      return groups;
-    }, {});
   }
 
   /**
@@ -167,7 +183,7 @@ export class EventSearchModel {
    * @param {string} query - Từ khóa tìm kiếm
    */
   saveSearchQuery(query) {
-    if (!query.trim()) return;
+    if (!query || !query.trim()) return;
     
     // Remove duplicate if exists
     this.searchHistory = this.searchHistory.filter(item => item !== query);

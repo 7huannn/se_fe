@@ -1,4 +1,4 @@
-// controllers/event-search.js (Updated - MVC Pattern)
+// controllers/event-search.js
 import { EventSearchModel } from "../models/event-search.js";
 import { EventSearchView } from "../views/event-searchView.js";
 

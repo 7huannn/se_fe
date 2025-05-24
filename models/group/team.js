@@ -1,4 +1,4 @@
-// models/group/team.js - Updated with team management features
+// models/group/team.js
 
 /**
  * Lưu teams vào localStorage
@@ -152,84 +152,6 @@ export function getColorClass(colorCode) {
     
     return colorMap[colorCode] || 'team-blue';
 }
-
-// Backend Integration Functions (Commented out until backend is ready)
-
-/*
-const API_URL = 'https://se_backend.hrzn.run/api';
-
-/**
- * Get teams from backend API
- * @returns {Promise<Array>} Teams array
- */
-/*
-export async function fetchTeamsFromAPI() {
-    try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-        
-        const response = await fetch(`${API_URL}/teams`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch teams');
-        }
-        
-        const data = await response.json();
-        return data.teams || [];
-    } catch (error) {
-        console.error('Error fetching teams:', error);
-        // Fallback to localStorage
-        return loadTeams();
-    }
-}
-
-/**
- * Create team via API
- * @param {Object} teamData - Team data
- * @returns {Promise<Object>} Created team
- */
-/*
-export async function createTeamAPI(teamData) {
-    try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-        
-        const response = await fetch(`${API_URL}/teams`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(teamData)
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to create team');
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error creating team:', error);
-        // Fallback to localStorage
-        const teams = loadTeams();
-        teams.push(teamData);
-        saveTeams(teams);
-        return teamData;
-    }
-}
-*/
-
-// Updated models/group/team.js with member management functions
 
 /**
  * Add a member to a team

@@ -198,7 +198,7 @@ export function initGroupCalendarController(eventStore) {
   function handleTeamEventCreate(event) {
     if (!selectedTeamId || !teamEventStore) return;
     
-    const newEvent = event.detail;
+    const newEvent = event.detail.event || event.detail;
     
     // Add team ID to the event
     newEvent.teamId = selectedTeamId;
@@ -211,7 +211,7 @@ export function initGroupCalendarController(eventStore) {
   function handleTeamEventEdit(event) {
     if (!selectedTeamId || !teamEventStore) return;
     
-    const updatedEvent = event.detail;
+    const updatedEvent = event.detail.event || event.detail;
     
     // Make sure the event has the team ID
     updatedEvent.teamId = selectedTeamId;
@@ -224,7 +224,7 @@ export function initGroupCalendarController(eventStore) {
   function handleTeamEventDelete(event) {
     if (!selectedTeamId || !teamEventStore) return;
     
-    const eventToDelete = event.detail;
+    const eventToDelete = event.detail.event || event.detail;
     
     // Delete the event from the team event store
     teamEventStore.deleteEvent(eventToDelete.id);
