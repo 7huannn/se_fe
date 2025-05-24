@@ -73,31 +73,31 @@ export default class AccView {
     reader.readAsDataURL(file);
   }
 
-  toggleDarkMode() {
-    this.body.classList.toggle('dark-mode');
+  // toggleDarkMode() {
+  //   this.body.classList.toggle('dark-mode');
     
-    if (this.body.classList.contains('dark-mode')) {
-      this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-      document.documentElement.style.setProperty('--text-color', '#f8f9fa');
-      document.documentElement.style.setProperty('--light-color', '#2c3e50');
-      document.documentElement.style.setProperty('--border-color', '#4d5b6a');
-      this.body.style.backgroundColor = '#1a2332';
-      this._setBgColor('.account-card, .form-control, .date-select-item', '#2c3e50', '#f8f9fa');
+  //   if (this.body.classList.contains('dark-mode')) {
+  //     this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+  //     document.documentElement.style.setProperty('--text-color', '#f8f9fa');
+  //     document.documentElement.style.setProperty('--light-color', '#2c3e50');
+  //     document.documentElement.style.setProperty('--border-color', '#4d5b6a');
+  //     this.body.style.backgroundColor = '#1a2332';
+  //     this._setBgColor('.account-card, .form-control, .date-select-item', '#2c3e50', '#f8f9fa');
       
-      // Save preference
-      localStorage.setItem('dark_mode', 'enabled');
-    } else {
-      this.darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-      document.documentElement.style.setProperty('--text-color', '#333');
-      document.documentElement.style.setProperty('--light-color', '#f8f9fa');
-      document.documentElement.style.setProperty('--border-color', '#e0e0e0');
-      this.body.style.backgroundColor = '#f5f7fa';
-      this._setBgColor('.account-card, .form-control, .date-select-item', '#fff', '#333');
+  //     // Save preference
+  //     localStorage.setItem('dark_mode', 'enabled');
+  //   } else {
+  //     this.darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+  //     document.documentElement.style.setProperty('--text-color', '#333');
+  //     document.documentElement.style.setProperty('--light-color', '#f8f9fa');
+  //     document.documentElement.style.setProperty('--border-color', '#e0e0e0');
+  //     this.body.style.backgroundColor = '#f5f7fa';
+  //     this._setBgColor('.account-card, .form-control, .date-select-item', '#fff', '#333');
       
-      // Save preference
-      localStorage.setItem('dark_mode', 'disabled');
-    }
-  }
+  //     // Save preference
+  //     localStorage.setItem('dark_mode', 'disabled');
+  //   }
+  // }
   
   /**
    * Initialize dark mode based on saved preference
