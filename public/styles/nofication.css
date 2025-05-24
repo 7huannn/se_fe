@@ -6,8 +6,9 @@
   align-items: center;
   justify-content: center;
   /* Khoảng cách so với phần search ở bên trái */
-  margin-left: 1rem;    /* bạn có thể điều chỉnh giá trị này tuỳ ý */
+  margin-right: 1rem;    /* bạn có thể điều chỉnh giá trị này tuỳ ý */
   height: 100%;
+
 }
 
 /* Button bọc SVG */

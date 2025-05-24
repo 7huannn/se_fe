@@ -11,6 +11,7 @@ import { initNavController } from "../nav.js";
 import { initMiniCalendars } from "../mini-calendar.js";
 import { initMobileSidebarController } from "../mobile-sidebar.js";
 import { initHamburger } from "../hamburger.js";
+import { initNotificationsController } from "../notifications.js";
 import { initGroupCalendarController } from "./group-calendar-controller.js";
 import { initSidebarToggleView } from "../../views/sidebar-toggleView.js";
 import { initEventCreateController } from "../event-create-button.js";
@@ -33,7 +34,7 @@ initMiniCalendars();
 initMobileSidebarController();
 initHamburger();
 initSidebarToggleView();
-
+initNotificationsController();
 // Initialize navigation controller
 initGroupCalendarNavigation();
 

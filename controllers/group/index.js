@@ -6,7 +6,7 @@ import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsCo
 import { initModalsController } from './modalController.js';
 import { initDropdownController } from './dropdownController.js';
 import { initTeamMembersController } from './membersController.js';
-
+import { initNotificationsController } from "../notifications.js";
 /**
  * Khởi tạo tất cả controllers cho trang group
  */
@@ -29,6 +29,9 @@ export function initGroupControllers() {
     // Khởi tạo controller quản lý thành viên
     initTeamMembersController();
     
+    //thêm notification
+    initNotificationsController();
+
     // Lắng nghe sự kiện tạo team
     document.addEventListener('team-create', handleTeamCreate);
     
