@@ -1,4 +1,4 @@
-// models/group/team.js
+// models/group/team.js - Updated with role management
 
 /**
  * Lưu teams vào localStorage
@@ -223,6 +223,31 @@ export function removeTeamMember(teamId, memberId) {
 }
 
 /**
+ * Update a team member's role
+ * @param {number} teamId - ID of the team
+ * @param {number} memberId - ID of the member
+ * @param {string} role - New role for the member
+ * @returns {boolean} Success status
+ */
+export function updateTeamMemberRole(teamId, memberId, role) {
+    const teams = loadTeams();
+    const teamIndex = teams.findIndex(team => team.id === teamId);
+    
+    if (teamIndex === -1) return false;
+    if (!teams[teamIndex].members) return false;
+    
+    const memberIndex = teams[teamIndex].members.findIndex(member => member.id === memberId);
+    
+    if (memberIndex === -1) return false;
+    
+    // Update member role
+    teams[teamIndex].members[memberIndex].role = role;
+    saveTeams(teams);
+    
+    return true;
+}
+
+/**
  * Get all members of a team
  * @param {number} teamId - ID of the team
  * @returns {Array|null} Array of team members or null if team not found
@@ -240,7 +265,7 @@ export function getTeamMembers(teamId) {
  * @returns {boolean} True if email is valid
  */
 export function isValidEmail(email) {
-    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
 }
 

@@ -1,12 +1,22 @@
-// controllers/group/index.js - Updated to include members controller
+// controllers/group/index.js - Updated
 
-import { initTeamsListController, initCreateTeamFormController, loadSavedTeamsController, 
-         handleTeamCreate, handleTeamEdit, handleTeamDelete, 
-         handleTeamPrivacyUpdate, initEditTeamFormController } from './teamController.js';
+// Import từ đường dẫn chính xác - đảm bảo đường dẫn này phù hợp với cấu trúc thư mục của bạn
+import { 
+    initTeamsListController, 
+    initCreateTeamFormController, 
+    loadSavedTeamsController,
+    handleTeamCreate, 
+    handleTeamEdit, 
+    handleTeamDelete,
+    handleTeamPrivacyUpdate, 
+    initEditTeamFormController 
+} from './teamController.js';
+
 import { initModalsController } from './modalController.js';
 import { initDropdownController } from './dropdownController.js';
 import { initTeamMembersController } from './membersController.js';
 import { initNotificationsController } from "../notifications.js";
+
 /**
  * Khởi tạo tất cả controllers cho trang group
  */
@@ -29,7 +39,7 @@ export function initGroupControllers() {
     // Khởi tạo controller quản lý thành viên
     initTeamMembersController();
     
-    //thêm notification
+    // Thêm notification
     initNotificationsController();
 
     // Lắng nghe sự kiện tạo team
@@ -47,11 +57,16 @@ export function initGroupControllers() {
     // Khởi tạo điều hướng sidebar - sử dụng controller chia sẻ
     import('../../controllers/sidebar-navigation.js').then(navModule => {
         navModule.initSidebarNav();
+    }).catch(error => {
+        console.error('Failed to load sidebar navigation module:', error);
     });
     
     // Load saved teams từ localStorage
     loadSavedTeamsController();
 }
+
+// Chạy khi trang được tải
+document.addEventListener('DOMContentLoaded', initGroupControllers);
 
 // Chạy khi trang được tải
 document.addEventListener('DOMContentLoaded', initGroupControllers);

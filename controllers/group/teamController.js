@@ -1,4 +1,4 @@
-// controllers/group/teamController.js - Updated with removed chat references
+// controllers/group/teamController.js - File hoàn chỉnh
 
 import { loadTeams, saveTeams, generateTeamCode, getInitials, addTeam, getColorClass, 
          getTeamById, updateTeam, deleteTeam, updateTeamPrivacy } from '../../models/group/team.js';
@@ -6,6 +6,8 @@ import { createTeamCardElement, createTeamsGridStructure, toggleTeamsContent,
          createTeamOptionsMenu, toggleTeamOptionsMenu, addPrivacyIndicator } from '../../views/group/teamView.js';
 import { hideModal, showModal } from '../../views/group/modalView.js';
 import { openTeamMembersModal } from './membersController.js';
+import { TEAM_ROLES, isTeamLeader, canManageMembers, canDeleteTeam, canEditTeam, getCurrentUser } from '../../models/group/team-permissions.js';
+
 /**
  * Khởi tạo controller cho team list
  */
@@ -23,15 +25,6 @@ export function initTeamsListController() {
             teamsContent.style.display === 'none'
         );
     });
-    
-    // Listen for team edit events
-    document.addEventListener('team-edit', handleTeamEdit);
-    
-    // Listen for team delete events
-    document.addEventListener('team-delete', handleTeamDelete);
-    
-    // Listen for team privacy update events
-    document.addEventListener('team-privacy-update', handleTeamPrivacyUpdate);
 }
 
 /**
@@ -57,6 +50,37 @@ export function initCreateTeamFormController() {
         const teamCode = generateTeamCode(teamName);
         const initials = getInitials(teamName);
         
+        // Get current user
+        const currentUser = getCurrentUser();
+        
+        // Create initial members array with current user as leader
+        const members = [];
+        
+        // Only add current user if they have an email
+        if (currentUser.email) {
+            members.push({
+                id: Date.now(),
+                email: currentUser.email,
+                name: currentUser.name,
+                role: TEAM_ROLES.LEADER,
+                addedAt: new Date().toISOString()
+            });
+        }
+        
+        // Add any temporary members that were added during team creation
+        if (window.tempTeamMembers && window.tempTeamMembers.length > 0) {
+            // Add each temporary member with 'member' role
+            window.tempTeamMembers.forEach(member => {
+                // Don't add duplicates
+                if (!members.some(m => m.email.toLowerCase() === member.email.toLowerCase())) {
+                    members.push({
+                        ...member,
+                        role: member.role || TEAM_ROLES.MEMBER
+                    });
+                }
+            });
+        }
+        
         // Tạo team data
         const teamData = {
             id: Date.now(), // Generate a unique ID for the team
@@ -67,7 +91,8 @@ export function initCreateTeamFormController() {
             color: color,
             initials: initials,
             createdAt: new Date().toISOString(),
-            members: [] // Start with empty members list
+            createdBy: currentUser.email || 'unknown',
+            members: members
         };
         
         // Dispatch sự kiện để xử lý ở controller khác
@@ -79,6 +104,9 @@ export function initCreateTeamFormController() {
         // Reset form
         document.getElementById('teamName').value = '';
         document.getElementById('teamDescription').value = '';
+        
+        // Reset temporary members array
+        window.tempTeamMembers = [];
         
         // Mở mục Teams nếu đang đóng
         const teamsContent = document.getElementById('teamsContent');
@@ -160,6 +188,15 @@ export function initEditTeamFormController() {
         deleteTeamBtn.addEventListener('click', () => {
             const teamId = parseInt(editTeamModal.dataset.teamId, 10);
             
+            // Check permission
+            const team = getTeamById(teamId);
+            const currentUser = getCurrentUser();
+            
+            if (!canDeleteTeam(team, currentUser.email)) {
+                showToast('Only team leaders can delete teams', 'error');
+                return;
+            }
+            
             if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
                 // Dispatch event to delete team
                 document.dispatchEvent(new CustomEvent('team-delete', {
@@ -203,6 +240,15 @@ export function handleTeamCreate(event) {
 export function handleTeamEdit(event) {
     const { teamId, updateData } = event.detail;
     
+    // Check permission
+    const team = getTeamById(teamId);
+    const currentUser = getCurrentUser();
+    
+    if (!canEditTeam(team, currentUser.email)) {
+        showToast('Only team leaders can edit team details', 'error');
+        return;
+    }
+    
     // Update team in model
     const success = updateTeam(teamId, updateData);
     
@@ -234,6 +280,15 @@ export function handleTeamEdit(event) {
 export function handleTeamDelete(event) {
     const { teamId } = event.detail;
     
+    // Check permission
+    const team = getTeamById(teamId);
+    const currentUser = getCurrentUser();
+    
+    if (!canDeleteTeam(team, currentUser.email)) {
+        showToast('Only team leaders can delete teams', 'error');
+        return;
+    }
+    
     // Delete team from model
     const success = deleteTeam(teamId);
     
@@ -257,6 +312,15 @@ export function handleTeamDelete(event) {
 export function handleTeamPrivacyUpdate(event) {
     const { teamId, privacy } = event.detail;
     
+    // Check permission
+    const team = getTeamById(teamId);
+    const currentUser = getCurrentUser();
+    
+    if (!canEditTeam(team, currentUser.email)) {
+        showToast('Only team leaders can change privacy settings', 'error');
+        return;
+    }
+    
     // Update team privacy in model
     const success = updateTeamPrivacy(teamId, privacy);
     
@@ -272,39 +336,6 @@ export function handleTeamPrivacyUpdate(event) {
     } else {
         showToast('Failed to update team privacy', 'error');
     }
-}
-
-/**
- * Render team card dựa trên dữ liệu team
- * @param {Object} team - Thông tin team
- */
-export function renderTeamCard(team) {
-    const teamsGrid = document.querySelector('.teams-grid');
-    if (!teamsGrid) {
-        // Nếu chưa có teams-grid, tạo mới cấu trúc
-        const teamsSection = document.querySelector('.teams-section');
-        const structure = createTeamsGridStructure(teamsSection);
-        if (structure) {
-            return renderTeamCard(team); // Gọi lại sau khi đã tạo cấu trúc
-        }
-        return;
-    }
-    
-    // Tạo team card element
-    const teamColorClass = getColorClass(team.color);
-    const teamCard = createTeamCardElement(team, teamColorClass);
-    
-    // Add team ID as data attribute
-    teamCard.dataset.teamId = team.id;
-    
-    // Add privacy indicator
-    addPrivacyIndicator(teamCard, team.privacy || 'private');
-    
-    // Thêm card vào grid
-    teamsGrid.appendChild(teamCard);
-    
-    // Thêm sự kiện cho team card
-    attachTeamCardEvents(teamCard, team.id);
 }
 
 /**
@@ -347,16 +378,52 @@ function updateTeamCardUI(teamCard, updateData) {
 }
 
 /**
- * Gắn các sự kiện cho team card
- * @param {HTMLElement} teamCard - Team card element
- * @param {number} teamId - ID of the team
+ * Render team card dựa trên dữ liệu team
+ * @param {Object} team - Thông tin team
  */
+export function renderTeamCard(team) {
+    const teamsGrid = document.querySelector('.teams-grid');
+    if (!teamsGrid) {
+        // Nếu chưa có teams-grid, tạo mới cấu trúc
+        const teamsSection = document.querySelector('.teams-section');
+        const structure = createTeamsGridStructure(teamsSection);
+        if (structure) {
+            return renderTeamCard(team); // Gọi lại sau khi đã tạo cấu trúc
+        }
+        return;
+    }
+    
+    // Tạo team card element
+    const teamColorClass = getColorClass(team.color);
+    const teamCard = createTeamCardElement(team, teamColorClass);
+    
+    // Add team ID as data attribute
+    teamCard.dataset.teamId = team.id;
+    
+    // Add privacy indicator
+    addPrivacyIndicator(teamCard, team.privacy || 'private');
+    
+    // Thêm card vào grid
+    teamsGrid.appendChild(teamCard);
+    
+    // Thêm sự kiện cho team card
+    attachTeamCardEvents(teamCard, team.id);
+}
+
 /**
  * Gắn các sự kiện cho team card
  * @param {HTMLElement} teamCard - Team card element
  * @param {number} teamId - ID of the team
  */
 export function attachTeamCardEvents(teamCard, teamId) {
+    // Get team data
+    const team = getTeamById(teamId);
+    if (!team) return;
+    
+    // Get current user
+    const currentUser = getCurrentUser();
+    const isLeader = isTeamLeader(team, currentUser.email);
+    
     // Options button event
     const optionButton = teamCard.querySelector('.team-options-btn');
     if (optionButton) {
@@ -367,7 +434,7 @@ export function attachTeamCardEvents(teamCard, teamId) {
             
             // If menu doesn't exist, create it
             if (!optionsMenu) {
-                optionsMenu = createTeamOptionsMenu(teamId);
+                optionsMenu = createTeamOptionsMenu(teamId, isLeader);
                 teamCard.appendChild(optionsMenu);
                 
                 // Add event listeners to menu options
@@ -379,7 +446,7 @@ export function attachTeamCardEvents(teamCard, teamId) {
                 if (membersOption) {
                     membersOption.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        openTeamMembersModal(teamId);
+                        openTeamMembersModal(teamId, isLeader);
                         toggleTeamOptionsMenu(optionsMenu, false);
                     });
                 }
@@ -387,7 +454,11 @@ export function attachTeamCardEvents(teamCard, teamId) {
                 if (editOption) {
                     editOption.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        openEditTeamModal(teamId);
+                        if (canEditTeam(team, currentUser.email)) {
+                            openEditTeamModal(teamId);
+                        } else {
+                            showToast('Only team leaders can edit team details', 'error');
+                        }
                         toggleTeamOptionsMenu(optionsMenu, false);
                     });
                 }
@@ -396,18 +467,18 @@ export function attachTeamCardEvents(teamCard, teamId) {
                     privacyOption.addEventListener('click', (e) => {
                         e.stopPropagation();
                         
-                        // Get current team
-                        const team = getTeamById(teamId);
-                        if (!team) return;
-                        
-                        // Toggle privacy
-                        const newPrivacy = team.privacy === 'private' ? 'public' : 'private';
-                        
-                        // Dispatch event to update privacy
-                        document.dispatchEvent(new CustomEvent('team-privacy-update', {
-                            detail: { teamId, privacy: newPrivacy },
-                            bubbles: true
-                        }));
+                        if (canEditTeam(team, currentUser.email)) {
+                            // Toggle privacy
+                            const newPrivacy = team.privacy === 'private' ? 'public' : 'private';
+                            
+                            // Dispatch event to update privacy
+                            document.dispatchEvent(new CustomEvent('team-privacy-update', {
+                                detail: { teamId, privacy: newPrivacy },
+                                bubbles: true
+                            }));
+                        } else {
+                            showToast('Only team leaders can change privacy settings', 'error');
+                        }
                         
                         toggleTeamOptionsMenu(optionsMenu, false);
                     });
@@ -417,12 +488,16 @@ export function attachTeamCardEvents(teamCard, teamId) {
                     deleteOption.addEventListener('click', (e) => {
                         e.stopPropagation();
                         
-                        if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
-                            // Dispatch event to delete team
-                            document.dispatchEvent(new CustomEvent('team-delete', {
-                                detail: { teamId },
-                                bubbles: true
-                            }));
+                        if (canDeleteTeam(team, currentUser.email)) {
+                            if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+                                // Dispatch event to delete team
+                                document.dispatchEvent(new CustomEvent('team-delete', {
+                                    detail: { teamId },
+                                    bubbles: true
+                                }));
+                            }
+                        } else {
+                            showToast('Only team leaders can delete teams', 'error');
                         }
                         
                         toggleTeamOptionsMenu(optionsMenu, false);
@@ -459,30 +534,34 @@ export function attachTeamCardEvents(teamCard, teamId) {
             
             // Members button (second button)
             if (index === 1 || button.classList.contains('members-btn')) {
-                openTeamMembersModal(teamId);
+                openTeamMembersModal(teamId, isLeader);
                 return;
             }
             
             // Privacy toggle button (third button)
             if (index === 2 || button.classList.contains('privacy-toggle')) {
-                // Get current team
-                const team = getTeamById(teamId);
-                if (!team) return;
-                
-                // Toggle privacy
-                const newPrivacy = team.privacy === 'private' ? 'public' : 'private';
-                
-                // Dispatch event to update privacy
-                document.dispatchEvent(new CustomEvent('team-privacy-update', {
-                    detail: { teamId, privacy: newPrivacy },
-                    bubbles: true
-                }));
+                if (canEditTeam(team, currentUser.email)) {
+                    // Toggle privacy
+                    const newPrivacy = team.privacy === 'private' ? 'public' : 'private';
+                    
+                    // Dispatch event to update privacy
+                    document.dispatchEvent(new CustomEvent('team-privacy-update', {
+                        detail: { teamId, privacy: newPrivacy },
+                        bubbles: true
+                    }));
+                } else {
+                    showToast('Only team leaders can change privacy settings', 'error');
+                }
                 return;
             }
             
             // Edit button (fourth button)
             if (index === 3) {
-                openEditTeamModal(teamId);
+                if (canEditTeam(team, currentUser.email)) {
+                    openEditTeamModal(teamId);
+                } else {
+                    showToast('Only team leaders can edit team details', 'error');
+                }
                 return;
             }
         });

@@ -1,9 +1,11 @@
-// Corrected implementation for controllers/group-calendar/group-calendar-controller.js
+// controllers/group-calendar/group-calendar-controller.js - Updated with permissions
 
 import { renderCalendar } from "../../views/calendarView.js";
 import { getDate, getView } from "../../models/url.js";
 import { getCurrentDeviceType } from "../../views/responsiveView.js";
 import { createTeamEventStore } from "../../models/group/team-calendar.js";
+import { getTeamById } from "../../models/group/team.js";
+import { canCreateEvents, getCurrentUser } from "../../models/group/team-permissions.js";
 
 /**
  * Initialize the group calendar controller
@@ -18,6 +20,7 @@ export function initGroupCalendarController(eventStore) {
   let deviceType = getCurrentDeviceType();
   let selectedTeamId = null;
   let teamEventStore = null;
+  let userCanCreateEvents = false;
 
   /**
    * Fix time display in day and week views for group calendar
@@ -67,24 +70,30 @@ export function initGroupCalendarController(eventStore) {
           cell.className = 'week-calendar__cell';
           cell.dataset.weekCalendarCell = (hour * 60).toString(); // minutes from midnight
           
-          // Add click handler to create events
-          cell.addEventListener('click', (e) => {
-            if (e.target.closest('[data-event]')) return;
-            
-            // Calculate event time range (1 hour duration)
-            const startTime = hour * 60;
-            const endTime = startTime + 60;
-            
-            // Dispatch event creation request
-            document.dispatchEvent(new CustomEvent('event-create-request', {
-              detail: {
-                date: selectedDate,
-                startTime: startTime,
-                endTime: endTime
-              },
-              bubbles: true
-            }));
-          });
+          // Add click handler to create events only if user has permission
+          if (userCanCreateEvents) {
+            cell.addEventListener('click', (e) => {
+              if (e.target.closest('[data-event]')) return;
+              
+              // Calculate event time range (1 hour duration)
+              const startTime = hour * 60;
+              const endTime = startTime + 60;
+              
+              // Dispatch event creation request
+              document.dispatchEvent(new CustomEvent('event-create-request', {
+                detail: {
+                  date: selectedDate,
+                  startTime: startTime,
+                  endTime: endTime
+                },
+                bubbles: true
+              }));
+            });
+          } else {
+            // Add a visual indicator that creating events is not allowed
+            cell.classList.add('calendar-cell-no-create');
+            cell.title = 'Only team leaders can create events';
+          }
           
           column.appendChild(cell);
         }
@@ -114,6 +123,22 @@ export function initGroupCalendarController(eventStore) {
           newScrollable.scrollTo({ top: scrollTop });
         }
       }
+      
+      // Add a visual indicator to the calendar if the user can't create events
+      if (!userCanCreateEvents) {
+        const createButtons = calendarElement.querySelectorAll("[data-event-create-button]");
+        createButtons.forEach(button => {
+          button.style.display = 'none';
+        });
+        
+        // For day/week view, add a message about permissions
+        if (selectedView === 'day' || selectedView === 'week') {
+          const permissionMsg = document.createElement('div');
+          permissionMsg.className = 'calendar-permission-notice';
+          permissionMsg.textContent = 'Only team leaders can create events';
+          calendarElement.appendChild(permissionMsg);
+        }
+      }
     } else {
       // Show a message when no team is selected
       const placeholderElement = document.createElement('div');
@@ -136,13 +161,24 @@ export function initGroupCalendarController(eventStore) {
       // Get color class based on team color
       const colorClass = getColorClass(team.color);
       
+      // Check if the current user can create events
+      const currentUser = getCurrentUser();
+      userCanCreateEvents = canCreateEvents(team, currentUser.email);
+      
+      // Get leader count
+      const leaderCount = team.members ? team.members.filter(m => m.role === 'leader').length : 0;
+      
       teamHeaderElement.innerHTML = `
         <div class="team-header-info">
           <div class="team-header-icon ${colorClass}">${team.initials}</div>
           <div class="team-header-details">
             <h2>${team.name}</h2>
             <p>Team Calendar • ${team.privacy === 'private' ? '🔒 Private' : '🌐 Public'}</p>
+            <p class="team-member-count">${team.members ? team.members.length : 0} member${team.members && team.members.length !== 1 ? 's' : ''} 
+              ${leaderCount > 0 ? `(${leaderCount} leader${leaderCount !== 1 ? 's' : ''})` : ''}
+            </p>
           </div>
+          ${userCanCreateEvents ? '' : '<div class="leader-only-badge">Only leaders can create events</div>'}
         </div>
       `;
       
@@ -163,6 +199,7 @@ export function initGroupCalendarController(eventStore) {
       
       selectedTeamId = null;
       teamEventStore = null;
+      userCanCreateEvents = false;
       
       // Remove team-specific event handlers
       removeTeamEventHandlers();
@@ -177,14 +214,60 @@ export function initGroupCalendarController(eventStore) {
     // Remove any existing handlers first
     removeTeamEventHandlers();
     
-    // Handle event creation
-    document.addEventListener("event-create", handleTeamEventCreate);
+    // Get team data and check permissions
+    const team = getTeamById(teamId);
+    const currentUser = getCurrentUser();
+    const canCreate = canCreateEvents(team, currentUser.email);
     
-    // Handle event editing
-    document.addEventListener("event-edit", handleTeamEventEdit);
+    // Only register event handlers if the user has permission
+    if (canCreate) {
+      // Handle event creation
+      document.addEventListener("event-create", handleTeamEventCreate);
+      
+      // Handle event editing
+      document.addEventListener("event-edit", handleTeamEventEdit);
+      
+      // Handle event deletion
+      document.addEventListener("event-delete", handleTeamEventDelete);
+    } else {
+      // Add a listener to intercept create requests and show permission message
+      document.addEventListener("event-create-request", handleUnauthorizedCreate);
+    }
+  }
+  
+  // Handle unauthorized create attempts
+  function handleUnauthorizedCreate(event) {
+    event.stopPropagation();
     
-    // Handle event deletion
-    document.addEventListener("event-delete", handleTeamEventDelete);
+    // Show a toast message
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+    showToast('Only team leaders can create events', 'error', toastContainer);
+  }
+  
+  // Helper function to create toast container
+  function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
+  }
+  
+  // Helper function to show toast
+  function showToast(message, type = 'info', container) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, 3000);
   }
   
   // Remove team event handlers
@@ -192,6 +275,7 @@ export function initGroupCalendarController(eventStore) {
     document.removeEventListener("event-create", handleTeamEventCreate);
     document.removeEventListener("event-edit", handleTeamEventEdit);
     document.removeEventListener("event-delete", handleTeamEventDelete);
+    document.removeEventListener("event-create-request", handleUnauthorizedCreate);
   }
   
   // Handler for creating team events
@@ -281,4 +365,62 @@ export function initGroupCalendarController(eventStore) {
 
   // Initialize with empty calendar
   updateTeamHeader(null);
+
+  // Add styles for leader-only indicators
+  addLeaderOnlyStyles();
+}
+
+/**
+ * Add CSS styles for leader-only indicators
+ */
+function addLeaderOnlyStyles() {
+  if (document.getElementById('leader-only-styles')) return;
+  
+  const styleEl = document.createElement('style');
+  styleEl.id = 'leader-only-styles';
+  styleEl.textContent = `
+    .leader-only-badge {
+      background-color: #ff8800;
+      color: white;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-left: 10px;
+      display: inline-block;
+    }
+    
+    .calendar-cell-no-create {
+      cursor: not-allowed;
+      position: relative;
+    }
+    
+    .calendar-cell-no-create:hover::after {
+      content: 'Only leaders can create events';
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 100;
+      top: -30px;
+      left: 0;
+      white-space: nowrap;
+    }
+    
+    .calendar-permission-notice {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(255, 136, 0, 0.9);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-size: 14px;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+  `;
+  
+  document.head.appendChild(styleEl);
 }
