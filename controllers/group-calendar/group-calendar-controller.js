@@ -22,45 +22,6 @@ export function initGroupCalendarController(eventStore) {
   let teamEventStore = null;
   let userCanCreateEvents = false;
 
-  /**
-   * Fix time display in day and week views for group calendar
-   * @param {string} view - Current view (day, week, month)
-   * @param {HTMLElement} calendarEl - Calendar container element
-   */
-  function fixGroupCalendarTimeDisplay(view, calendarEl) {
-    // If not day or week view, no need for fixes
-    if (view !== 'day' && view !== 'week') return;
-    
-    // Check if the week calendar already has time slots
-    const timeList = calendarEl.querySelector('.week-calendar__time-list');
-    if (!timeList) {
-      console.error('Week calendar time list not found');
-      return;
-    }
-    
-    // Check if time slots already exist
-    if (timeList.children.length > 0) return;
-    
-    // Create time slots for 24 hours
-    const hours = Array.from({length: 24}, (_, i) => i);
-    
-    hours.forEach(hour => {
-      const timeItem = document.createElement('li');
-      timeItem.className = 'week-calendar__time-item';
-      
-      const timeElement = document.createElement('time');
-      timeElement.className = 'week-calendar__time';
-      
-      // Format time as 12-hour with AM/PM
-      const formattedHour = hour % 12 || 12;
-      const ampm = hour < 12 ? 'AM' : 'PM';
-      timeElement.textContent = `${formattedHour}:00 ${ampm}`;
-      
-      timeItem.appendChild(timeElement);
-      timeList.appendChild(timeItem);
-    });
-  }
-
   // Function to refresh the calendar view - Enhanced version
   function refreshCalendar() {
     if (!calendarElement) return;
@@ -74,8 +35,10 @@ export function initGroupCalendarController(eventStore) {
     if (selectedTeamId && teamEventStore) {
       renderCalendar(calendarElement, selectedView, selectedDate, teamEventStore, deviceType);
       
-      // Apply time display fix after rendering
-      fixGroupCalendarTimeDisplay(selectedView, calendarElement);
+      // FIXED: Apply time display fix after rendering - only for desktop day/week views
+      if (deviceType === 'desktop' && (selectedView === 'day' || selectedView === 'week')) {
+        fixGroupCalendarTimeDisplay(selectedView, calendarElement);
+      }
       
       if (scrollable) {
         const newScrollable = calendarElement.querySelector("[data-calendar-scrollable]");
@@ -113,6 +76,87 @@ export function initGroupCalendarController(eventStore) {
         </div>
       `;
       calendarElement.appendChild(placeholderElement);
+    }
+  }
+
+  /**
+   * FIXED: Fix time display in day and week views for group calendar
+   * @param {string} view - Current view (day, week, month)
+   * @param {HTMLElement} calendarEl - Calendar container element
+   */
+  function fixGroupCalendarTimeDisplay(view, calendarEl) {
+    // If not day or week view, no need for fixes
+    if (view !== 'day' && view !== 'week') return;
+    
+    // Find the week calendar container
+    const weekCalendar = calendarEl.querySelector('.week-calendar');
+    if (!weekCalendar) {
+      console.warn('Week calendar container not found');
+      return;
+    }
+    
+    // Check if the week calendar already has time slots
+    const timeList = weekCalendar.querySelector('.week-calendar__time-list');
+    if (!timeList) {
+      console.warn('Week calendar time list not found');
+      return;
+    }
+    
+    // Check if time slots already exist and are populated
+    const existingTimeItems = timeList.querySelectorAll('.week-calendar__time-item');
+    if (existingTimeItems.length > 0) {
+      // Time slots already exist, just ensure they have content
+      existingTimeItems.forEach((timeItem, index) => {
+        const timeElement = timeItem.querySelector('.week-calendar__time');
+        if (timeElement && !timeElement.textContent.trim()) {
+          // If time element exists but has no content, add it
+          const hour = index;
+          const formattedHour = hour % 12 || 12;
+          const ampm = hour < 12 ? 'AM' : 'PM';
+          timeElement.textContent = `${formattedHour}:00 ${ampm}`;
+        }
+      });
+      return;
+    }
+    
+    // If no time items exist, create them
+    console.log('Creating time slots for group calendar');
+    
+    // Create time slots for 24 hours
+    for (let hour = 0; hour < 24; hour++) {
+      const timeItem = document.createElement('li');
+      timeItem.className = 'week-calendar__time-item';
+      
+      const timeElement = document.createElement('time');
+      timeElement.className = 'week-calendar__time';
+      
+      // Format time as 12-hour with AM/PM
+      const formattedHour = hour % 12 || 12;
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      timeElement.textContent = `${formattedHour}:00 ${ampm}`;
+      
+      timeItem.appendChild(timeElement);
+      timeList.appendChild(timeItem);
+    }
+    
+    // Also ensure the columns are properly structured
+    const columnsContainer = weekCalendar.querySelector('.week-calendar__columns');
+    if (columnsContainer) {
+      // Make sure columns have the proper grid structure
+      const columns = columnsContainer.querySelectorAll('.week-calendar__column');
+      columns.forEach(column => {
+        // Check if column has cells
+        const existingCells = column.querySelectorAll('.week-calendar__cell');
+        if (existingCells.length === 0) {
+          // Create cells for this column
+          for (let hour = 0; hour < 24; hour++) {
+            const cell = document.createElement('div');
+            cell.className = 'week-calendar__cell';
+            cell.dataset.weekCalendarCell = (hour * 60).toString();
+            column.appendChild(cell);
+          }
+        }
+      });
     }
   }
 
@@ -496,6 +540,68 @@ function addLeaderOnlyStyles() {
     @keyframes toast-out {
       from { transform: translateY(0); opacity: 1; }
       to { transform: translateY(-20px); opacity: 0; }
+    }
+    
+    /* Additional styles to ensure the week calendar displays properly */
+    .week-calendar__time-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      width: 4.5rem;
+      flex-shrink: 0;
+    }
+    
+    .week-calendar__time-item {
+      height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border-top: 1px solid var(--color-gray-300);
+    }
+    
+    .week-calendar__time-item:first-child {
+      border-top: none;
+    }
+    
+    .week-calendar__time {
+      font-size: var(--font-size-xs);
+      line-height: var(--line-height-xs);
+      color: var(--color-gray-500);
+    }
+    
+    .week-calendar__columns {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+    
+    .week-calendar--day .week-calendar__columns {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    .week-calendar__column {
+      position: relative;
+      border-left: 1px solid var(--color-gray-300);
+    }
+    
+    .week-calendar__column:first-child {
+      border-left: none;
+    }
+    
+    .week-calendar__cell {
+      height: 4rem;
+      border-top: 1px solid var(--color-gray-300);
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .week-calendar__cell:first-child {
+      border-top: none;
+    }
+    
+    .week-calendar__cell:hover:not(.calendar-cell-no-create) {
+      background-color: rgba(37, 99, 235, 0.05);
     }
   `;
   
