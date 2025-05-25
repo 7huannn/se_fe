@@ -1,63 +1,66 @@
-// controllers/chat-bubbleController.js - UPDATED VERSION
+// controllers/chat-bubbleController.js - FIXED MVC COMPLIANT VERSION
+
 import ChatBubbleModel from "../models/chat-bubble.js";
 import ChatBubbleView from "../views/chat-bubbleView.js";
 
 /**
- * Controller cho Floating Chat Bubble
- * Kết nối model và view, xử lý logic
+ * Controller chỉ chịu trách nhiệm điều phối giữa Model và View
+ * Xử lý business logic và user interactions
+ * Không thao tác DOM trực tiếp
  */
 export default class ChatBubbleController {
   constructor() {
     this.model = new ChatBubbleModel();
     this.view = new ChatBubbleView();
     
-    // Khởi tạo view
+    this.init();
+  }
+
+  /**
+   * Initialize controller - COORDINATION LOGIC
+   */
+  init() {
+    // Initialize view
     this.view.createElements();
     
-    // Đính kèm các event listeners với các hàm xử lý
+    // Attach event listeners with controller methods
     this.view.attachEventListeners({
       expandChat: this.expandChat.bind(this),
       collapseChat: this.collapseChat.bind(this),
       sendMessage: this.sendMessage.bind(this)
     });
     
-    // Cập nhật opacity định kỳ
+    // Update opacity periodically
     setInterval(() => this.view.updateBubbleOpacity(), 100);
     
-    // Tải tin nhắn từ localStorage
+    // Load messages from model
     this.model.loadMessages();
     
-    // Hiển thị tin nhắn đã lưu
-    this.view.renderMessages(this.model.getMessages());
+    // Render messages with formatting
+    this.renderMessagesFromModel();
     
-    // NEW: Auto-open chat only on home page
-    this.autoOpenOnHomePage();
+    // Auto-open on home page if needed
+    this.handleAutoOpenLogic();
   }
 
   /**
-   * NEW: Tự động mở chat nếu đang ở trang home
+   * Handle auto-open logic - BUSINESS LOGIC
    */
-  autoOpenOnHomePage() {
-    // Kiểm tra xem có phải trang home không
+  handleAutoOpenLogic() {
     if (this.isHomePage()) {
-      // Delay một chút để đảm bảo trang đã load xong
       setTimeout(() => {
         this.expandChat();
-        
-        // Thêm tin nhắn chào mừng đặc biệt cho trang home
-        this.addWelcomeMessage();
-      }, 1500); // 1.5 giây sau khi trang load
+        this.addWelcomeMessageForHomePage();
+      }, 1500);
     }
   }
 
   /**
-   * NEW: Kiểm tra có phải trang home không
-   * @returns {boolean}
+   * Check if current page is home - BUSINESS LOGIC
    */
   isHomePage() {
     const currentPath = window.location.pathname;
     
-    // Kiểm tra các pattern của trang home
     return currentPath.includes('home.html') || 
            currentPath === '/' || 
            currentPath.endsWith('/') ||
@@ -67,29 +70,23 @@ export default class ChatBubbleController {
   }
 
   /**
-   * NEW: Thêm tin nhắn chào mừng đặc biệt cho trang home
+   * Add welcome message for home page - BUSINESS LOGIC
    */
-  addWelcomeMessage() {
-    // Chỉ thêm tin nhắn chào mừng nếu chưa có tin nhắn nào hoặc chỉ có tin nhắn mặc định
+  addWelcomeMessageForHomePage() {
     const messages = this.model.getMessages();
     
-    // Nếu chỉ có 1 tin nhắn (tin nhắn mặc định) hoặc không có tin nhắn nào
     if (messages.length <= 1) {
-      // Xóa tin nhắn cũ nếu có
       this.model.clearMessages();
       
-      // Thêm tin nhắn chào mừng cho trang home
       const welcomeMessage = this.getHomeWelcomeMessage();
-      const botMessage = this.model.addMessage(welcomeMessage, false);
+      this.model.addMessage(welcomeMessage, false);
       
-      // Cập nhật giao diện
-      this.view.renderMessages(this.model.getMessages());
+      this.renderMessagesFromModel();
     }
   }
 
   /**
-   * NEW: Lấy tin nhắn chào mừng cho trang home
-   * @returns {string}
+   * Get contextual welcome message - BUSINESS LOGIC
    */
   getHomeWelcomeMessage() {
     const welcomeMessages = [
@@ -99,87 +96,82 @@ export default class ChatBubbleController {
       "🚀 Welcome to Schedigo! Tôi ở đây để giúp bạn làm chủ thời gian. Bạn muốn tìm hiểu về tính năng nào của chúng tôi?"
     ];
     
-    // Chọn ngẫu nhiên một tin nhắn
     return welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
   }
 
   /**
-   * Mở rộng chat panel
+   * Expand chat - COORDINATE VIEW ACTION
    */
   expandChat() {
     this.view.expandChat();
   }
 
   /**
-   * Thu gọn chat panel
+   * Collapse chat - COORDINATE VIEW ACTION
    */
   collapseChat() {
     this.view.collapseChat();
   }
 
   /**
-   * Xử lý gửi tin nhắn
+   * Handle send message - BUSINESS LOGIC COORDINATION
    */
   sendMessage() {
-    // Lấy tin nhắn từ input
+    // Get message from view
     const message = this.view.getInputMessage();
     if (!message) return;
     
-    // Lưu tin nhắn người dùng vào model
+    // Process through model
     const userMessage = this.model.addMessage(message, true);
     
-    // Hiển thị tin nhắn người dùng trên giao diện
-    this.view.addUserMessage(
-      userMessage.content, 
-      this.view.formatTime(new Date(userMessage.timestamp))
-    );
+    // Format time for display
+    const formattedTime = this.formatTime(new Date(userMessage.timestamp));
     
-    // Hiển thị trạng thái đang nhập
+    // Update view
+    this.view.addUserMessage(userMessage.content, formattedTime);
+    
+    // Show typing indicator
     const typingIndicator = this.view.showTypingIndicator();
     
-    // Tạo độ trễ để mô phỏng AI đang xử lý
+    // Simulate AI processing delay
     setTimeout(() => {
-      // Lấy phản hồi từ model với context cho trang home
+      // Get AI response with context
       const aiResponse = this.getContextualResponse(message);
       
-      // Lưu tin nhắn AI vào model
+      // Process AI response through model
       const botMessage = this.model.addMessage(aiResponse, false);
       
-      // Xóa trạng thái đang nhập
+      // Format AI response content (handle line breaks)
+      const formattedContent = this.formatMessageContent(botMessage.content);
+      const formattedTime = this.formatTime(new Date(botMessage.timestamp));
+      
+      // Remove typing indicator
       this.view.removeTypingIndicator(typingIndicator);
       
-      // Hiển thị tin nhắn AI
-      this.view.addBotMessage(
-        botMessage.content,
-        this.view.formatTime(new Date(botMessage.timestamp))
-      );
-    }, 1000 + Math.random() * 1000); // Độ trễ ngẫu nhiên 1-2 giây
+      // Update view with formatted content
+      this.view.addBotMessage(formattedContent, formattedTime);
+      
+    }, 1000 + Math.random() * 1000);
   }
 
   /**
-   * NEW: Lấy phản hồi có context tùy theo trang
-   * @param {string} message - Tin nhắn của người dùng
-   * @returns {string}
+   * Get contextual AI response - BUSINESS LOGIC
    */
   getContextualResponse(message) {
-    // Nếu đang ở trang home, thêm context về việc bắt đầu sử dụng Schedigo
     if (this.isHomePage()) {
       return this.getHomeContextResponse(message);
     }
     
-    // Nếu không phải trang home, dùng response thông thường
     return this.model.getAIResponse(message);
   }
 
   /**
-   * NEW: Lấy phản hồi có context cho trang home
-   * @param {string} message - Tin nhắn của người dùng
-   * @returns {string}
+   * Get home-specific contextual response - BUSINESS LOGIC
    */
   getHomeContextResponse(message) {
     const lowerMsg = message.toLowerCase();
     
-    // Phản hồi đặc biệt cho trang home
+    // Home-specific responses
     if (lowerMsg.includes('bắt đầu') || lowerMsg.includes('start') || lowerMsg.includes('begin')) {
       return "🎯 Tuyệt vời! Để bắt đầu với Schedigo, bạn có thể:\n\n📅 Tạo lịch cá nhân để quản lý công việc hàng ngày\n👥 Tham gia hoặc tạo nhóm để cộng tác\n🔍 Sử dụng AI để tối ưu hóa lịch trình\n\nBạn muốn thử tính năng nào trước?";
     }
@@ -196,20 +188,72 @@ export default class ChatBubbleController {
       return "💰 Schedigo có cả phiên bản miễn phí và premium:\n\n🆓 Miễn phí: Quản lý lịch cơ bản, nhóm nhỏ\n⭐ Premium: Không giới hạn nhóm, AI advanced, analytics\n\nBạn có thể bắt đầu với phiên bản miễn phí ngay bây giờ!";
     }
     
-    // Nếu không match các case đặc biệt, dùng response thông thường nhưng thêm context home
+    // Get normal response but add home-specific CTA
     const normalResponse = this.model.getAIResponse(message);
     
-    // Thêm call-to-action cho trang home
-    if (Math.random() > 0.7) { // 30% chance thêm CTA
+    if (Math.random() > 0.7) {
       return normalResponse + "\n\n💡 Tip: Hãy thử đăng ký để trải nghiệm đầy đủ tính năng của Schedigo!";
     }
     
     return normalResponse;
   }
+
+  /**
+   * Format message content for display - DATA FORMATTING
+   */
+  formatMessageContent(content) {
+    // Convert line breaks to HTML
+    return content.replace(/\n/g, '<br>');
+  }
+
+  /**
+   * Format time for display - DATA FORMATTING
+   */
+  formatTime(date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /**
+   * Render messages from model with formatting - COORDINATION
+   */
+  renderMessagesFromModel() {
+    const messages = this.model.getMessages();
+    
+    // Format messages for view
+    const formattedMessages = messages.map(msg => ({
+      ...msg,
+      formattedTime: this.formatTime(new Date(msg.timestamp)),
+      formattedContent: msg.isUser ? msg.content : this.formatMessageContent(msg.content)
+    }));
+    
+    this.view.renderMessages(formattedMessages);
+  }
+
+  /**
+   * Clear all messages - COORDINATE MODEL AND VIEW
+   */
+  clearMessages() {
+    this.model.clearMessages();
+    this.view.clearMessages();
+  }
+
+  /**
+   * Get messages count - DELEGATE TO MODEL
+   */
+  getMessagesCount() {
+    return this.model.getMessages().length;
+  }
+
+  /**
+   * Check if chat is expanded - DELEGATE TO VIEW
+   */
+  isChatExpanded() {
+    return this.view.isExpanded();
+  }
 }
 
 /**
- * Khởi tạo ChatBubbleController khi DOM sẵn sàng
+ * Initialize chat bubble when DOM is ready
  */
 export function initChatBubble() {
   if (document.readyState === 'loading') {
@@ -221,5 +265,5 @@ export function initChatBubble() {
   }
 }
 
-// Khởi động chat bubble
+// Auto-initialize
 initChatBubble();

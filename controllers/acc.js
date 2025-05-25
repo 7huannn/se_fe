@@ -1,6 +1,13 @@
+// controllers/acc.js - FIXED MVC COMPLIANT VERSION
+
 import AccView from '../views/accView.js';
 import AccountModel from '../models/account.js';
 
+/**
+ * Controller chỉ chịu trách nhiệu điều phối giữa Model và View
+ * Xử lý business logic và user interactions
+ * Không thao tác DOM trực tiếp
+ */
 export class AccountController {
   constructor(formId = 'accountForm', saveIndicatorId = 'saveIndicator') {
     this.form = document.getElementById(formId);
@@ -12,279 +19,332 @@ export class AccountController {
     }
     
     this.view = new AccView();
+    this.model = new AccountModel();
     
-    // Form fields
-    this.emailInput = document.getElementById('email');
-    this.usernameInput = document.getElementById('username');
-    this.fullnameInput = document.getElementById('fullname');
-    this.genderInputs = document.querySelectorAll('input[name="gender"]');
-    this.passwordInput = document.getElementById('password');
-    this.confirmPasswordInput = document.getElementById('confirmPassword');
-    this.avatarInput = document.getElementById('avatar');
-    this.birthDayInput = document.getElementById('birthDay');
-    this.birthMonthInput = document.getElementById('birthMonth');
-    this.birthYearInput = document.getElementById('birthYear');
-
-    this._bindEvents();
-    this._loadAccountData();
+    this.init();
   }
 
-  async _loadAccountData() {
+  /**
+   * Initialize controller - COORDINATION LOGIC
+   */
+  async init() {
+    this._bindEvents();
+    await this._loadAndDisplayAccountData();
+  }
+
+  /**
+   * Load account data and coordinate display - BUSINESS LOGIC
+   */
+  async _loadAndDisplayAccountData() {
     try {
       const accountData = await AccountModel.getAccountInfo();
-      this._populateForm(accountData);
       
-      // Kiểm tra xem có URL avatar đã lưu trong localStorage không
-      const savedAvatarUrl = localStorage.getItem('user_avatar');
-      if (savedAvatarUrl && !accountData.avatar) {
-        // Nếu có avatar đã lưu nhưng không có trong dữ liệu tài khoản, sử dụng avatar đã lưu
-        this.view.previewAvatar({ src: savedAvatarUrl });
-      } else if (accountData.avatar) {
-        // Nếu tài khoản có avatar, lưu vào localStorage để sử dụng giữa các trang
-        localStorage.setItem('user_avatar', accountData.avatar);
-      }
+      // Use view to populate form
+      this.view.populateForm(accountData);
       
-      // Lưu thông tin username và email vào localStorage
-      if (accountData.username) {
-        localStorage.setItem('username', accountData.username);
-      }
+      // Handle avatar logic
+      await this._handleAvatarLogic(accountData);
       
-      if (accountData.email) {
-        localStorage.setItem('email', accountData.email);
-      }
+      // Store user info
+      this._storeUserInfo(accountData);
+      
     } catch (error) {
       console.error('Error loading account data:', error);
       this.view.showError('Failed to load account data. Please try again later.');
     }
   }
 
-  _populateForm(data) {
-    // Fill form with user data
-    if (this.emailInput) {
-      this.emailInput.value = data.email || '';
-    }
+  /**
+   * Handle avatar logic - BUSINESS LOGIC
+   */
+  async _handleAvatarLogic(accountData) {
+    const savedAvatarUrl = localStorage.getItem('user_avatar');
     
-    if (this.usernameInput) {
-      this.usernameInput.value = data.username || '';
-    }
-    
-    if (this.fullnameInput) {
-      this.fullnameInput.value = data.fullname || '';
-    }
-    
-    // Set gender radio button
-    if (this.genderInputs.length > 0) {
-      this.genderInputs.forEach(input => {
-        if (input.value === data.gender) {
-          input.checked = true;
-        }
-      });
-    }
-    
-    // Set date of birth if available
-    if (data.dateOfBirth) {
-      const dateOfBirth = AccountModel.parseDateOfBirth(data.dateOfBirth);
-      this.view.setDateOfBirth(dateOfBirth);
-    }
-    
-    // Display avatar if exists
-    if (data.avatar) {
-      this.view.previewAvatar({ src: data.avatar });
+    if (savedAvatarUrl && !accountData.avatar) {
+      this.view.previewAvatar({ src: savedAvatarUrl });
+    } else if (accountData.avatar) {
+      localStorage.setItem('user_avatar', accountData.avatar);
+      this.view.previewAvatar({ src: accountData.avatar });
     }
   }
 
+  /**
+   * Store user info in localStorage - DATA MANAGEMENT
+   */
+  _storeUserInfo(accountData) {
+    if (accountData.username) {
+      localStorage.setItem('username', accountData.username);
+    }
+    
+    if (accountData.email) {
+      localStorage.setItem('email', accountData.email);
+    }
+  }
+
+  /**
+   * Bind events to view elements - EVENT COORDINATION
+   */
   _bindEvents() {
-    // Toggle password visibility
-    if (this.view.passwordToggle) {
-      this.view.passwordToggle.addEventListener('click', () => {
-        this.view.togglePassword(this.passwordInput, this.view.passwordToggle);
-      });
-    }
+    // Password toggle events
+    this.view.bindPasswordToggle();
     
-    // Toggle confirm password visibility
-    if (this.view.confirmPasswordToggle) {
-      this.view.confirmPasswordToggle.addEventListener('click', () => {
-        this.view.togglePassword(this.confirmPasswordInput, this.view.confirmPasswordToggle);
-      });
-    }
-
-    // Preview avatar when file selected
-    if (this.view.avatarInput) {
-      this.view.avatarInput.addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (file) {
-          this.view.previewAvatar(file);
-        }
-      });
-    }
-
-    // Toggle dark mode
-    if (this.view.darkModeToggle) {
-      this.view.darkModeToggle.addEventListener('click', () => {
-        this.view.toggleDarkMode();
-      });
-    }
-
-    // Submit form
-    if (this.form) {
-      this.form.addEventListener('submit', e => {
-        e.preventDefault();
-        this._handleFormSubmit();
-      });
-    }
+    // Avatar preview events
+    this.view.bindAvatarPreview();
     
-    // Date of birth validation - show different day counts for different months
-    if (this.birthMonthInput && this.birthDayInput) {
-      this.birthMonthInput.addEventListener('change', () => {
-        const month = parseInt(this.birthMonthInput.value);
-        const year = parseInt(this.birthYearInput.value);
-        this.view.updateDaysInMonth(month, year);
-      });
-      
-      this.birthYearInput.addEventListener('change', () => {
-        // February days depend on leap years
-        if (this.birthMonthInput.value === '1') { // February (0-based)
-          const month = parseInt(this.birthMonthInput.value);
-          const year = parseInt(this.birthYearInput.value);
-          this.view.updateDaysInMonth(month, year);
-        }
-      });
-    }
+    // Dark mode toggle
+    this.view.bindDarkModeToggle();
+    
+    // Date validation events
+    this.view.bindDateValidation();
+    
+    // Form submission
+    this.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this._handleFormSubmit();
+    });
   }
 
+  /**
+   * Handle form submission - BUSINESS LOGIC COORDINATION
+   */
   async _handleFormSubmit() {
     try {
-      // Basic validations
-      if (!this.emailInput.value.trim()) {
-        this.view.showError('Email is required', 'email');
+      // Get form data from view
+      const formData = this.view.getFormData();
+      
+      // Validate form data
+      const validation = this._validateFormData(formData);
+      if (!validation.isValid) {
+        this.view.showError(validation.message, validation.field);
         return;
       }
       
-      if (!AccountModel.isValidEmail(this.emailInput.value)) {
-        this.view.showError('Please enter a valid email address', 'email');
-        return;
+      // Process account update
+      await this._processAccountUpdate(formData);
+      
+      // Process password update if needed
+      if (formData.hasPassword) {
+        await this._processPasswordUpdate(formData);
       }
       
-      if (!this.usernameInput.value.trim()) {
-        this.view.showError('Username is required', 'username');
-        return;
+      // Process avatar upload if needed
+      if (formData.hasAvatar) {
+        await this._processAvatarUpload(formData);
       }
       
-      // Validate date of birth if provided
-      if (!this.view.isValidDateOfBirth()) {
-        this.view.showError('Please enter a valid date of birth or leave all date fields empty', 'birthDay');
-        return;
-      }
+      // Update stored user info
+      this._updateStoredUserInfo(formData);
       
-      // Validate password fields
-      const hasPassword = this.passwordInput.value.trim() !== '';
-      const hasConfirmPassword = this.confirmPasswordInput.value.trim() !== '';
-      
-      // If one password field is filled but not the other
-      if ((hasPassword && !hasConfirmPassword) || (!hasPassword && hasConfirmPassword)) {
-        this.view.showError('Please fill both password fields or leave both empty', 'confirmPassword');
-        return;
-      }
-      
-      // If both password fields are filled, check if they match
-      if (hasPassword && hasConfirmPassword) {
-        if (this.passwordInput.value !== this.confirmPasswordInput.value) {
-          this.view.showError('Passwords do not match', 'confirmPassword');
-          return;
-        }
-      }
-      
-      // Get date of birth components
-      const dob = this.view.getDateOfBirth();
-      
-      // Format date of birth if all components are provided
-      let dateOfBirth = null;
-      if (dob.day && dob.month && dob.year) {
-        dateOfBirth = AccountModel.formatDateOfBirth(dob.day, dob.month, dob.year);
-      }
-      
-      // Gather account data
-      const accountData = {
-        email: this.emailInput.value,
-        username: this.usernameInput.value,
-        fullname: this.fullnameInput ? this.fullnameInput.value : '',
-        gender: document.querySelector('input[name="gender"]:checked')?.value || 'male',
-        dateOfBirth: dateOfBirth
-      };
-
-      // Update account info
-      const accountResult = await AccountModel.updateAccount(accountData);
-      if (!accountResult.success) {
-        throw new Error(accountResult.message || 'Failed to update account information');
-      }
-
-      // Update password if provided
-      if (hasPassword) {
-        const passwordResult = await AccountModel.updatePassword(
-          this.passwordInput.value,
-          this.confirmPasswordInput.value
-        );
-        
-        if (!passwordResult.success) {
-          throw new Error(passwordResult.message || 'Failed to update password');
-        }
-        
-        // Clear password fields after successful update
-        this.passwordInput.value = '';
-        this.confirmPasswordInput.value = '';
-      }
-
-      // Upload avatar if provided
-      if (this.avatarInput && this.avatarInput.files && this.avatarInput.files.length > 0) {
-        const avatarResult = await AccountModel.uploadAvatar(this.avatarInput.files[0]);
-        
-        if (!avatarResult.success) {
-          throw new Error(avatarResult.message || 'Failed to upload avatar');
-        }
-        
-        // Update the avatar preview with the new URL
-        if (avatarResult.avatarUrl) {
-          this.view.previewAvatar({ src: avatarResult.avatarUrl });
-          
-          // Đồng bộ với avatar trong header
-          document.dispatchEvent(new CustomEvent('avatar-updated', {
-            detail: { avatarUrl: avatarResult.avatarUrl },
-            bubbles: true
-          }));
-          
-          // Lưu vào localStorage để giữ xuyên suốt các trang
-          localStorage.setItem('user_avatar', avatarResult.avatarUrl);
-        }
-        
-        // Clear file input
-        this.avatarInput.value = '';
-      }
-      
-      // Cập nhật thông tin người dùng trong localStorage và thông báo sự kiện
-      localStorage.setItem('username', accountData.username);
-      localStorage.setItem('email', accountData.email);
-      
-      document.dispatchEvent(new CustomEvent('user-info-updated', {
-        detail: { 
-          username: accountData.username,
-          email: accountData.email
-        },
-        bubbles: true
-      }));
-
-      // Show success indicator with redirect message
-      this.view.showSaveIndicator(this.saveIndicator);
-      
-      // Add redirect after successful update
-      setTimeout(() => {
-        // Redirect back to calendar page
-        window.location.href = "index.html";
-      }, 1500); // Redirect after 1.5 seconds so user can see success message
+      // Show success and redirect
+      this._handleSuccessfulUpdate();
       
     } catch (error) {
       console.error('Error updating account:', error);
       this.view.showError(error.message || 'An error occurred while updating your account');
     }
+  }
+
+  /**
+   * Validate form data - BUSINESS LOGIC
+   */
+  _validateFormData(formData) {
+    if (!formData.email.trim()) {
+      return {
+        isValid: false,
+        message: 'Email is required',
+        field: 'email'
+      };
+    }
+    
+    if (!AccountModel.isValidEmail(formData.email)) {
+      return {
+        isValid: false,
+        message: 'Please enter a valid email address',
+        field: 'email'
+      };
+    }
+    
+    if (!formData.username.trim()) {
+      return {
+        isValid: false,
+        message: 'Username is required',
+        field: 'username'
+      };
+    }
+    
+    // Validate date of birth
+    if (!this.view.isValidDateOfBirth()) {
+      return {
+        isValid: false,
+        message: 'Please enter a valid date of birth or leave all date fields empty',
+        field: 'birthDay'
+      };
+    }
+    
+    // Validate passwords
+    const passwordValidation = this._validatePasswords(formData);
+    if (!passwordValidation.isValid) {
+      return passwordValidation;
+    }
+    
+    return { isValid: true };
+  }
+
+  /**
+   * Validate password fields - BUSINESS LOGIC
+   */
+  _validatePasswords(formData) {
+    const hasPassword = formData.password && formData.password.trim() !== '';
+    const hasConfirmPassword = formData.confirmPassword && formData.confirmPassword.trim() !== '';
+    
+    if ((hasPassword && !hasConfirmPassword) || (!hasPassword && hasConfirmPassword)) {
+      return {
+        isValid: false,
+        message: 'Please fill both password fields or leave both empty',
+        field: 'confirmPassword'
+      };
+    }
+    
+    if (hasPassword && hasConfirmPassword) {
+      if (formData.password !== formData.confirmPassword) {
+        return {
+          isValid: false,
+          message: 'Passwords do not match',
+          field: 'confirmPassword'
+        };
+      }
+    }
+    
+    return { isValid: true };
+  }
+
+  /**
+   * Process account information update - BUSINESS LOGIC
+   */
+  async _processAccountUpdate(formData) {
+    const dateOfBirth = this._formatDateOfBirth(formData);
+    
+    const accountData = {
+      email: formData.email,
+      username: formData.username,
+      fullname: formData.fullname || '',
+      gender: formData.gender || 'male',
+      dateOfBirth: dateOfBirth
+    };
+
+    const result = await AccountModel.updateAccount(accountData);
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to update account information');
+    }
+  }
+
+  /**
+   * Process password update - BUSINESS LOGIC
+   */
+  async _processPasswordUpdate(formData) {
+    const result = await AccountModel.updatePassword(
+      formData.password,
+      formData.confirmPassword
+    );
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to update password');
+    }
+    
+    // Clear password fields through view
+    this.view.clearPasswordFields();
+  }
+
+  /**
+   * Process avatar upload - BUSINESS LOGIC
+   */
+  async _processAvatarUpload(formData) {
+    const result = await AccountModel.uploadAvatar(formData.avatarFile);
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to upload avatar');
+    }
+    
+    if (result.avatarUrl) {
+      // Update view
+      this.view.previewAvatar({ src: result.avatarUrl });
+      
+      // Dispatch events for other components
+      this._dispatchAvatarUpdatedEvent(result.avatarUrl);
+      
+      // Store in localStorage
+      localStorage.setItem('user_avatar', result.avatarUrl);
+    }
+    
+    // Clear file input through view
+    this.view.clearAvatarInput();
+  }
+
+  /**
+   * Format date of birth - DATA PROCESSING
+   */
+  _formatDateOfBirth(formData) {
+    const dob = formData.dateOfBirth;
+    
+    if (dob.day && dob.month && dob.year) {
+      return AccountModel.formatDateOfBirth(dob.day, dob.month, dob.year);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Update stored user information - DATA MANAGEMENT
+   */
+  _updateStoredUserInfo(formData) {
+    localStorage.setItem('username', formData.username);
+    localStorage.setItem('email', formData.email);
+    
+    // Dispatch event for other components
+    this._dispatchUserInfoUpdatedEvent(formData);
+  }
+
+  /**
+   * Handle successful update - UI COORDINATION
+   */
+  _handleSuccessfulUpdate() {
+    // Show success indicator through view
+    this.view.showSaveIndicator(this.saveIndicator);
+    
+    // Redirect after delay
+    setTimeout(() => {
+      this._redirectToCalendar();
+    }, 1500);
+  }
+
+  /**
+   * Redirect to calendar - NAVIGATION LOGIC
+   */
+  _redirectToCalendar() {
+    window.location.href = "index.html";
+  }
+
+  /**
+   * Dispatch avatar updated event - EVENT COORDINATION
+   */
+  _dispatchAvatarUpdatedEvent(avatarUrl) {
+    document.dispatchEvent(new CustomEvent('avatar-updated', {
+      detail: { avatarUrl },
+      bubbles: true
+    }));
+  }
+
+  /**
+   * Dispatch user info updated event - EVENT COORDINATION
+   */
+  _dispatchUserInfoUpdatedEvent(formData) {
+    document.dispatchEvent(new CustomEvent('user-info-updated', {
+      detail: { 
+        username: formData.username,
+        email: formData.email
+      },
+      bubbles: true
+    }));
   }
 }
 

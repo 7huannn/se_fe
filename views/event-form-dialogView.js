@@ -1,20 +1,12 @@
-// views/event-form-dialogView.js - FIXED VERSION
-import { generateEventId } from "../models/event.js";
+// views/event-form-dialogView.js - FIXED MVC COMPLIANT VERSION
 
 /**
- * Khởi tạo logic cho form tạo/sửa event và emit sự kiện tương ứng
- * @param {{ success: (msg: string) => void, error: (msg: string) => void }} toaster
- * @returns {{
- *   formElement: HTMLFormElement,
- *   switchToCreateMode: (date: Date, startTime: number, endTime: number) => void,
- *   switchToEditMode: (eventData: object) => void,
- *   reset: () => void
- * }}
+ * View chỉ chịu trách nhiệm về presentation và DOM manipulation
+ * Không chứa business logic, validation, hoặc data processing
  */
 export function initEventForm(toaster) {
   const formElement = document.querySelector("[data-event-form]");
   
-  // FIX: Kiểm tra formElement có tồn tại không
   if (!formElement) {
     console.error("Event form element not found");
     return null;
@@ -26,86 +18,192 @@ export function initEventForm(toaster) {
   const endInput = formElement.querySelector("#end-time");
   const colorInputs = formElement.querySelectorAll(".color-select__input");
 
-  // Chuyển form về mode "Create", với giá trị mặc định
+  /**
+   * Populate time options in dropdowns - MOVED FROM CONTROLLER
+   * This is pure DOM manipulation, belongs in View
+   */
+  function populateTimeOptions() {
+    const startTimeSelect = formElement.querySelector('#start-time');
+    const endTimeSelect = formElement.querySelector('#end-time');
+    
+    if (!startTimeSelect || !endTimeSelect || startTimeSelect.options.length > 1) {
+      return;
+    }
+    
+    // Clear existing options
+    while (startTimeSelect.options.length > 0) {
+      startTimeSelect.remove(0);
+    }
+    
+    while (endTimeSelect.options.length > 0) {
+      endTimeSelect.remove(0);
+    }
+    
+    // Create time options for every 30 minutes
+    const timeOptions = [];
+    
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute of [0, 30]) {
+        const minutesSinceMidnight = hour * 60 + minute;
+        const displayHour = hour % 12 || 12;
+        const ampm = hour < 12 ? 'AM' : 'PM';
+        const displayMinute = minute === 0 ? '00' : '30';
+        const displayTime = `${displayHour}:${displayMinute} ${ampm}`;
+        
+        timeOptions.push({
+          value: minutesSinceMidnight,
+          text: displayTime
+        });
+      }
+    }
+    
+    // Add options to dropdowns
+    timeOptions.forEach(option => {
+      const startOption = document.createElement('option');
+      startOption.value = option.value;
+      startOption.textContent = option.text;
+      startTimeSelect.appendChild(startOption);
+    });
+    
+    timeOptions.slice(1).forEach(option => {
+      const endOption = document.createElement('option');
+      endOption.value = option.value;
+      endOption.textContent = option.text;
+      endTimeSelect.appendChild(endOption);
+    });
+    
+    // Add end of day option
+    const endOfDayOption = document.createElement('option');
+    endOfDayOption.value = 24 * 60 - 1;
+    endOfDayOption.textContent = '11:59 PM';
+    endTimeSelect.appendChild(endOfDayOption);
+    
+    // Set default times
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const roundedMinutes = Math.ceil(currentMinutes / 30) * 30;
+    
+    let closestStartIndex = 0;
+    let minDiff = Infinity;
+    
+    timeOptions.forEach((option, index) => {
+      const diff = Math.abs(option.value - roundedMinutes);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestStartIndex = index;
+      }
+    });
+    
+    startTimeSelect.selectedIndex = closestStartIndex;
+    endTimeSelect.selectedIndex = Math.min(closestStartIndex + 2, endTimeSelect.options.length - 1);
+  }
+
+  /**
+   * Get form data - PURE DATA COLLECTION, NO BUSINESS LOGIC
+   */
+  function getFormData() {
+    return {
+      title: titleInput ? titleInput.value.trim() : "",
+      date: dateInput ? dateInput.value : "",
+      startTime: startInput ? startInput.value : "",
+      endTime: endInput ? endInput.value : "",
+      color: formElement.querySelector(".color-select__input:checked")?.value || "#2563eb",
+      mode: formElement.dataset.mode || "create",
+      id: formElement.dataset.id || null
+    };
+  }
+
+  /**
+   * Set form to create mode - PURE UI STATE CHANGE
+   */
   function switchToCreateMode(date, startTime, endTime) {
     formElement.dataset.mode = "create";
-    delete formElement.dataset.id;               // Xóa id cũ nếu có
+    delete formElement.dataset.id;
+    
     if (titleInput) titleInput.value = "";
     if (dateInput) dateInput.value = date.toISOString().slice(0, 10);
     if (startInput) startInput.value = startTime;
     if (endInput) endInput.value = endTime;
     if (colorInputs.length > 0) colorInputs[0].checked = true;
+    
+    populateTimeOptions();
   }
 
-  // Chuyển form về mode "Edit", với dữ liệu event hiện có
+  /**
+   * Set form to edit mode - PURE UI STATE CHANGE
+   */
   function switchToEditMode(eventData) {
     formElement.dataset.mode = "edit";
-    formElement.dataset.id = eventData.id;        // Giữ lại id
+    formElement.dataset.id = eventData.id;
+    
     if (titleInput) titleInput.value = eventData.title;
     if (dateInput) dateInput.value = eventData.date.toISOString().slice(0, 10);
     if (startInput) startInput.value = eventData.startTime;
     if (endInput) endInput.value = eventData.endTime;
     
-    const matched = Array.from(colorInputs).find(
+    const matchedColor = Array.from(colorInputs).find(
       inp => inp.value === eventData.color
     );
-    if (matched) matched.checked = true;
+    if (matchedColor) matchedColor.checked = true;
+    
+    populateTimeOptions();
   }
 
-  // Reset form về trạng thái ban đầu
+  /**
+   * Reset form - PURE UI RESET
+   */
   function reset() {
     formElement.reset();
     delete formElement.dataset.mode;
     delete formElement.dataset.id;
   }
 
-  // Bắt sự kiện submit để emit custom event và toast
+  /**
+   * Show validation error - PURE UI FEEDBACK
+   */
+  function showError(message) {
+    if (toaster && toaster.error) {
+      toaster.error(message);
+    }
+  }
+
+  /**
+   * Show success message - PURE UI FEEDBACK
+   */
+  function showSuccess(message) {
+    if (toaster && toaster.success) {
+      toaster.success(message);
+    }
+  }
+
+  /**
+   * Bind form submission - ONLY DISPATCH EVENT, NO BUSINESS LOGIC
+   */
   formElement.addEventListener("submit", e => {
     e.preventDefault();
-    const mode = formElement.dataset.mode || "create";
-
-    // Xây dựng detail payload
-    const detail = {
-      event: {
-        title: titleInput ? titleInput.value.trim() : "",
-        date: dateInput ? new Date(dateInput.value) : new Date(),
-        startTime: startInput ? Number(startInput.value) : 0,
-        endTime: endInput ? Number(endInput.value) : 60,
-        color: formElement.querySelector(".color-select__input:checked")?.value || "#2563eb"
-      }
-    };
-
-    if (mode === "create") {
-      // Tạo id mới
-      detail.event.id = generateEventId();
-      
-      // FIX: Sử dụng đúng method của toaster
-      if (toaster && toaster.success) {
-        toaster.success("Event created!");
-      }
-      
-      formElement.dispatchEvent(
-        new CustomEvent("event-create", { detail, bubbles: true })
-      );
-    } else {
-      // Giữ nguyên id cũ
-      detail.event.id = Number(formElement.dataset.id);
-      
-      // FIX: Sử dụng đúng method của toaster
-      if (toaster && toaster.success) {
-        toaster.success("Event updated!");
-      }
-      
-      formElement.dispatchEvent(
-        new CustomEvent("event-edit", { detail, bubbles: true })
-      );
-    }
+    
+    // Collect form data and dispatch to controller
+    const formData = getFormData();
+    
+    formElement.dispatchEvent(
+      new CustomEvent("form-submit", { 
+        detail: { formData }, 
+        bubbles: true 
+      })
+    );
   });
+
+  // Auto-populate time options when form is initialized
+  populateTimeOptions();
 
   return {
     formElement,
+    getFormData,
     switchToCreateMode,
     switchToEditMode,
-    reset
+    reset,
+    showError,
+    showSuccess,
+    populateTimeOptions
   };
 }

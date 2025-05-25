@@ -1,214 +1,460 @@
-// views/notificationsView.js - Complete version with team notifications support
-import { initToaster } from "./toasterView.js";
+// views/notificationsView.js - FIXED MVC COMPLIANT VERSION
 
 /**
- * Khởi tạo view cho notifications:
- * - Tạo cấu trúc dropdown nếu chưa có
- * - Trả về các elements và API
+ * View chỉ chịu trách nhiệm về presentation và DOM manipulation
+ * Không chứa business logic hoặc data processing
  */
-export function initNotificationsView() {
-  const notificationBtn = document.querySelector('.notification-btn');
-  if (!notificationBtn) return {};
-  
-  // Khởi tạo toaster
-  const toaster = initToaster(document.body);
-  
-  // Đảm bảo container có positioning
-  const notificationsIcon = notificationBtn.closest('.notifications-icon');
-  if (notificationsIcon) {
-    notificationsIcon.style.position = 'relative';
+export class NotificationsView {
+  constructor() {
+    this.notificationBtn = null;
+    this.notificationBadge = null;
+    this.notificationDropdown = null;
+    this.notificationList = null;
+    this.emptyNotification = null;
+    this.filterMenu = null;
+    this.isDropdownOpen = false;
   }
-  
-  // Tìm hoặc tạo badge
-  let notificationBadge = notificationBtn.querySelector('.notification-badge');
-  if (!notificationBadge) {
-    notificationBadge = document.createElement('span');
-    notificationBadge.className = 'notification-badge';
-    notificationBtn.appendChild(notificationBadge);
+
+  /**
+   * Initialize the notifications view - PURE UI SETUP
+   */
+  init() {
+    this.notificationBtn = document.querySelector('.notification-btn');
+    if (!this.notificationBtn) {
+      console.warn("Notification button not found");
+      return {};
+    }
+
+    this._setupNotificationBadge();
+    this._setupNotificationDropdown();
+    this._addNotificationStyles();
+
+    return {
+      notificationBtn: this.notificationBtn,
+      notificationBadge: this.notificationBadge,
+      notificationDropdown: this.notificationDropdown,
+      notificationList: this.notificationList,
+      emptyNotification: this.emptyNotification,
+      toggleDropdown: this.toggleDropdown.bind(this),
+      updateBadge: this.updateBadge.bind(this),
+      toaster: this._createToaster()
+    };
   }
-  
-  // Tìm hoặc tạo dropdown
-  let notificationDropdown = document.querySelector('.notification-dropdown');
-  let notificationList, emptyNotification;
-  
-  if (!notificationDropdown) {
-    // Tạo dropdown nếu chưa có
-    notificationDropdown = document.createElement('div');
-    notificationDropdown.className = 'notification-dropdown';
-    notificationDropdown.innerHTML = `
-      <div class="notification-header">
-        <h3>Notifications</h3>
-        <div class="notification-header-actions">
-          <button class="notification-filter-btn" title="Filter notifications">🔽</button>
-          <button class="notification-clear-btn" title="Clear all">Clear all</button>
-        </div>
-      </div>
-      <div class="notification-filter-menu hidden">
-        <button class="filter-option active" data-filter="all">All</button>
-        <button class="filter-option" data-filter="event">Events</button>
-        <button class="filter-option" data-filter="team">Teams</button>
-      </div>
-      <div class="notification-list-container">
-        <ul class="notification-list"></ul>
-        <div class="empty-noti hidden">No notifications</div>
-      </div>
-    `;
-    
-    // Thêm vào container thay vì body
-    if (notificationsIcon) {
-      notificationsIcon.appendChild(notificationDropdown);
-    } else {
-      // Fallback: thêm vào body với positioning tuyệt đối
-      document.body.appendChild(notificationDropdown);
+
+  /**
+   * Setup notification badge - PURE DOM CREATION
+   */
+  _setupNotificationBadge() {
+    this.notificationBadge = this.notificationBtn.querySelector('.notification-badge');
+    if (!this.notificationBadge) {
+      this.notificationBadge = document.createElement('span');
+      this.notificationBadge.className = 'notification-badge';
+      this.notificationBtn.appendChild(this.notificationBadge);
     }
   }
-  
-  // Lấy elements trong dropdown
-  notificationList = notificationDropdown.querySelector('.notification-list');
-  emptyNotification = notificationDropdown.querySelector('.empty-noti');
-  const filterBtn = notificationDropdown.querySelector('.notification-filter-btn');
-  const filterMenu = notificationDropdown.querySelector('.notification-filter-menu');
-  const filterOptions = notificationDropdown.querySelectorAll('.filter-option');
-  
-  // Nút Clear all
-  const clearBtn = notificationDropdown.querySelector('.notification-clear-btn');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      clearNotifications();
-    });
+
+  /**
+   * Setup notification dropdown - PURE DOM CREATION
+   */
+  _setupNotificationDropdown() {
+    const container = this.notificationBtn.closest('.notifications-icon');
+    if (container) {
+      container.style.position = 'relative';
+    }
+
+    this.notificationDropdown = document.querySelector('.notification-dropdown');
+    if (!this.notificationDropdown) {
+      this.notificationDropdown = document.createElement('div');
+      this.notificationDropdown.className = 'notification-dropdown';
+      this.notificationDropdown.innerHTML = `
+        <div class="notification-header">
+          <h3>Notifications</h3>
+          <div class="notification-header-actions">
+            <button class="notification-filter-btn" title="Filter notifications">🔽</button>
+            <button class="notification-clear-btn" title="Clear all">Clear all</button>
+          </div>
+        </div>
+        <div class="notification-filter-menu hidden">
+          <button class="filter-option active" data-filter="all">All</button>
+          <button class="filter-option" data-filter="event">Events</button>
+          <button class="filter-option" data-filter="team">Teams</button>
+        </div>
+        <div class="notification-list-container">
+          <ul class="notification-list"></ul>
+          <div class="empty-noti hidden">No notifications</div>
+        </div>
+      `;
+
+      if (container) {
+        container.appendChild(this.notificationDropdown);
+      } else {
+        document.body.appendChild(this.notificationDropdown);
+      }
+    }
+
+    // Store references
+    this.notificationList = this.notificationDropdown.querySelector('.notification-list');
+    this.emptyNotification = this.notificationDropdown.querySelector('.empty-noti');
+    this.filterMenu = this.notificationDropdown.querySelector('.notification-filter-menu');
   }
-  
-  // Filter functionality
-  if (filterBtn && filterMenu) {
-    filterBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      filterMenu.classList.toggle('hidden');
-    });
+
+  /**
+   * Toggle dropdown visibility - PURE UI STATE
+   */
+  toggleDropdown() {
+    if (this.isDropdownOpen) {
+      this.closeDropdown();
+    } else {
+      this.openDropdown();
+    }
+  }
+
+  /**
+   * Open dropdown - PURE UI STATE
+   */
+  openDropdown() {
+    if (!this.notificationDropdown) return;
     
-    filterOptions.forEach(option => {
-      option.addEventListener('click', (e) => {
-        e.stopPropagation();
-        
-        // Update active filter
-        filterOptions.forEach(opt => opt.classList.remove('active'));
-        option.classList.add('active');
-        
-        // Apply filter
-        const filter = option.dataset.filter;
-        applyNotificationFilter(filter);
-        
-        // Hide filter menu
-        filterMenu.classList.add('hidden');
+    this._closeOtherDropdowns();
+    this.notificationDropdown.classList.add('show');
+    this.isDropdownOpen = true;
+    this._positionDropdown();
+  }
+
+  /**
+   * Close dropdown - PURE UI STATE
+   */
+  closeDropdown() {
+    if (!this.notificationDropdown) return;
+    
+    this.notificationDropdown.classList.remove('show');
+    this.isDropdownOpen = false;
+    
+    if (this.filterMenu) {
+      this.filterMenu.classList.add('hidden');
+    }
+  }
+
+  /**
+   * Check if dropdown is open - PURE STATE CHECK
+   */
+  isDropdownOpen() {
+    return this.isDropdownOpen;
+  }
+
+  /**
+   * Check if click is inside dropdown - PURE UI INTERACTION
+   */
+  isClickInsideDropdown(target) {
+    return this.notificationDropdown && this.notificationDropdown.contains(target);
+  }
+
+  /**
+   * Update notification badge - PURE UI UPDATE
+   */
+  updateBadge(count) {
+    if (!this.notificationBadge) return;
+    
+    if (count > 0) {
+      this.notificationBadge.textContent = count > 9 ? '9+' : count;
+      this.notificationBadge.classList.add('has-notifications');
+    } else {
+      this.notificationBadge.textContent = '';
+      this.notificationBadge.classList.remove('has-notifications');
+    }
+  }
+
+  /**
+   * Render notifications list - PURE DOM RENDERING
+   */
+  renderNotifications(formattedNotifications) {
+    if (!this.notificationList || !this.emptyNotification) return;
+
+    this.notificationList.innerHTML = '';
+
+    if (formattedNotifications.length === 0) {
+      this.emptyNotification.classList.remove('hidden');
+      return;
+    }
+
+    this.emptyNotification.classList.add('hidden');
+
+    // Group notifications by category
+    const groupedNotifications = this._groupNotificationsByCategory(formattedNotifications);
+
+    // Render each group
+    Object.entries(groupedNotifications).forEach(([category, categoryNotifications]) => {
+      if (Object.keys(groupedNotifications).length > 1) {
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'notification-category-header';
+        categoryHeader.textContent = this._getCategoryDisplayName(category);
+        this.notificationList.appendChild(categoryHeader);
+      }
+
+      categoryNotifications.forEach(notification => {
+        const notificationItem = this._createNotificationItem(notification);
+        this.notificationList.appendChild(notificationItem);
       });
     });
   }
-  
-  // Thêm styles ngay khi khởi tạo
-  if (!document.getElementById('notification-styles')) {
-    addNotificationStyles();
-  }
-  
+
   /**
-   * Toggle dropdown hiển thị
+   * Bind clear all button - PURE EVENT BINDING
    */
-  function toggleDropdown() {
-    if (!notificationDropdown) return;
-    
-    const isShowing = notificationDropdown.classList.contains('show');
-    
-    if (isShowing) {
-      notificationDropdown.classList.remove('show');
-      // Hide filter menu when closing dropdown
-      if (filterMenu) {
-        filterMenu.classList.add('hidden');
-      }
-    } else {
-      // Đóng các dropdown khác trước khi mở
-      closeOtherDropdowns();
-      notificationDropdown.classList.add('show');
-      
-      // Tính toán vị trí nếu cần thiết
-      positionDropdown();
+  bindClearAllButton(callback) {
+    const clearBtn = this.notificationDropdown?.querySelector('.notification-clear-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        callback();
+      });
     }
   }
-  
+
   /**
-   * Apply notification filter
-   * @param {string} filter - Filter type ('all', 'event', 'team')
+   * Bind filter events - PURE EVENT BINDING
    */
-  function applyNotificationFilter(filter) {
-    if (!notificationList) return;
-    
-    const allItems = notificationList.querySelectorAll('.notification-item');
-    
-    allItems.forEach(item => {
-      const category = item.dataset.category || 'general';
-      
-      if (filter === 'all' || category === filter) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
+  bindFilterEvents(callback) {
+    const filterBtn = this.notificationDropdown?.querySelector('.notification-filter-btn');
+    const filterOptions = this.notificationDropdown?.querySelectorAll('.filter-option');
+
+    if (filterBtn && this.filterMenu) {
+      filterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.filterMenu.classList.toggle('hidden');
+      });
+    }
+
+    if (filterOptions) {
+      filterOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          // Update active filter
+          filterOptions.forEach(opt => opt.classList.remove('active'));
+          option.classList.add('active');
+
+          // Call callback with filter
+          const filter = option.dataset.filter;
+          callback(filter);
+
+          // Hide filter menu
+          if (this.filterMenu) {
+            this.filterMenu.classList.add('hidden');
+          }
+        });
+      });
+    }
+  }
+
+  /**
+   * Create notification item - PURE DOM CREATION
+   */
+  _createNotificationItem(notification) {
+    const item = document.createElement('li');
+    item.className = `notification-item ${notification.read ? '' : 'unread'}`;
+    item.dataset.category = notification.category || 'general';
+
+    item.innerHTML = `
+      <div class="notification-icon">${notification.displayIcon}</div>
+      <div class="notification-content">
+        <div class="notification-message">${notification.message}</div>
+        ${notification.details ? `<div class="notification-details">${notification.details}</div>` : ''}
+        <div class="notification-time">${notification.formattedTime}</div>
+        ${this._getNotificationActions(notification)}
+      </div>
+    `;
+
+    // Bind action events
+    this._bindNotificationActions(item, notification);
+
+    return item;
+  }
+
+  /**
+   * Get notification actions HTML - PURE HTML GENERATION
+   */
+  _getNotificationActions(notification) {
+    let actions = '';
+
+    if (notification.category === 'team' && notification.teamId) {
+      if (notification.type === 'team-create' || notification.type === 'team-edit') {
+        actions = `
+          <div class="notification-actions">
+            <button class="notification-action-btn" data-action="view-team" data-team-id="${notification.teamId}">View Team</button>
+          </div>
+        `;
+      } else if (notification.type === 'team-member-add' || notification.type === 'team-member-role-change') {
+        actions = `
+          <div class="notification-actions">
+            <button class="notification-action-btn" data-action="manage-members" data-team-id="${notification.teamId}">Manage Members</button>
+          </div>
+        `;
       }
+    } else if (notification.category === 'event' && notification.eventId) {
+      actions = `
+        <div class="notification-actions">
+          <button class="notification-action-btn" data-action="view-event" data-event-id="${notification.eventId}">View Event</button>
+        </div>
+      `;
+    }
+
+    return actions;
+  }
+
+  /**
+   * Bind notification action events - PURE EVENT BINDING
+   */
+  _bindNotificationActions(item, notification) {
+    const actionButtons = item.querySelectorAll('.notification-action-btn');
+
+    actionButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        const action = button.dataset.action;
+        const teamId = button.dataset.teamId;
+        const eventId = button.dataset.eventId;
+
+        // Dispatch custom events for controller to handle
+        switch (action) {
+          case 'view-team':
+            if (teamId) {
+              document.dispatchEvent(new CustomEvent('notification-action', {
+                detail: { action: 'view-team', teamId: parseInt(teamId, 10) },
+                bubbles: true
+              }));
+            }
+            break;
+
+          case 'manage-members':
+            if (teamId) {
+              document.dispatchEvent(new CustomEvent('notification-action', {
+                detail: { action: 'manage-members', teamId: parseInt(teamId, 10) },
+                bubbles: true
+              }));
+            }
+            break;
+
+          case 'view-event':
+            if (eventId) {
+              document.dispatchEvent(new CustomEvent('notification-action', {
+                detail: { action: 'view-event', eventId: parseInt(eventId, 10) },
+                bubbles: true
+              }));
+            }
+            break;
+        }
+      });
     });
-    
-    // Check if any items are visible
-    const visibleItems = Array.from(allItems).filter(item => item.style.display !== 'none');
-    
-    if (visibleItems.length === 0) {
-      if (emptyNotification) {
-        emptyNotification.classList.remove('hidden');
-        emptyNotification.textContent = filter === 'all' ? 'No notifications' : `No ${filter} notifications`;
-      }
-    } else {
-      if (emptyNotification) {
-        emptyNotification.classList.add('hidden');
-      }
-    }
   }
-  
+
   /**
-   * Đóng các dropdown khác
+   * Group notifications by category - PURE DATA GROUPING
    */
-  function closeOtherDropdowns() {
-    // Đóng team dropdown nếu có
+  _groupNotificationsByCategory(notifications) {
+    return notifications.reduce((groups, notification) => {
+      const category = notification.category || 'general';
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(notification);
+      return groups;
+    }, {});
+  }
+
+  /**
+   * Get category display name - PURE DATA MAPPING
+   */
+  _getCategoryDisplayName(category) {
+    const categoryNames = {
+      'event': '📅 Events',
+      'team': '👥 Teams',
+      'general': '🔔 General'
+    };
+
+    return categoryNames[category] || '🔔 General';
+  }
+
+  /**
+   * Close other dropdowns - PURE UI INTERACTION
+   */
+  _closeOtherDropdowns() {
     const teamDropdown = document.getElementById('teamDropdown');
     if (teamDropdown) {
       teamDropdown.classList.remove('show');
     }
-    
-    // Đóng profile dropdown nếu có
+
     const profileMenu = document.getElementById('profile-menu');
     if (profileMenu) {
       profileMenu.classList.remove('show');
     }
   }
-  
+
   /**
-   * Tính toán và điều chỉnh vị trí dropdown
+   * Position dropdown - PURE UI POSITIONING
    */
-  function positionDropdown() {
-    if (!notificationDropdown || !notificationBtn) return;
-    
-    const btnRect = notificationBtn.getBoundingClientRect();
-    const dropdownRect = notificationDropdown.getBoundingClientRect();
+  _positionDropdown() {
+    if (!this.notificationDropdown || !this.notificationBtn) return;
+
+    const btnRect = this.notificationBtn.getBoundingClientRect();
+    const dropdownRect = this.notificationDropdown.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
-    
-    // Nếu dropdown vượt quá màn hình bên phải, điều chỉnh
+
     if (btnRect.right + dropdownRect.width > viewportWidth) {
-      notificationDropdown.style.right = '0';
-      notificationDropdown.style.left = 'auto';
+      this.notificationDropdown.style.right = '0';
+      this.notificationDropdown.style.left = 'auto';
     }
   }
-  
+
   /**
-   * Thêm CSS styles - Complete version with team notification support
+   * Create simple toaster - PURE UI UTILITY
    */
-  function addNotificationStyles() {
+  _createToaster() {
+    return {
+      success: (message) => this._showToast(message, 'success'),
+      error: (message) => this._showToast(message, 'error'),
+      warning: (message) => this._showToast(message, 'warning')
+    };
+  }
+
+  /**
+   * Show toast notification - PURE UI FEEDBACK
+   */
+  _showToast(message, type = 'success') {
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container';
+      document.body.appendChild(toastContainer);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, 3000);
+  }
+
+  /**
+   * Add notification styles - PURE CSS INJECTION
+   */
+  _addNotificationStyles() {
+    if (document.getElementById('notification-styles')) return;
+
     const styleEl = document.createElement('style');
     styleEl.id = 'notification-styles';
     styleEl.textContent = `
-      /* Container chứa notification */
+      /* Notification container */
       .notifications-icon {
         position: relative !important;
         display: flex;
@@ -218,7 +464,7 @@ export function initNotificationsView() {
         height: 100%;
       }
       
-      /* Notification Button */
+      /* Notification button */
       .notification-btn {
         position: relative;
         background: transparent !important;
@@ -238,7 +484,7 @@ export function initNotificationsView() {
         background-color: rgba(0, 0, 0, 0.05) !important;
       }
       
-      /* Notification Badge */
+      /* Notification badge */
       .notification-badge {
         position: absolute;
         top: 2px;
@@ -262,7 +508,7 @@ export function initNotificationsView() {
         opacity: 1;
       }
       
-      /* Notification Dropdown */
+      /* Notification dropdown */
       .notification-dropdown {
         position: absolute !important;
         top: calc(100% + 8px) !important;
@@ -283,7 +529,7 @@ export function initNotificationsView() {
         display: block !important;
       }
       
-      /* Header của dropdown */
+      /* Dropdown header */
       .notification-header {
         display: flex;
         justify-content: space-between;
@@ -325,7 +571,7 @@ export function initNotificationsView() {
         text-decoration: underline;
       }
       
-      /* Filter Menu */
+      /* Filter menu */
       .notification-filter-menu {
         display: flex;
         gap: 4px;
@@ -359,7 +605,7 @@ export function initNotificationsView() {
         border-color: #0078d4;
       }
       
-      /* List container */
+      /* Notification list */
       .notification-list-container {
         max-height: 350px;
         overflow-y: auto;
@@ -371,7 +617,6 @@ export function initNotificationsView() {
         padding: 0;
       }
       
-      /* Category Headers */
       .notification-category-header {
         padding: 8px 16px;
         background-color: #f5f5f5;
@@ -421,6 +666,13 @@ export function initNotificationsView() {
         word-wrap: break-word;
       }
       
+      .notification-details {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+        line-height: 1.3;
+      }
+      
       .notification-time {
         font-size: 12px;
         color: #666;
@@ -437,15 +689,6 @@ export function initNotificationsView() {
       
       .notification-item.unread .notification-message {
         font-weight: 500;
-      }
-      
-      /* Team notification specific styles */
-      .notification-item[data-category="team"] {
-        border-left: 2px solid #ff8800;
-      }
-      
-      .notification-item[data-category="event"] {
-        border-left: 2px solid #2563eb;
       }
       
       .notification-actions {
@@ -480,19 +723,7 @@ export function initNotificationsView() {
         display: none !important;
       }
       
-      /* Animation */
-      @keyframes fadeInDown {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
-      /* Toast styles for team notifications */
+      /* Toast styles */
       .toast-container {
         position: fixed;
         top: 20px;
@@ -540,21 +771,23 @@ export function initNotificationsView() {
         opacity: 0;
       }
       
-      /* Responsive adjustments */
+      /* Animations */
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      /* Responsive */
       @media (max-width: 768px) {
         .notification-dropdown {
           width: 320px;
           right: -20px;
-        }
-        
-        .notification-header-actions {
-          gap: 4px;
-        }
-        
-        .notification-filter-btn,
-        .notification-clear-btn {
-          font-size: 12px;
-          padding: 2px 6px;
         }
         
         .toast-container {
@@ -562,272 +795,20 @@ export function initNotificationsView() {
           left: 10px;
           top: 10px;
         }
-        
-        .toast {
-          margin: 0;
-        }
       }
     `;
-    
+
     document.head.appendChild(styleEl);
   }
-  
-  /**
-   * Cập nhật badge hiển thị số thông báo
-   * @param {number} count - Số thông báo chưa đọc
-   */
-  function updateBadge(count) {
-    if (!notificationBadge) return;
-    
-    if (count > 0) {
-      notificationBadge.textContent = count > 9 ? '9+' : count;
-      notificationBadge.classList.add('has-notifications');
-    } else {
-      notificationBadge.textContent = '';
-      notificationBadge.classList.remove('has-notifications');
-    }
-  }
-  
-  /**
-   * Xóa tất cả thông báo
-   */
-  function clearNotifications() {
-    // Xóa từ localStorage
-    localStorage.removeItem('schedigo_notifications');
-    
-    // Cập nhật UI
-    if (notificationList) {
-      notificationList.innerHTML = '';
-    }
-    
-    if (emptyNotification) {
-      emptyNotification.classList.remove('hidden');
-    }
-    
-    // Cập nhật badge
-    updateBadge(0);
-    
-    // Đóng dropdown
-    if (notificationDropdown) {
-      notificationDropdown.classList.remove('show');
-    }
-  }
-  
-  return {
-    notificationBtn,
-    notificationBadge,
-    notificationDropdown,
-    notificationList,
-    emptyNotification,
-    toggleDropdown,
-    updateBadge,
-    toaster,
-    applyNotificationFilter
-  };
 }
 
-/**
- * Render notification item with enhanced support for team notifications
- * @param {Object} notification - Notification data
- * @returns {HTMLElement} Notification item element
- */
+// Legacy function exports for backward compatibility
+export function initNotificationsView() {
+  const view = new NotificationsView();
+  return view.init();
+}
+
 export function renderNotificationItem(notification) {
-  const item = document.createElement('li');
-  item.className = `notification-item ${notification.read ? '' : 'unread'}`;
-  item.dataset.category = notification.category || 'general';
-  
-  const timeAgo = formatTimeAgo(notification.timestamp);
-  
-  // Use custom icon if provided, otherwise use default based on type
-  let icon = notification.icon || '📅';
-  if (!notification.icon) {
-    if (notification.type === 'event-create') icon = '➕';
-    else if (notification.type === 'event-edit') icon = '✏️';
-    else if (notification.type === 'event-delete') icon = '🗑️';
-    else if (notification.type === 'team-create') icon = '👥';
-    else if (notification.type === 'team-member-add') icon = '➕👤';
-    else if (notification.type === 'team-member-remove') icon = '➖👤';
-    else if (notification.type === 'team-member-role-change') icon = '👑';
-    else if (notification.type === 'team-edit') icon = '✏️';
-    else if (notification.type === 'team-delete') icon = '🗑️👥';
-    else if (notification.type === 'team-privacy-update') icon = notification.newPrivacy === 'private' ? '🔒' : '🌐';
-  }
-  
-  item.innerHTML = `
-    <div class="notification-icon">${icon}</div>
-    <div class="notification-content">
-      <div class="notification-message">${notification.message}</div>
-      <div class="notification-time">${timeAgo}</div>
-      ${getNotificationActions(notification)}
-    </div>
-  `;
-  
-  // Add click handler for notification actions
-  bindNotificationActions(item, notification);
-  
-  return item;
-}
-
-/**
- * Get notification actions HTML based on notification type
- * @param {Object} notification - Notification data
- * @returns {string} Actions HTML
- */
-function getNotificationActions(notification) {
-  let actions = '';
-  
-  // Add specific actions based on notification type
-  if (notification.category === 'team' && notification.teamId) {
-    if (notification.type === 'team-create' || notification.type === 'team-edit') {
-      actions = `
-        <div class="notification-actions">
-          <button class="notification-action-btn" data-action="view-team" data-team-id="${notification.teamId}">View Team</button>
-        </div>
-      `;
-    } else if (notification.type === 'team-member-add' || notification.type === 'team-member-role-change') {
-      actions = `
-        <div class="notification-actions">
-          <button class="notification-action-btn" data-action="manage-members" data-team-id="${notification.teamId}">Manage Members</button>
-        </div>
-      `;
-    }
-  } else if (notification.category === 'event' && notification.eventId) {
-    actions = `
-      <div class="notification-actions">
-        <button class="notification-action-btn" data-action="view-event" data-event-id="${notification.eventId}">View Event</button>
-      </div>
-    `;
-  }
-  
-  return actions;
-}
-
-/**
- * Bind notification action events
- * @param {HTMLElement} item - Notification item element
- * @param {Object} notification - Notification data
- */
-function bindNotificationActions(item, notification) {
-  const actionButtons = item.querySelectorAll('.notification-action-btn');
-  
-  actionButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-      e.stopPropagation();
-      
-      const action = button.dataset.action;
-      const teamId = button.dataset.teamId;
-      const eventId = button.dataset.eventId;
-      
-      switch (action) {
-        case 'view-team':
-          if (teamId) {
-            // Navigate to team page or open team details
-            window.location.href = 'group.html';
-          }
-          break;
-          
-        case 'manage-members':
-          if (teamId) {
-            // Open team members modal
-            import('../../controllers/group/membersController.js').then(module => {
-              if (module.openTeamMembersModal) {
-                module.openTeamMembersModal(parseInt(teamId, 10), true);
-              }
-            }).catch(err => {
-              console.error('Failed to load members controller:', err);
-            });
-          }
-          break;
-          
-        case 'view-event':
-          if (eventId) {
-            // Find and dispatch event click to open details
-            const event = findEventById(parseInt(eventId, 10));
-            if (event) {
-              document.dispatchEvent(new CustomEvent('event-click', {
-                detail: { event },
-                bubbles: true
-              }));
-            }
-          }
-          break;
-      }
-    });
-  });
-}
-
-/**
- * Find event by ID from storage
- * @param {number} eventId - Event ID
- * @returns {Object|null} Event object or null
- */
-function findEventById(eventId) {
-  try {
-    // Try personal events first
-    const personalEvents = JSON.parse(localStorage.getItem('events') || '[]');
-    const personalEvent = personalEvents.find(e => e.id === eventId);
-    if (personalEvent) {
-      return {
-        ...personalEvent,
-        date: new Date(personalEvent.date)
-      };
-    }
-    
-    // Try team events
-    const teams = JSON.parse(localStorage.getItem('schedigo_teams') || '[]');
-    for (const team of teams) {
-      const teamEventsKey = `team_events_${team.id}`;
-      const teamEvents = JSON.parse(localStorage.getItem(teamEventsKey) || '[]');
-      const teamEvent = teamEvents.find(e => e.id === eventId);
-      if (teamEvent) {
-        return {
-          ...teamEvent,
-          date: new Date(teamEvent.date)
-        };
-      }
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error finding event by ID:', error);
-    return null;
-  }
-}
-
-/**
- * Format timestamp to relative time
- * @param {number} timestamp - Timestamp in milliseconds
- * @returns {string} Formatted time string
- */
-function formatTimeAgo(timestamp) {
-  const now = Date.now();
-  const diff = now - timestamp;
-  
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  
-  if (days > 0) {
-    return `${days} day${days !== 1 ? 's' : ''} ago`;
-  } else if (hours > 0) {
-    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-  } else if (minutes > 0) {
-    return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-  } else {
-    return 'Just now';
-  }
-}
-
-// Legacy notification functions for backward compatibility
-export function notifyEventCreated(toaster) {
-  toaster.success("Event has been created");
-}
-
-export function notifyEventDeleted(toaster) {
-  toaster.success("Event has been deleted");
-}
-
-export function notifyEventEdited(toaster) {
-  toaster.success("Event has been edited");
+  const view = new NotificationsView();
+  return view._createNotificationItem(notification);
 }

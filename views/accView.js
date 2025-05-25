@@ -1,7 +1,15 @@
+// views/accView.js - FIXED MVC COMPLIANT VERSION
+
+/**
+ * View chỉ chịu trách nhiệm về presentation và DOM manipulation
+ * Không chứa business logic hoặc data processing
+ */
 export default class AccView {
   constructor() {
     this.emailInput = document.getElementById('email');
     this.usernameInput = document.getElementById('username');
+    this.fullnameInput = document.getElementById('fullname');
+    this.genderInputs = document.querySelectorAll('input[name="gender"]');
     this.passwordInput = document.getElementById('password');
     this.confirmPasswordInput = document.getElementById('confirmPassword');
     this.passwordToggle = document.getElementById('passwordToggle');
@@ -14,19 +22,14 @@ export default class AccView {
     this.birthYearSelect = document.getElementById('birthYear');
     this.body = document.body;
     
-    // Initialize date selects
     this._initializeDateSelects();
-    
-    // Check for saved dark mode preference
     this._initDarkMode();
   }
 
   /**
-   * Initialize the date select dropdowns with day and year options
-   * @private
+   * Initialize date select dropdowns - PURE UI SETUP
    */
   _initializeDateSelects() {
-    // Generate days for birth day select
     if (this.birthDaySelect) {
       for (let i = 1; i <= 31; i++) {
         const option = document.createElement('option');
@@ -36,7 +39,6 @@ export default class AccView {
       }
     }
     
-    // Generate years for birth year select (100 years back from current year)
     if (this.birthYearSelect) {
       const currentYear = new Date().getFullYear();
       for (let i = currentYear; i >= currentYear - 100; i--) {
@@ -48,6 +50,140 @@ export default class AccView {
     }
   }
 
+  /**
+   * Initialize dark mode from saved preference - PURE UI STATE
+   */
+  _initDarkMode() {
+    if (localStorage.getItem('dark_mode') === 'enabled') {
+      this.body.classList.add('dark-mode');
+      if (this.darkModeToggle) {
+        this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+      }
+      this._applyDarkModeStyles();
+    }
+  }
+
+  /**
+   * Populate form with account data - PURE DATA DISPLAY
+   */
+  populateForm(data) {
+    if (this.emailInput) {
+      this.emailInput.value = data.email || '';
+    }
+    
+    if (this.usernameInput) {
+      this.usernameInput.value = data.username || '';
+    }
+    
+    if (this.fullnameInput) {
+      this.fullnameInput.value = data.fullname || '';
+    }
+    
+    // Set gender radio button
+    if (this.genderInputs.length > 0) {
+      this.genderInputs.forEach(input => {
+        if (input.value === data.gender) {
+          input.checked = true;
+        }
+      });
+    }
+    
+    // Set date of birth if available
+    if (data.dateOfBirth) {
+      const dateOfBirth = this._parseDateOfBirth(data.dateOfBirth);
+      this.setDateOfBirth(dateOfBirth);
+    }
+    
+    // Display avatar if exists
+    if (data.avatar) {
+      this.previewAvatar({ src: data.avatar });
+    }
+  }
+
+  /**
+   * Get form data - PURE DATA COLLECTION
+   */
+  getFormData() {
+    return {
+      email: this.emailInput ? this.emailInput.value.trim() : '',
+      username: this.usernameInput ? this.usernameInput.value.trim() : '',
+      fullname: this.fullnameInput ? this.fullnameInput.value.trim() : '',
+      gender: document.querySelector('input[name="gender"]:checked')?.value || 'male',
+      password: this.passwordInput ? this.passwordInput.value : '',
+      confirmPassword: this.confirmPasswordInput ? this.confirmPasswordInput.value : '',
+      dateOfBirth: this.getDateOfBirth(),
+      hasPassword: this.passwordInput && this.passwordInput.value.trim() !== '',
+      hasAvatar: this.avatarInput && this.avatarInput.files && this.avatarInput.files.length > 0,
+      avatarFile: this.avatarInput && this.avatarInput.files ? this.avatarInput.files[0] : null
+    };
+  }
+
+  /**
+   * Bind password toggle events - PURE EVENT BINDING
+   */
+  bindPasswordToggle() {
+    if (this.passwordToggle && this.passwordInput) {
+      this.passwordToggle.addEventListener('click', () => {
+        this.togglePassword(this.passwordInput, this.passwordToggle);
+      });
+    }
+    
+    if (this.confirmPasswordToggle && this.confirmPasswordInput) {
+      this.confirmPasswordToggle.addEventListener('click', () => {
+        this.togglePassword(this.confirmPasswordInput, this.confirmPasswordToggle);
+      });
+    }
+  }
+
+  /**
+   * Bind avatar preview events - PURE EVENT BINDING
+   */
+  bindAvatarPreview() {
+    if (this.avatarInput) {
+      this.avatarInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          this.previewAvatar(file);
+        }
+      });
+    }
+  }
+
+  /**
+   * Bind dark mode toggle events - PURE EVENT BINDING
+   */
+  bindDarkModeToggle() {
+    if (this.darkModeToggle) {
+      this.darkModeToggle.addEventListener('click', () => {
+        this.toggleDarkMode();
+      });
+    }
+  }
+
+  /**
+   * Bind date validation events - PURE EVENT BINDING
+   */
+  bindDateValidation() {
+    if (this.birthMonthSelect && this.birthDaySelect) {
+      this.birthMonthSelect.addEventListener('change', () => {
+        const month = parseInt(this.birthMonthSelect.value);
+        const year = parseInt(this.birthYearSelect.value);
+        this.updateDaysInMonth(month, year);
+      });
+      
+      this.birthYearSelect.addEventListener('change', () => {
+        if (this.birthMonthSelect.value === '1') { // February
+          const month = parseInt(this.birthMonthSelect.value);
+          const year = parseInt(this.birthYearSelect.value);
+          this.updateDaysInMonth(month, year);
+        }
+      });
+    }
+  }
+
+  /**
+   * Toggle password visibility - PURE UI INTERACTION
+   */
   togglePassword(inputElement, toggleElement) {
     if (!inputElement || !toggleElement) return;
     
@@ -57,6 +193,9 @@ export default class AccView {
     toggleElement.classList.toggle('fa-eye-slash');
   }
 
+  /**
+   * Preview avatar - PURE UI DISPLAY
+   */
   previewAvatar(file) {
     if (!file || !this.avatarPreview) return;
     
@@ -73,66 +212,67 @@ export default class AccView {
     reader.readAsDataURL(file);
   }
 
-  // toggleDarkMode() {
-  //   this.body.classList.toggle('dark-mode');
-    
-  //   if (this.body.classList.contains('dark-mode')) {
-  //     this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-  //     document.documentElement.style.setProperty('--text-color', '#f8f9fa');
-  //     document.documentElement.style.setProperty('--light-color', '#2c3e50');
-  //     document.documentElement.style.setProperty('--border-color', '#4d5b6a');
-  //     this.body.style.backgroundColor = '#1a2332';
-  //     this._setBgColor('.account-card, .form-control, .date-select-item', '#2c3e50', '#f8f9fa');
-      
-  //     // Save preference
-  //     localStorage.setItem('dark_mode', 'enabled');
-  //   } else {
-  //     this.darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-  //     document.documentElement.style.setProperty('--text-color', '#333');
-  //     document.documentElement.style.setProperty('--light-color', '#f8f9fa');
-  //     document.documentElement.style.setProperty('--border-color', '#e0e0e0');
-  //     this.body.style.backgroundColor = '#f5f7fa';
-  //     this._setBgColor('.account-card, .form-control, .date-select-item', '#fff', '#333');
-      
-  //     // Save preference
-  //     localStorage.setItem('dark_mode', 'disabled');
-  //   }
-  // }
-  
   /**
-   * Initialize dark mode based on saved preference
-   * @private
+   * Toggle dark mode - PURE UI STATE CHANGE
    */
-  _initDarkMode() {
-    if (localStorage.getItem('dark_mode') === 'enabled') {
-      this.body.classList.add('dark-mode');
+  toggleDarkMode() {
+    this.body.classList.toggle('dark-mode');
+    
+    if (this.body.classList.contains('dark-mode')) {
       this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-      document.documentElement.style.setProperty('--text-color', '#f8f9fa');
-      document.documentElement.style.setProperty('--light-color', '#2c3e50');
-      document.documentElement.style.setProperty('--border-color', '#4d5b6a');
-      this.body.style.backgroundColor = '#1a2332';
-      this._setBgColor('.account-card, .form-control, .date-select-item', '#2c3e50', '#f8f9fa');
+      this._applyDarkModeStyles();
+      localStorage.setItem('dark_mode', 'enabled');
+    } else {
+      this.darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+      this._applyLightModeStyles();
+      localStorage.setItem('dark_mode', 'disabled');
     }
   }
 
+  /**
+   * Apply dark mode styles - PURE UI STYLING
+   */
+  _applyDarkModeStyles() {
+    document.documentElement.style.setProperty('--text-color', '#f8f9fa');
+    document.documentElement.style.setProperty('--light-color', '#2c3e50');
+    document.documentElement.style.setProperty('--border-color', '#4d5b6a');
+    this.body.style.backgroundColor = '#1a2332';
+    this._setBgColor('.account-card, .form-control, .date-select-item', '#2c3e50', '#f8f9fa');
+  }
+
+  /**
+   * Apply light mode styles - PURE UI STYLING
+   */
+  _applyLightModeStyles() {
+    document.documentElement.style.setProperty('--text-color', '#333');
+    document.documentElement.style.setProperty('--light-color', '#f8f9fa');
+    document.documentElement.style.setProperty('--border-color', '#e0e0e0');
+    this.body.style.backgroundColor = '#f5f7fa';
+    this._setBgColor('.account-card, .form-control, .date-select-item', '#fff', '#333');
+  }
+
+  /**
+   * Set background color for elements - PURE UI STYLING
+   */
   _setBgColor(selector, bg, color) {
     document.querySelectorAll(selector).forEach(el => {
       el.style.backgroundColor = bg;
       el.style.color = color;
     });
   }
-  
-  showSaveIndicator(saveIndicator, duration = 1500) {
-  if (!saveIndicator) return;
-  
-  // Update message to indicate redirect
-  saveIndicator.textContent = 'Saved successfully! Redirecting...';
-  saveIndicator.style.display = 'block';
-}
-  
+
   /**
-   * Set date of birth values in the select fields
-   * @param {object} dateOfBirth - Object containing day, month, year values
+   * Show save indicator - PURE UI FEEDBACK
+   */
+  showSaveIndicator(saveIndicator, duration = 1500) {
+    if (!saveIndicator) return;
+    
+    saveIndicator.textContent = 'Saved successfully! Redirecting...';
+    saveIndicator.style.display = 'block';
+  }
+
+  /**
+   * Set date of birth values - PURE UI STATE
    */
   setDateOfBirth(dateOfBirth) {
     if (!dateOfBirth) return;
@@ -149,10 +289,9 @@ export default class AccView {
       this.birthYearSelect.value = dateOfBirth.year || '';
     }
   }
-  
+
   /**
-   * Get date of birth values from the select fields
-   * @returns {object} Object containing day, month, year values
+   * Get date of birth values - PURE DATA COLLECTION
    */
   getDateOfBirth() {
     return {
@@ -161,10 +300,9 @@ export default class AccView {
       year: this.birthYearSelect ? this.birthYearSelect.value : ''
     };
   }
-  
+
   /**
-   * Check if the date of birth is valid
-   * @returns {boolean} True if the date is valid
+   * Check if date of birth is valid - PURE VALIDATION
    */
   isValidDateOfBirth() {
     const dob = this.getDateOfBirth();
@@ -185,7 +323,7 @@ export default class AccView {
       return false;
     }
     
-    // Check if the date is reasonable (e.g., not in the future)
+    // Check if the date is reasonable (not in the future)
     const today = new Date();
     if (date > today) {
       return false;
@@ -198,19 +336,16 @@ export default class AccView {
     
     return true;
   }
-  
+
   /**
-   * Update the number of days in the day select based on month and year
-   * @param {number} month - Selected month (0-based)
-   * @param {number} year - Selected year
+   * Update days in month based on selected month/year - PURE UI UPDATE
    */
   updateDaysInMonth(month, year) {
     if (!this.birthDaySelect || isNaN(month)) return;
     
-    // Get current selected day
     const currentDay = this.birthDaySelect.value;
     
-    // Clear existing options except the placeholder
+    // Clear existing options except placeholder
     while (this.birthDaySelect.options.length > 1) {
       this.birthDaySelect.remove(1);
     }
@@ -220,8 +355,6 @@ export default class AccView {
     
     if (month === 1) { // February (0-based)
       daysInMonth = 28;
-      
-      // Check for leap year
       if (!isNaN(year) && ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0)) {
         daysInMonth = 29;
       }
@@ -242,17 +375,14 @@ export default class AccView {
       this.birthDaySelect.value = currentDay;
     }
   }
-  
+
   /**
-   * Display an error message
-   * @param {string} message - The error message to display
-   * @param {string} fieldId - The ID of the field with error (optional)
+   * Show error message - PURE UI FEEDBACK
    */
   showError(message, fieldId = null) {
     let errorDiv;
     
     if (fieldId) {
-      // Find or create an error div for the specific field
       const field = document.getElementById(fieldId);
       if (!field) return;
       
@@ -266,51 +396,62 @@ export default class AccView {
         parentDiv.appendChild(errorDiv);
       }
     } else {
-      // Create or find a global error message at the top of the form
       errorDiv = document.querySelector('#form-error');
       if (!errorDiv) {
         errorDiv = document.createElement('div');
         errorDiv.id = 'form-error';
         errorDiv.className = 'error-message';
         const form = document.getElementById('accountForm');
-        form.insertBefore(errorDiv, form.firstChild);
+        if (form) {
+          form.insertBefore(errorDiv, form.firstChild);
+        }
       }
     }
     
-    errorDiv.textContent = message;
-    errorDiv.classList.add('show');
-    
-    // Hide error after 5 seconds
-    setTimeout(() => {
-      errorDiv.classList.remove('show');
-    }, 5000);
+    if (errorDiv) {
+      errorDiv.textContent = message;
+      errorDiv.classList.add('show');
+      
+      setTimeout(() => {
+        errorDiv.classList.remove('show');
+      }, 5000);
+    }
   }
-  
+
   /**
-   * Check if passwords match
-   * @returns {boolean} True if passwords match or both are empty
+   * Clear password fields - PURE UI RESET
    */
-  validatePasswords() {
-    const password = this.passwordInput.value;
-    const confirmPassword = this.confirmPasswordInput.value;
-    
-    // If both are empty, no password change is requested
-    if (!password && !confirmPassword) {
-      return true;
+  clearPasswordFields() {
+    if (this.passwordInput) {
+      this.passwordInput.value = '';
     }
-    
-    // If one is filled but the other isn't
-    if ((password && !confirmPassword) || (!password && confirmPassword)) {
-      this.showError('Both password fields must be filled', 'confirmPassword');
-      return false;
+    if (this.confirmPasswordInput) {
+      this.confirmPasswordInput.value = '';
     }
-    
-    // Check if passwords match
-    if (password !== confirmPassword) {
-      this.showError('Passwords do not match', 'confirmPassword');
-      return false;
+  }
+
+  /**
+   * Clear avatar input - PURE UI RESET
+   */
+  clearAvatarInput() {
+    if (this.avatarInput) {
+      this.avatarInput.value = '';
     }
+  }
+
+  /**
+   * Parse date of birth string - PURE DATA PARSING
+   */
+  _parseDateOfBirth(dateString) {
+    if (!dateString) return { day: '', month: '', year: '' };
     
-    return true;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return { day: '', month: '', year: '' };
+    
+    return {
+      day: date.getDate(),
+      month: date.getMonth(), // 0-based month
+      year: date.getFullYear()
+    };
   }
 }

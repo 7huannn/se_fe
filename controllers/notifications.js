@@ -1,425 +1,238 @@
-// controllers/notifications.js - Updated with team notifications
-import { initNotificationsView, renderNotificationItem } from "../views/notificationsView.js";
+// controllers/notifications.js - FIXED MVC COMPLIANT VERSION
+
+import { NotificationsModel } from "../models/notifications.js";
+import { NotificationsView } from "../views/notificationsView.js";
 
 /**
- * Controller để khởi tạo notifications:
- * - Bắt các sự kiện liên quan đến notifications (events và teams)
- * - Xử lý thông báo event, team, cập nhật badge, toggle dropdown
+ * Controller chỉ chịu trách nhiệm điều phối giữa Model và View
+ * Xử lý business logic và user interactions
+ * Không thao tác DOM trực tiếp
  */
 export function initNotificationsController() {
-  // Khởi tạo view, lấy các elements và API
-  const notificationsAPI = initNotificationsView();
+  const model = new NotificationsModel();
+  const view = new NotificationsView();
   
-  // FIX: Kiểm tra API có tồn tại không
-  if (!notificationsAPI || !notificationsAPI.notificationBtn) {
+  // Initialize view
+  const viewAPI = view.init();
+  
+  if (!viewAPI || !viewAPI.notificationBtn) {
     console.warn("Notifications view initialization failed");
     return {};
   }
   
   const { 
     notificationBtn, 
-    notificationBadge,
-    notificationDropdown,
-    notificationList,
-    emptyNotification,
     toggleDropdown, 
     updateBadge,
-    toaster
-  } = notificationsAPI;
+    toaster 
+  } = viewAPI;
   
-  // Mảng lưu trữ thông báo
-  let notifications = loadNotifications();
-  let unreadCount = countUnreadNotifications(notifications);
+  // Load initial data
+  let notifications = model.loadNotifications();
+  let unreadCount = model.countUnreadNotifications(notifications);
   
-  // Cập nhật badge ban đầu
+  // Initialize view with data
   updateBadge(unreadCount);
   
-  // Toggle dropdown khi click vào button
-  notificationBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleDropdown();
-    renderNotifications();
-    
-    // Đánh dấu tất cả là đã đọc khi mở dropdown
-    if (unreadCount > 0) {
-      markAllAsRead();
-    }
-  });
+  // Bind view events
+  bindViewEvents();
   
-  // Đóng dropdown khi click ra ngoài
-  document.addEventListener("click", (e) => {
-    if (notificationDropdown && notificationDropdown.classList.contains('show')) {
-      if (!notificationDropdown.contains(e.target) && e.target !== notificationBtn) {
-        toggleDropdown();
-      }
-    }
-  });
-  
-  // ==============================================
-  // EVENT NOTIFICATIONS (Existing)
-  // ==============================================
-  
-  // Lắng nghe sự kiện tạo event
-  document.addEventListener("event-create", (e) => {
-    const eventData = e.detail.event || e.detail;
-    addNotification({
-      type: 'event-create',
-      category: 'event',
-      message: `Event "${eventData.title}" created`,
-      timestamp: Date.now(),
-      read: false,
-      eventId: eventData.id,
-      icon: '➕'
-    });
-    
-    if (toaster && toaster.success) {
-      toaster.success("Event has been created");
-    }
-  });
-  
-  // Lắng nghe sự kiện sửa event
-  document.addEventListener("event-edit", (e) => {
-    const eventData = e.detail.event || e.detail;
-    addNotification({
-      type: 'event-edit',
-      category: 'event',
-      message: `Event "${eventData.title}" updated`,
-      timestamp: Date.now(),
-      read: false,
-      eventId: eventData.id,
-      icon: '✏️'
-    });
-    
-    if (toaster && toaster.success) {
-      toaster.success("Event has been edited");
-    }
-  });
-  
-  // Lắng nghe sự kiện xoá event
-  document.addEventListener("event-delete", (e) => {
-    const eventData = e.detail.event || e.detail;
-    addNotification({
-      type: 'event-delete',
-      category: 'event',
-      message: `Event "${eventData.title || 'Event'}" deleted`,
-      timestamp: Date.now(),
-      read: false,
-      icon: '🗑️'
-    });
-    
-    if (toaster && toaster.success) {
-      toaster.success("Event has been deleted");
-    }
-  });
-  
-  // ==============================================
-  // TEAM NOTIFICATIONS (New)
-  // ==============================================
-  
-  // Lắng nghe sự kiện tạo team
-  document.addEventListener("team-create", (e) => {
-    const teamData = e.detail.team;
-    const currentUser = getCurrentUser();
-    
-    addNotification({
-      type: 'team-create',
-      category: 'team',
-      message: `Team "${teamData.name}" created successfully`,
-      timestamp: Date.now(),
-      read: false,
-      teamId: teamData.id,
-      icon: '👥'
-    });
-    
-    if (toaster && toaster.success) {
-      toaster.success("Team created successfully");
-    }
-  });
-  
-  // Lắng nghe sự kiện thêm thành viên vào team
-  document.addEventListener("team-member-add", (e) => {
-    const { teamId, member } = e.detail;
-    const team = getTeamById(teamId);
-    const currentUser = getCurrentUser();
-    
-    if (team) {
-      // Thông báo cho người thêm
-      addNotification({
-        type: 'team-member-add',
-        category: 'team',
-        message: `${member.name || member.email} added to team "${team.name}"`,
-        timestamp: Date.now(),
-        read: false,
-        teamId: teamId,
-        memberId: member.id,
-        icon: '➕👤'
-      });
-      
-      // Nếu là thêm người khác (không phải bản thân)
-      if (member.email.toLowerCase() !== currentUser.email.toLowerCase()) {
-        // Có thể thêm logic để gửi thông báo cho member được thêm vào
-        // (trong thực tế cần API backend để gửi thông báo qua email/push notification)
-        console.log(`Should notify ${member.email} about being added to team ${team.name}`);
-      }
-    }
-  });
-  
-  // Lắng nghe sự kiện xóa thành viên khỏi team
-  document.addEventListener("team-member-remove", (e) => {
-    const { teamId, memberId } = e.detail;
-    const team = getTeamById(teamId);
-    
-    if (team) {
-      // Tìm thông tin member đã bị xóa
-      const removedMember = team.members?.find(m => m.id === memberId);
-      const memberName = removedMember ? (removedMember.name || removedMember.email) : 'Member';
-      
-      addNotification({
-        type: 'team-member-remove',
-        category: 'team',
-        message: `${memberName} removed from team "${team.name}"`,
-        timestamp: Date.now(),
-        read: false,
-        teamId: teamId,
-        icon: '➖👤'
-      });
-    }
-  });
-  
-  // Lắng nghe sự kiện thay đổi role thành viên
-  document.addEventListener("team-member-role-change", (e) => {
-    const { teamId, memberId, role } = e.detail;
-    const team = getTeamById(teamId);
-    
-    if (team) {
-      const member = team.members?.find(m => m.id === memberId);
-      const memberName = member ? (member.name || member.email) : 'Member';
-      
-      const roleText = role === 'leader' ? 'promoted to Leader' : 'changed to Member';
-      const icon = role === 'leader' ? '👑' : '👤';
-      
-      addNotification({
-        type: 'team-member-role-change',
-        category: 'team',
-        message: `${memberName} ${roleText} in team "${team.name}"`,
-        timestamp: Date.now(),
-        read: false,
-        teamId: teamId,
-        memberId: memberId,
-        newRole: role,
-        icon: icon
-      });
-    }
-  });
-  
-  // Lắng nghe sự kiện chỉnh sửa team
-  document.addEventListener("team-edit", (e) => {
-    const { teamId, updateData } = e.detail;
-    const team = getTeamById(teamId);
-    
-    if (team) {
-      addNotification({
-        type: 'team-edit',
-        category: 'team',
-        message: `Team "${team.name}" details updated`,
-        timestamp: Date.now(),
-        read: false,
-        teamId: teamId,
-        icon: '✏️'
-      });
-    }
-  });
-  
-  // Lắng nghe sự kiện xóa team
-  document.addEventListener("team-delete", (e) => {
-    const { teamId } = e.detail;
-    
-    // Lấy tên team trước khi xóa (nếu còn trong localStorage)
-    const teams = JSON.parse(localStorage.getItem('schedigo_teams') || '[]');
-    const team = teams.find(t => t.id === teamId);
-    const teamName = team ? team.name : 'Team';
-    
-    addNotification({
-      type: 'team-delete',
-      category: 'team',
-      message: `Team "${teamName}" has been deleted`,
-      timestamp: Date.now(),
-      read: false,
-      icon: '🗑️👥'
-    });
-    
-    if (toaster && toaster.success) {
-      toaster.success("Team deleted successfully");
-    }
-  });
-  
-  // Lắng nghe sự kiện thay đổi privacy team
-  document.addEventListener("team-privacy-update", (e) => {
-    const { teamId, privacy } = e.detail;
-    const team = getTeamById(teamId);
-    
-    if (team) {
-      const privacyText = privacy === 'private' ? 'Private' : 'Public';
-      const icon = privacy === 'private' ? '🔒' : '🌐';
-      
-      addNotification({
-        type: 'team-privacy-update',
-        category: 'team',
-        message: `Team "${team.name}" changed to ${privacyText}`,
-        timestamp: Date.now(),
-        read: false,
-        teamId: teamId,
-        newPrivacy: privacy,
-        icon: icon
-      });
-    }
-  });
-  
+  // Bind model events (listen to app events)
+  bindModelEvents();
+
   /**
-   * Thêm notification mới
-   * @param {Object} notification - Thông tin notification
+   * Bind view interaction events - EVENT COORDINATION
+   */
+  function bindViewEvents() {
+    // Toggle dropdown
+    notificationBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleDropdown();
+      
+      // Render notifications when opened
+      const formattedNotifications = model.formatNotificationsForDisplay(notifications);
+      view.renderNotifications(formattedNotifications);
+      
+      // Mark all as read when opened
+      if (unreadCount > 0) {
+        markAllAsRead();
+      }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (view.isDropdownOpen() && !view.isClickInsideDropdown(e.target) && e.target !== notificationBtn) {
+        view.closeDropdown();
+      }
+    });
+    
+    // Clear all notifications
+    view.bindClearAllButton(() => {
+      clearAllNotifications();
+    });
+    
+    // Filter notifications
+    view.bindFilterEvents((filter) => {
+      const filteredNotifications = model.filterNotifications(notifications, filter);
+      const formattedNotifications = model.formatNotificationsForDisplay(filteredNotifications);
+      view.renderNotifications(formattedNotifications);
+    });
+  }
+
+  /**
+   * Bind application events to model - BUSINESS LOGIC COORDINATION
+   */
+  function bindModelEvents() {
+    // Event notifications
+    document.addEventListener("event-create", (e) => {
+      const eventData = e.detail.event || e.detail;
+      const notification = model.createEventNotification('create', eventData);
+      addNotification(notification);
+      
+      if (toaster && toaster.success) {
+        toaster.success("Event has been created");
+      }
+    });
+    
+    document.addEventListener("event-edit", (e) => {
+      const eventData = e.detail.event || e.detail;
+      const notification = model.createEventNotification('edit', eventData);
+      addNotification(notification);
+      
+      if (toaster && toaster.success) {
+        toaster.success("Event has been edited");
+      }
+    });
+    
+    document.addEventListener("event-delete", (e) => {
+      const eventData = e.detail.event || e.detail;
+      const notification = model.createEventNotification('delete', eventData);
+      addNotification(notification);
+      
+      if (toaster && toaster.success) {
+        toaster.success("Event has been deleted");
+      }
+    });
+    
+    // Team notifications
+    document.addEventListener("team-create", (e) => {
+      const teamData = e.detail.team;
+      const notification = model.createTeamNotification('create', teamData);
+      addNotification(notification);
+      
+      if (toaster && toaster.success) {
+        toaster.success("Team created successfully");
+      }
+    });
+    
+    document.addEventListener("team-member-add", (e) => {
+      const { teamId, member } = e.detail;
+      const team = getTeamById(teamId);
+      if (team) {
+        const notification = model.createTeamMemberNotification('add', team, member);
+        addNotification(notification);
+      }
+    });
+    
+    document.addEventListener("team-member-remove", (e) => {
+      const { teamId, memberId } = e.detail;
+      const team = getTeamById(teamId);
+      if (team) {
+        const memberToRemove = team.members?.find(m => m.id === memberId);
+        if (memberToRemove) {
+          const notification = model.createTeamMemberNotification('remove', team, memberToRemove);
+          addNotification(notification);
+        }
+      }
+    });
+    
+    document.addEventListener("team-member-role-change", (e) => {
+      const { teamId, memberId, role } = e.detail;
+      const team = getTeamById(teamId);
+      if (team) {
+        const member = team.members?.find(m => m.id === memberId);
+        if (member) {
+          const notification = model.createTeamRoleChangeNotification(team, member, role);
+          addNotification(notification);
+        }
+      }
+    });
+    
+    document.addEventListener("team-edit", (e) => {
+      const { teamId, updateData } = e.detail;
+      const team = getTeamById(teamId);
+      if (team) {
+        const notification = model.createTeamNotification('edit', team, updateData);
+        addNotification(notification);
+      }
+    });
+    
+    document.addEventListener("team-delete", (e) => {
+      const { teamId } = e.detail;
+      const teams = JSON.parse(localStorage.getItem('schedigo_teams') || '[]');
+      const team = teams.find(t => t.id === teamId);
+      if (team) {
+        const notification = model.createTeamNotification('delete', team);
+        addNotification(notification);
+      }
+      
+      if (toaster && toaster.success) {
+        toaster.success("Team deleted successfully");
+      }
+    });
+    
+    document.addEventListener("team-privacy-update", (e) => {
+      const { teamId, privacy } = e.detail;
+      const team = getTeamById(teamId);
+      if (team) {
+        const notification = model.createTeamPrivacyNotification(team, privacy);
+        addNotification(notification);
+      }
+    });
+  }
+
+  /**
+   * Add new notification - BUSINESS LOGIC
    */
   function addNotification(notification) {
-    // Thêm vào đầu mảng
-    notifications.unshift(notification);
-    
-    // Giới hạn số lượng thông báo (giữ 50 thông báo gần nhất)
-    if (notifications.length > 50) {
-      notifications = notifications.slice(0, 50);
-    }
-    
-    // Lưu vào localStorage
-    saveNotifications(notifications);
-    
-    // Cập nhật số lượng chưa đọc
-    unreadCount++;
+    notifications = model.addNotification(notifications, notification);
+    unreadCount = model.countUnreadNotifications(notifications);
     updateBadge(unreadCount);
+    
+    // Save to storage
+    model.saveNotifications(notifications);
   }
-  
+
   /**
-   * Đánh dấu tất cả thông báo là đã đọc
+   * Mark all notifications as read - BUSINESS LOGIC
    */
   function markAllAsRead() {
-    notifications.forEach(notification => {
-      notification.read = true;
-    });
-    
-    // Lưu vào localStorage
-    saveNotifications(notifications);
-    
-    // Cập nhật badge
+    notifications = model.markAllAsRead(notifications);
     unreadCount = 0;
     updateBadge(0);
-  }
-  
-  /**
-   * Render danh sách thông báo
-   */
-  function renderNotifications() {
-    if (!notificationList || !emptyNotification) return;
     
-    // Clear current list
-    notificationList.innerHTML = '';
+    // Save to storage
+    model.saveNotifications(notifications);
+  }
+
+  /**
+   * Clear all notifications - BUSINESS LOGIC
+   */
+  function clearAllNotifications() {
+    notifications = [];
+    unreadCount = 0;
+    updateBadge(0);
     
-    if (notifications.length === 0) {
-      // Show empty message
-      emptyNotification.classList.remove('hidden');
-    } else {
-      // Hide empty message
-      emptyNotification.classList.add('hidden');
-      
-      // Group notifications by category
-      const groupedNotifications = groupNotificationsByCategory(notifications);
-      
-      // Render each group
-      Object.entries(groupedNotifications).forEach(([category, categoryNotifications]) => {
-        // Add category header if there are multiple categories
-        if (Object.keys(groupedNotifications).length > 1) {
-          const categoryHeader = document.createElement('div');
-          categoryHeader.className = 'notification-category-header';
-          categoryHeader.textContent = getCategoryDisplayName(category);
-          notificationList.appendChild(categoryHeader);
-        }
-        
-        // Render notifications in this category
-        categoryNotifications.forEach(notification => {
-          const notificationItem = renderNotificationItem(notification);
-          notificationList.appendChild(notificationItem);
-        });
-      });
-    }
-  }
-  
-  /**
-   * Group notifications by category
-   * @param {Array} notifications - Array of notifications
-   * @returns {Object} Grouped notifications
-   */
-  function groupNotificationsByCategory(notifications) {
-    return notifications.reduce((groups, notification) => {
-      const category = notification.category || 'general';
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(notification);
-      return groups;
-    }, {});
-  }
-  
-  /**
-   * Get display name for category
-   * @param {string} category - Category key
-   * @returns {string} Display name
-   */
-  function getCategoryDisplayName(category) {
-    const categoryNames = {
-      'event': '📅 Events',
-      'team': '👥 Teams',
-      'general': '🔔 General'
-    };
+    // Save to storage
+    model.saveNotifications([]);
     
-    return categoryNames[category] || '🔔 General';
+    // Update view
+    view.renderNotifications([]);
+    view.closeDropdown();
   }
-  
+
   /**
-   * Lấy thông báo từ localStorage
-   * @returns {Array} Danh sách thông báo
-   */
-  function loadNotifications() {
-    try {
-      const stored = localStorage.getItem('schedigo_notifications');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Error loading notifications', error);
-      return [];
-    }
-  }
-  
-  /**
-   * Lưu thông báo vào localStorage
-   * @param {Array} notifications - Danh sách thông báo
-   */
-  function saveNotifications(notifications) {
-    try {
-      localStorage.setItem('schedigo_notifications', JSON.stringify(notifications));
-    } catch (error) {
-      console.error('Error saving notifications', error);
-    }
-  }
-  
-  /**
-   * Đếm số thông báo chưa đọc
-   * @param {Array} notifications - Danh sách thông báo
-   * @returns {number} Số thông báo chưa đọc
-   */
-  function countUnreadNotifications(notifications) {
-    return notifications.filter(notification => !notification.read).length;
-  }
-  
-  /**
-   * Get team by ID
-   * @param {number} teamId - Team ID
-   * @returns {Object|null} Team object or null
+   * Get team by ID - DELEGATE TO MODEL
    */
   function getTeamById(teamId) {
     try {
@@ -430,30 +243,14 @@ export function initNotificationsController() {
       return null;
     }
   }
-  
-  /**
-   * Get current user information
-   * @returns {Object} Current user info
-   */
-  function getCurrentUser() {
-    return {
-      email: localStorage.getItem('email') || '',
-      name: localStorage.getItem('username') || 'User'
-    };
-  }
-  
+
   // Public API
   return {
     toaster,
     addNotification,
     markAllAsRead,
+    clearNotifications: clearAllNotifications,
     getNotifications: () => notifications,
-    clearNotifications: () => {
-      notifications = [];
-      saveNotifications([]);
-      unreadCount = 0;
-      updateBadge(0);
-      renderNotifications();
-    }
+    getUnreadCount: () => unreadCount
   };
 }
