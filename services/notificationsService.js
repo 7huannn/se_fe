@@ -93,7 +93,7 @@ class NotificationsService {
     return this.notifications.filter(notification => {
       switch (type) {
         case 'event':
-          return ['event_created', 'event_updated', 'event_deleted', 'reminder'].includes(notification.type);
+          return ['event_created', 'event_updated', 'event_deleted'].includes(notification.type);
         case 'group':
           return [
             'group_invite', 'kicked_from_group', 'role_updated', 
@@ -172,7 +172,6 @@ class NotificationsService {
       'role_updated': '👑',
       'leader_transferred': '👑',
       'group_deleted': '🗑️👥',
-      'reminder': '⏰'
     };
     
     return iconMap[type] || '🔔';
@@ -180,7 +179,7 @@ class NotificationsService {
 
   // Get notification category
   getNotificationCategory(type) {
-    const eventTypes = ['event_created', 'event_updated', 'event_deleted', 'reminder'];
+    const eventTypes = ['event_created', 'event_updated', 'event_deleted'];
     const groupTypes = ['group_invite', 'kicked_from_group', 'role_updated', 'leader_transferred', 'group_deleted'];
     
     if (eventTypes.includes(type)) return 'event';
@@ -191,7 +190,7 @@ class NotificationsService {
   // Get notification priority
   getNotificationPriority(type) {
     const highPriority = ['group_invite', 'kicked_from_group', 'leader_transferred', 'group_deleted'];
-    const mediumPriority = ['role_updated', 'event_created', 'event_updated', 'reminder'];
+    const mediumPriority = ['role_updated', 'event_created', 'event_updated'];
     
     if (highPriority.includes(type)) return 'high';
     if (mediumPriority.includes(type)) return 'medium';
