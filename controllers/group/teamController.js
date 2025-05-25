@@ -1,4 +1,4 @@
-// controllers/group/teamController.js - File hoàn chỉnh
+// controllers/group/teamController.js - Updated with notifications support
 
 import { loadTeams, saveTeams, generateTeamCode, getInitials, addTeam, getColorClass, 
          getTeamById, updateTeam, deleteTeam, updateTeamPrivacy } from '../../models/group/team.js';
@@ -7,6 +7,17 @@ import { createTeamCardElement, createTeamsGridStructure, toggleTeamsContent,
 import { hideModal, showModal } from '../../views/group/modalView.js';
 import { openTeamMembersModal } from './membersController.js';
 import { TEAM_ROLES, isTeamLeader, canManageMembers, canDeleteTeam, canEditTeam, getCurrentUser } from '../../models/group/team-permissions.js';
+
+// Import notification helpers
+import { 
+  createTeamCreationNotification,
+  createTeamEditNotification,
+  createTeamDeletionNotification,
+  createPrivacyChangeNotification,
+  dispatchNotificationEvent,
+  showDesktopNotification,
+  getCurrentUserForNotifications
+} from '../../models/group/team-notifications.js';
 
 /**
  * Khởi tạo controller cho team list
@@ -95,6 +106,11 @@ export function initCreateTeamFormController() {
             members: members
         };
         
+        // Create and dispatch notification for team creation
+        const notification = createTeamCreationNotification(teamData);
+        dispatchNotificationEvent(notification);
+        showDesktopNotification(notification);
+        
         // Dispatch sự kiện để xử lý ở controller khác
         document.dispatchEvent(new CustomEvent('team-create', {
             detail: { team: teamData },
@@ -148,6 +164,7 @@ export function initEditTeamFormController() {
     // Save changes button event
     saveEditTeamBtn.addEventListener('click', () => {
         const teamId = parseInt(editTeamModal.dataset.teamId, 10);
+        const originalTeam = getTeamById(teamId);
         
         // Get form data
         const teamName = document.getElementById('editTeamName').value;
@@ -172,6 +189,20 @@ export function initEditTeamFormController() {
             initials: initials,
             updatedAt: new Date().toISOString()
         };
+        
+        // Track changes for notification
+        const changes = {};
+        if (originalTeam.name !== teamName) changes.name = teamName;
+        if (originalTeam.description !== teamDescription) changes.description = teamDescription;
+        if (originalTeam.privacy !== privacy) changes.privacy = privacy;
+        if (originalTeam.color !== color) changes.color = color;
+        
+        // Create and dispatch notification if there are changes
+        if (Object.keys(changes).length > 0) {
+            const currentUser = getCurrentUserForNotifications();
+            const notification = createTeamEditNotification(originalTeam, changes, currentUser);
+            dispatchNotificationEvent(notification);
+        }
         
         // Dispatch event to update team
         document.dispatchEvent(new CustomEvent('team-edit', {
@@ -198,6 +229,12 @@ export function initEditTeamFormController() {
             }
             
             if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+                // Create notification before deletion
+                const currentUserForNotif = getCurrentUserForNotifications();
+                const notification = createTeamDeletionNotification(team, currentUserForNotif);
+                dispatchNotificationEvent(notification);
+                showDesktopNotification(notification);
+                
                 // Dispatch event to delete team
                 document.dispatchEvent(new CustomEvent('team-delete', {
                     detail: { teamId },
@@ -321,10 +358,18 @@ export function handleTeamPrivacyUpdate(event) {
         return;
     }
     
+    // Store old privacy for notification
+    const oldPrivacy = team.privacy;
+    
     // Update team privacy in model
     const success = updateTeamPrivacy(teamId, privacy);
     
     if (success) {
+        // Create and dispatch notification
+        const currentUserForNotif = getCurrentUserForNotifications();
+        const notification = createPrivacyChangeNotification(team, oldPrivacy, privacy, currentUserForNotif);
+        dispatchNotificationEvent(notification);
+        
         // Update UI to reflect privacy change
         const privacyIndicator = document.querySelector(`[data-team-id="${teamId}"] .privacy-indicator`);
         if (privacyIndicator) {
@@ -490,6 +535,12 @@ export function attachTeamCardEvents(teamCard, teamId) {
                         
                         if (canDeleteTeam(team, currentUser.email)) {
                             if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+                                // Create notification before deletion
+                                const currentUserForNotif = getCurrentUserForNotifications();
+                                const notification = createTeamDeletionNotification(team, currentUserForNotif);
+                                dispatchNotificationEvent(notification);
+                                showDesktopNotification(notification);
+                                
                                 // Dispatch event to delete team
                                 document.dispatchEvent(new CustomEvent('team-delete', {
                                     detail: { teamId },

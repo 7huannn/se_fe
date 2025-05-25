@@ -1,4 +1,4 @@
-// controllers/group/membersController.js - Updated with role management
+// controllers/group/membersController.js - Updated with notifications
 
 import { 
     addTeamMember, 
@@ -13,6 +13,16 @@ import {
 import { TEAM_ROLES, isTeamLeader, canManageMembers, getCurrentUser } from '../../models/group/team-permissions.js';
 import { showModal, hideModal } from '../../views/group/modalView.js';
 import { addTeamRoleStyles } from '../../views/group/teamView.js';
+
+// Import notification helpers
+import { 
+  createMemberAddedNotification,
+  createMemberRemovedNotification,
+  createRoleChangeNotification,
+  dispatchNotificationEvent,
+  showDesktopNotification,
+  getCurrentUserForNotifications
+} from '../../models/group/team-notifications.js';
 
 /**
  * Initialize the team members management functionality
@@ -104,38 +114,6 @@ function initCreateTeamMembersUI() {
         
         // Focus back on input
         memberEmailInput.focus();
-    }
-    
-    // Hook into the save team button to ensure members are saved with the team
-    const saveTeamBtn = document.getElementById('saveTeam');
-    if (saveTeamBtn) {
-        const originalClickHandler = saveTeamBtn.onclick;
-        saveTeamBtn.onclick = function(e) {
-            // Add the members to the team data before saving
-            const teamNameInput = document.getElementById('teamName');
-            
-            if (!teamNameInput || !teamNameInput.value.trim()) {
-                // If team name is not valid, let original handler deal with it
-                if (originalClickHandler) return originalClickHandler.call(this, e);
-                return;
-            }
-            
-            // Add event listener to capture the team-create event
-            document.addEventListener('team-create', function handleTeamCreate(event) {
-                // Add members to the team data
-                const teamData = event.detail.team;
-                teamData.members = window.tempTeamMembers;
-                
-                // Remove the listener to prevent duplicates
-                document.removeEventListener('team-create', handleTeamCreate);
-                
-                // Clear temporary members
-                window.tempTeamMembers = [];
-            }, { once: true });
-            
-            // Call original handler
-            if (originalClickHandler) originalClickHandler.call(this, e);
-        };
     }
 }
 
@@ -454,6 +432,11 @@ function handleTeamMemberAdd(event) {
     const isLeader = isTeamLeader(team, currentUser.email);
     
     if (success) {
+        // Create and dispatch notification
+        const currentUserForNotif = getCurrentUserForNotifications();
+        const notification = createMemberAddedNotification(team, member);
+        dispatchNotificationEvent(notification);
+        
         // Show success message
         showToast('Member added successfully');
         
@@ -499,7 +482,13 @@ function handleTeamMemberRemove(event) {
     // Remove member from team
     const success = removeTeamMember(teamId, memberId);
     
-    if (success) {
+    if (success && memberToRemove) {
+        // Create and dispatch notification
+        const currentUserForNotif = getCurrentUserForNotifications();
+        const notification = createMemberRemovedNotification(team, memberToRemove, currentUserForNotif);
+        dispatchNotificationEvent(notification);
+        showDesktopNotification(notification);
+        
         // Show success message
         showToast('Member removed successfully');
         
@@ -532,6 +521,13 @@ function handleTeamMemberRoleChange(event) {
     // Find the member to be updated
     const memberToUpdate = team.members.find(m => m.id === memberId);
     
+    if (!memberToUpdate) {
+        showToast('Member not found', 'error');
+        return;
+    }
+    
+    const oldRole = memberToUpdate.role;
+    
     // If changing from leader to member, check if this is the last leader
     if (memberToUpdate?.role === TEAM_ROLES.LEADER && role === TEAM_ROLES.MEMBER) {
         const leaderCount = team.members.filter(m => m.role === TEAM_ROLES.LEADER).length;
@@ -555,6 +551,12 @@ function handleTeamMemberRoleChange(event) {
     const success = updateTeamMemberRole(teamId, memberId, role);
     
     if (success) {
+        // Create and dispatch notification
+        const currentUserForNotif = getCurrentUserForNotifications();
+        const notification = createRoleChangeNotification(team, memberToUpdate, oldRole, role, currentUserForNotif);
+        dispatchNotificationEvent(notification);
+        showDesktopNotification(notification);
+        
         // Show success message
         showToast(`Member role updated to ${role}`);
         
