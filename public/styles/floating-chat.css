@@ -1,4 +1,4 @@
-/* public/styles/floating-chat.css */
+/* public/styles/floating-chat.css - UPDATED VERSION */
 
 /* Container cho chat elements */
 .floating-chat-container {
@@ -36,7 +36,7 @@
   text-align: center;
 }
 
-/* Chat panel styles */
+/* Chat panel styles - UPDATED with animation support */
 .floating-chat-panel {
   position: absolute;
   bottom: 0;
@@ -52,6 +52,28 @@
   animation: slideIn 0.3s ease;
 }
 
+/* NEW: Welcome pulse effect for auto-opened chat */
+.floating-chat-panel.welcome-pulse {
+  animation: welcomePulse 2s ease-in-out;
+}
+
+@keyframes welcomePulse {
+  0%, 100% { 
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2); 
+  }
+  25% { 
+    box-shadow: 0 5px 30px rgba(0, 120, 212, 0.4); 
+    transform: scale(1.02);
+  }
+  50% { 
+    box-shadow: 0 5px 35px rgba(0, 120, 212, 0.3); 
+  }
+  75% { 
+    box-shadow: 0 5px 30px rgba(0, 120, 212, 0.4); 
+    transform: scale(1.02);
+  }
+}
+
 /* Chat header */
 .chat-header-boxchat {
   padding: 14px 16px;
@@ -62,16 +84,34 @@
   align-items: center;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
+  position: relative;
+}
+
+/* NEW: Add subtle gradient for better visual appeal */
+.chat-header-boxchat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .chat-title {
   font-weight: 600;
   font-size: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .chat-actions {
   display: flex;
   gap: 10px;
+  position: relative;
+  z-index: 1;
 }
 
 .chat-actions button {
@@ -95,7 +135,7 @@
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Chat messages area */
+/* Chat messages area - UPDATED for better message display */
 .chat-messages {
   flex: 1;
   padding: 16px;
@@ -104,6 +144,25 @@
   flex-direction: column;
   gap: 16px;
   background-color: #f5f5f5;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling for chat messages */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 /* Message styles */
@@ -111,6 +170,18 @@
   display: flex;
   flex-direction: column;
   max-width: 80%;
+  animation: messageSlideIn 0.3s ease;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user-message {
@@ -127,6 +198,19 @@
   font-size: 14px;
   line-height: 1.4;
   word-break: break-word;
+  position: relative;
+  animation: bubbleAppear 0.3s ease;
+}
+
+@keyframes bubbleAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .user-message .message-bubble {
@@ -139,6 +223,13 @@
   background-color: #e0e0e0;
   color: #333;
   border-bottom-left-radius: 4px;
+  /* NEW: Better styling for formatted text */
+  white-space: pre-line;
+}
+
+/* NEW: Style for formatted bot messages with lists */
+.bot-message .message-bubble br {
+  line-height: 1.6;
 }
 
 .message-time {
@@ -167,10 +258,12 @@
   border-radius: 20px;
   outline: none;
   font-size: 14px;
+  transition: border-color 0.2s ease;
 }
 
 .chat-input:focus {
   border-color: #0078d4;
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
 }
 
 .send-btn {
@@ -185,11 +278,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .send-btn:hover {
-  background-color: #006cbe;
+  background-color: #0062ad;
+  transform: scale(1.05);
+}
+
+.send-btn:active {
+  transform: scale(0.95);
 }
 
 /* Typing indicator */
@@ -201,6 +299,7 @@
   padding: 12px 16px;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
+  animation: messageSlideIn 0.3s ease;
 }
 
 .typing-indicator span {
@@ -244,6 +343,43 @@
   }
 }
 
+/* NEW: Enhanced animations for home page auto-open */
+@keyframes homeWelcomeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Apply welcome animation when auto-opened on home */
+.floating-chat-panel.auto-opened {
+  animation: homeWelcomeSlide 0.5s ease-out;
+}
+
+/* NEW: Attention-grabbing pulse for bubble when not interacted */
+.floating-chat-bubble.attention {
+  animation: attentionPulse 2s infinite;
+}
+
+@keyframes attentionPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  50% { 
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 120, 212, 0.3);
+  }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 480px) {
   .floating-chat-panel {
@@ -256,4 +392,76 @@
   .chat-message {
     max-width: 90%;
   }
+  
+  .floating-chat-container {
+    right: 10px;
+    bottom: 10px;
+  }
+}
+
+/* NEW: Special styling for welcome messages */
+.bot-message.welcome .message-bubble {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+  color: #1565c0;
+  font-weight: 500;
+}
+
+/* NEW: Enhance user experience with better visual feedback */
+.chat-input-container.typing .send-btn {
+  background-color: #28a745;
+  animation: readyPulse 1s infinite;
+}
+
+@keyframes readyPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* NEW: Add subtle background pattern to messages area */
+.chat-messages::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(0,120,212,0.02) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(0,120,212,0.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* NEW: Improve message bubble shadows for depth */
+.message-bubble {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-message .message-bubble {
+  box-shadow: 0 2px 4px rgba(0, 120, 212, 0.2);
+}
+
+/* NEW: Add loading state for better UX */
+.floating-chat-panel.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.floating-chat-panel.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #0078d4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
 }

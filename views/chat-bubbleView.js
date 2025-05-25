@@ -1,4 +1,4 @@
-// views/chat-bubbleView.js
+// views/chat-bubbleView.js - UPDATED VERSION
 /**
  * View cho Floating Chat Bubble
  * Xử lý hiển thị và tương tác UI
@@ -17,6 +17,7 @@ export default class ChatBubbleView {
     this.isExpanded = false;
     this.isMouseOver = false;
     this.opacity = 0.6;
+    this.autoOpened = false; // NEW: Track if auto-opened
   }
 
   /**
@@ -128,8 +129,12 @@ export default class ChatBubbleView {
   addBotMessage(text, time) {
     const messageEl = document.createElement('div');
     messageEl.className = 'chat-message bot-message';
+    
+    // NEW: Support for formatted messages (with line breaks)
+    const formattedText = text.replace(/\n/g, '<br>');
+    
     messageEl.innerHTML = `
-      <div class="message-bubble">${text}</div>
+      <div class="message-bubble">${formattedText}</div>
       <div class="message-time">${time}</div>
     `;
     
@@ -161,24 +166,72 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Mở rộng chat panel
+   * Mở rộng chat panel - UPDATED with animation support
    */
   expandChat() {
     this.isExpanded = true;
+    this.autoOpened = true; // Mark as auto-opened
+    
+    // NEW: Add smooth opening animation
     this.panel.style.display = 'flex';
+    this.panel.style.transform = 'translateY(20px)';
+    this.panel.style.opacity = '0';
+    
+    // Hide bubble
     this.bubble.style.display = 'none';
     
-    // Focus vào input
-    setTimeout(() => this.chatInput.focus(), 100);
+    // Animate in
+    setTimeout(() => {
+      this.panel.style.transition = 'all 0.3s ease';
+      this.panel.style.transform = 'translateY(0)';
+      this.panel.style.opacity = '1';
+    }, 10);
+    
+    // Focus vào input sau khi animation
+    setTimeout(() => {
+      this.chatInput.focus();
+      
+      // NEW: Add welcome pulse effect for auto-opened chat
+      if (this.autoOpened) {
+        this.addWelcomePulse();
+      }
+    }, 350);
   }
 
   /**
-   * Thu gọn chat panel
+   * NEW: Add welcome pulse effect
+   */
+  addWelcomePulse() {
+    this.panel.classList.add('welcome-pulse');
+    
+    // Remove the effect after animation
+    setTimeout(() => {
+      this.panel.classList.remove('welcome-pulse');
+    }, 2000);
+  }
+
+  /**
+   * Thu gọn chat panel - UPDATED with animation
    */
   collapseChat() {
     this.isExpanded = false;
-    this.panel.style.display = 'none';
-    this.bubble.style.display = 'flex';
+    this.autoOpened = false;
+    
+    // Animate out
+    this.panel.style.transition = 'all 0.3s ease';
+    this.panel.style.transform = 'translateY(20px)';
+    this.panel.style.opacity = '0';
+    
+    // Hide panel and show bubble after animation
+    setTimeout(() => {
+      this.panel.style.display = 'none';
+      this.bubble.style.display = 'flex';
+      
+      // Reset transform for next opening
+      this.panel.style.transition = '';
+      this.panel.style.transform = '';
+      this.panel.style.opacity = '';
+    }, 300);
   }
 
   /**
@@ -212,7 +265,7 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Vẽ lại tất cả tin nhắn trong lịch sử
+   * Vẽ lại tất cả tin nhắn trong lịch sử - UPDATED with formatting support
    * @param {Array} messages - Danh sách tin nhắn
    */
   renderMessages(messages) {
