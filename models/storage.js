@@ -1,44 +1,62 @@
-// models/storage.js
+// models/storage.js - Updated to use API instead of localStorage
+import { eventsService } from "../services/eventsService.js";
 import { isTheSameDay } from "./date.js";
 
-const STORAGE_KEY = "events";
+// Cache để tránh gọi API liên tục
+let eventsCache = [];
+let cacheExpiry = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Đọc toàn bộ events từ localStorage, parse ngày về Date object
+ * Get all events from API (with caching)
  */
-export function getAllEvents() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
+export async function getAllEvents() {
+  // Check cache first
+  if (cacheExpiry && Date.now() < cacheExpiry && eventsCache.length > 0) {
+    return eventsCache;
+  }
+
   try {
-    const parsed = JSON.parse(raw);
-    return parsed.map(evt => ({
-      ...evt,
-      date: new Date(evt.date)
-    }));
-  } catch (e) {
-    console.error("Parse events failed", e);
+    const result = await eventsService.searchEvents();
+    if (result.success) {
+      eventsCache = result.events;
+      cacheExpiry = Date.now() + CACHE_DURATION;
+      return eventsCache;
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching events:", error);
     return [];
   }
 }
 
 /**
- * Ghi mảng events (chuyển Date→ISO) vào localStorage
+ * Save all events (this method is now deprecated, but kept for compatibility)
  */
 export function saveAllEvents(events) {
-  const toSave = events.map(evt => ({
-    ...evt,
-    date: evt.date.toISOString()
-  }));
+  // This method is no longer used since we save to API directly
+  // But we update cache
+  eventsCache = events;
+  cacheExpiry = Date.now() + CACHE_DURATION;
+}
+
+/**
+ * Get events by date from API
+ */
+export async function getEventsByDate(date) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-  } catch (e) {
-    console.error("Stringify events failed", e);
+    const events = await eventsService.getEventsByDate(date);
+    return events;
+  } catch (error) {
+    console.error("Error fetching events by date:", error);
+    return [];
   }
 }
 
 /**
- * Lọc events theo ngày
+ * Clear cache (useful when events are modified)
  */
-export function getEventsByDate(date) {
-  return getAllEvents().filter(evt => isTheSameDay(evt.date, date));
+export function clearEventsCache() {
+  eventsCache = [];
+  cacheExpiry = null;
 }

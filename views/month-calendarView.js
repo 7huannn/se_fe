@@ -1,50 +1,58 @@
-// views/monthCalendarView.js
+// views/month-calendarView.js - Updated to work with async API
 import { generateMonthCalendarDays, today, isTheSameDay } from "../models/date.js";
 import { isEventAllDay, eventStartsBefore } from "../models/event.js";
 import { renderEventListItem } from "./event-listView.js";
 
 // Template elements và mapping class tuần
-const calendarTemplateElement    = document.querySelector("[data-template='month-calendar']");
+const calendarTemplateElement = document.querySelector("[data-template='month-calendar']");
 const calendarDayTemplateElement = document.querySelector("[data-template='month-calendar-day']");
-const calendarWeekClasses        = { 4: "four-week", 5: "five-week", 6: "six-week" };
+const calendarWeekClasses = { 4: "four-week", 5: "five-week", 6: "six-week" };
 
 /**
- * Render toàn bộ month calendar
- * @param {HTMLElement} parent
- * @param {Date} selectedDate
- * @param {Object} eventStore
+ * Render toàn bộ month calendar với async support
  */
-export function renderMonthCalendar(parent, selectedDate, eventStore) {
+export async function renderMonthCalendar(parent, selectedDate, eventStore) {
   // Clone template
-  const content   = calendarTemplateElement.content.cloneNode(true);
-  const calendarEl= content.querySelector("[data-month-calendar]");
+  const content = calendarTemplateElement.content.cloneNode(true);
+  const calendarEl = content.querySelector("[data-month-calendar]");
   const dayListEl = calendarEl.querySelector("[data-month-calendar-day-list]");
 
   // Tính tuần, thêm class tương ứng
-  const days  = generateMonthCalendarDays(selectedDate);
+  const days = generateMonthCalendarDays(selectedDate);
   const weeks = days.length / 7;
   calendarEl.classList.add(calendarWeekClasses[weeks]);
 
-  // Tạo từng ngày
-  days.forEach(day => {
-    const events = eventStore.getEventsByDate(day);
-    sortCalendarDayEvents(events);
-    const dayEl = createCalendarDay(day, events);
+  // Create all day elements với async events
+  const dayPromises = days.map(async (day) => {
+    try {
+      const events = await eventStore.getEventsByDate(day);
+      sortCalendarDayEvents(events);
+      return createCalendarDay(day, events);
+    } catch (error) {
+      console.error("Error loading events for day:", day, error);
+      return createCalendarDay(day, []); // Fallback với empty events
+    }
+  });
+
+  // Wait for all days to be created
+  const dayElements = await Promise.all(dayPromises);
+  
+  // Append all day elements
+  dayElements.forEach(dayEl => {
     dayListEl.appendChild(dayEl);
   });
 
+  // Clear parent and append new calendar
+  parent.replaceChildren();
   parent.appendChild(calendarEl);
 }
 
 /**
  * Tạo một ngày trong month calendar
- * @param {Date} calendarDay
- * @param {Array} events
- * @returns {HTMLElement}
  */
 function createCalendarDay(calendarDay, events) {
   const content = calendarDayTemplateElement.content.cloneNode(true);
-  const dayEl   = content.querySelector("[data-month-calendar-day]");
+  const dayEl = content.querySelector("[data-month-calendar-day]");
   const labelEl = content.querySelector("[data-month-calendar-day-label]");
   const wrapperEl = dayEl.querySelector("[data-month-calendar-event-list-wrapper]");
 
@@ -53,7 +61,7 @@ function createCalendarDay(calendarDay, events) {
     dayEl.classList.add("month-calendar__day--highlight");
   }
 
-  // 2) Click vào số ngày: chuyển sang view “day”
+  // 2) Click vào số ngày: chuyển sang view "day"
   labelEl.textContent = calendarDay.getDate();
   labelEl.addEventListener("click", () => {
     document.dispatchEvent(new CustomEvent("date-change", {
@@ -66,14 +74,14 @@ function createCalendarDay(calendarDay, events) {
     }));
   });
 
-  // 3) **Click vào vùng sự kiện (wrapper)** → dispatch event-create-request
+  // 3) Click vào vùng sự kiện (wrapper) → dispatch event-create-request
   wrapperEl.addEventListener("click", e => {
     if (e.target.closest("[data-event]")) return;
     document.dispatchEvent(new CustomEvent("event-create-request", {
       detail: {
         date: calendarDay,
-        startTime: 600,
-        endTime:   960
+        startTime: 600, // 10:00 AM
+        endTime: 660    // 11:00 AM
       },
       bubbles: true
     }));
@@ -91,7 +99,7 @@ function createCalendarDay(calendarDay, events) {
 function sortCalendarDayEvents(events) {
   events.sort((a, b) => {
     if (isEventAllDay(a)) return -1;
-    if (isEventAllDay(b)) return  1;
+    if (isEventAllDay(b)) return 1;
     return eventStartsBefore(a, b) ? -1 : 1;
   });
 }

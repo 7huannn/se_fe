@@ -1,17 +1,17 @@
-// services/api.js - Main API client service
+// services/api.js - API client đơn giản để kết nối với backend
 class APIClient {
-  constructor(baseURL = 'https://se_backend.hrzn.run') {
-    this.baseURL = baseURL;
+  constructor() {
+    this.baseURL = 'http://localhost:8000'; // URL backend của bạn
     this.token = localStorage.getItem('auth_token');
   }
 
-  // Set authentication token
+  // Set token khi login
   setToken(token) {
     this.token = token;
     localStorage.setItem('auth_token', token);
   }
 
-  // Remove authentication token
+  // Remove token khi logout
   removeToken() {
     this.token = null;
     localStorage.removeItem('auth_token');
@@ -25,7 +25,7 @@ class APIClient {
       ...options.headers,
     };
 
-    // Add authorization header if token exists
+    // Add authorization header nếu có token
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
@@ -38,38 +38,21 @@ class APIClient {
     try {
       const response = await fetch(url, config);
       
-      // Handle different response types
-      let data;
-      const contentType = response.headers.get('content-type');
-      
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        data = await response.text();
-      }
-
       if (!response.ok) {
-        throw new APIError(data.detail || data.message || 'API request failed', response.status, data);
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'API request failed');
       }
 
-      return data;
+      return await response.json();
     } catch (error) {
-      if (error instanceof APIError) {
-        throw error;
-      }
-      
-      // Handle network errors
-      throw new APIError('Network error: Please check your connection', 0, error);
+      console.error('API Error:', error);
+      throw error;
     }
   }
 
   // HTTP methods
-  async get(endpoint, params = {}) {
-    const searchParams = new URLSearchParams(params);
-    const queryString = searchParams.toString();
-    const url = queryString ? `${endpoint}?${queryString}` : endpoint;
-    
-    return this.request(url, { method: 'GET' });
+  async get(endpoint) {
+    return this.request(endpoint, { method: 'GET' });
   }
 
   async post(endpoint, data) {
@@ -89,49 +72,7 @@ class APIClient {
   async delete(endpoint) {
     return this.request(endpoint, { method: 'DELETE' });
   }
-
-  // File upload method
-  async uploadFile(endpoint, formData) {
-    const url = `${this.baseURL}${endpoint}`;
-    const headers = {};
-
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
-    }
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new APIError(error.detail || error.message || 'Upload failed', response.status, error);
-      }
-
-      return await response.json();
-    } catch (error) {
-      if (error instanceof APIError) {
-        throw error;
-      }
-      throw new APIError('Upload failed', 0, error);
-    }
-  }
-}
-
-// Custom error class for API errors
-class APIError extends Error {
-  constructor(message, status, data) {
-    super(message);
-    this.name = 'APIError';
-    this.status = status;
-    this.data = data;
-  }
 }
 
 // Create singleton instance
-const apiClient = new APIClient();
-
-export { apiClient, APIError };
+export const apiClient = new APIClient();

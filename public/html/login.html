@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" />
   <link rel="stylesheet" href="../styles/login.css" />
   <link rel="stylesheet" href="../styles/floating-chat.css">
+  <script type="module" src="services/api.js"></script>
+  <script type="module" src="services/authService.js"></script>
+  <script type="module" src="services/eventsService.js"></script>
   <script type="module" src="../../controllers/chat-bubbleController.js"></script>
   <title>Schedigo Login</title>
 </head>
+
 <body>
   <div class="container" id="container">
     <!-- ---------------- SIGN UP ---------------- -->
@@ -23,40 +23,16 @@
       <form id="signUpForm">
         <h1>Create Account</h1>
         <div class="social-icons">
-          <a href="#" id="googleSignUp"   class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+          <a href="#" id="googleSignUp" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
           <!-- <a href="#" id="facebookSignUp" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
           <a href="#" id="githubSignUp"   class="icon"><i class="fa-brands fa-github"></i></a>
           <a href="#" id="linkedinSignUp" class="icon"><i class="fa-brands fa-linkedin-in"></i></a> -->
         </div>
         <span>or use your email for registration</span>
-        <input
-          type="text"
-          id="signUpUsername"
-          name="username"
-          placeholder="Username"
-          required
-        />
-        <input
-          type="email"
-          id="signUpEmail"
-          name="email"
-          placeholder="Email"
-          required
-        />
-        <input
-          type="password"
-          id="signUpPassword"
-          name="password"
-          placeholder="Password"
-          required
-        />
-        <input
-          type="password"
-          id="confirmPassword"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          required
-        />
+        <input type="text" id="signUpUsername" name="username" placeholder="Username" required />
+        <input type="email" id="signUpEmail" name="email" placeholder="Email" required />
+        <input type="password" id="signUpPassword" name="password" placeholder="Password" required />
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required />
         <button type="submit">Sign Up</button>
       </form>
     </div>
@@ -66,26 +42,14 @@
       <form id="signInForm">
         <h1>Sign In</h1>
         <div class="social-icons">
-          <a href="#" id="googleSignIn"   class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
+          <a href="#" id="googleSignIn" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
           <!-- <a href="#" id="facebookSignIn" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
           <a href="#" id="githubSignIn"   class="icon"><i class="fa-brands fa-github"></i></a>
           <a href="#" id="linkedinSignIn" class="icon"><i class="fa-brands fa-linkedin-in"></i></a> -->
         </div>
         <span>or use your email &amp; password</span>
-        <input
-          type="email"
-          id="loginEmail"
-          name="email"
-          placeholder="Email"
-          required
-        />
-        <input
-          type="password"
-          id="loginPassword"
-          name="password"
-          placeholder="Password"
-          required
-        />
+        <input type="email" id="loginEmail" name="email" placeholder="Email" required />
+        <input type="password" id="loginPassword" name="password" placeholder="Password" required />
         <a href="#" id="showForgotPassword">Forget Your Password?</a>
         <button type="submit">Sign In</button>
       </form>
@@ -96,13 +60,7 @@
       <form id="forgotPasswordForm">
         <h1>Forgot Password</h1>
         <p>Enter your email to reset your password</p>
-        <input
-          type="email"
-          id="forgotEmail"
-          name="email"
-          placeholder="Email"
-          required
-        />
+        <input type="email" id="forgotEmail" name="email" placeholder="Email" required />
         <button type="submit">Send Reset Link</button>
         <a href="#" id="backToLogin">Back to Login</a>
       </form>
@@ -127,6 +85,7 @@
 
   <!-- Gọi module JS -->
   <script type="module" src="../../controllers/login.js" defer></script>
-  <script type="module" src="../../views/loginView.js"  defer></script>
+  <script type="module" src="../../views/loginView.js" defer></script>
 </body>
+
 </html>

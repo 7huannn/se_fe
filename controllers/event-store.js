@@ -1,49 +1,80 @@
-// controllers/event-store.js - FIXED VERSION
-import {
-  getAllEvents,
-  saveAllEvents,
-  getEventsByDate as fetchEventsByDate
-} from "../models/storage.js";
+// controllers/event-store.js - Updated to use API
+import { eventsService } from "../services/eventsService.js";
+import { getEventsByDate, clearEventsCache } from "../models/storage.js";
 
 export function initEventStore() {
-  // helper nhỏ để dispatch change
+  // Helper để dispatch change event
   function notify() {
     document.dispatchEvent(new CustomEvent("events-change", {
       bubbles: true
     }));
   }
 
-  document.addEventListener("event-create", ({ detail }) => {
-    // FIX: Xử lý đúng format data từ event-form
-    const newEvent = detail.event || detail; // Support both formats
-    const all = getAllEvents();
-    all.push(newEvent);
-    saveAllEvents(all);
-    notify();
+  // Handle event creation
+  document.addEventListener("event-create", async ({ detail }) => {
+    try {
+      const eventData = detail.event || detail;
+      const result = await eventsService.createEvent(eventData);
+      
+      if (result.success) {
+        clearEventsCache(); // Clear cache to force refresh
+        notify();
+        console.log("Event created successfully:", result.event);
+      } else {
+        console.error("Failed to create event:", result.message);
+        // Show error to user (you can customize this)
+        alert("Failed to create event: " + result.message);
+      }
+    } catch (error) {
+      console.error("Error creating event:", error);
+      alert("Error creating event: " + error.message);
+    }
   });
 
-  document.addEventListener("event-delete", ({ detail }) => {
-    // FIX: Xử lý đúng format data
-    const delEvent = detail.event || detail;
-    const all = getAllEvents().filter(evt => evt.id !== delEvent.id);
-    saveAllEvents(all);
-    notify();
+  // Handle event deletion
+  document.addEventListener("event-delete", async ({ detail }) => {
+    try {
+      const eventData = detail.event || detail;
+      const result = await eventsService.deleteEvent(eventData.id);
+      
+      if (result.success) {
+        clearEventsCache(); // Clear cache to force refresh
+        notify();
+        console.log("Event deleted successfully");
+      } else {
+        console.error("Failed to delete event:", result.message);
+        alert("Failed to delete event: " + result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      alert("Error deleting event: " + error.message);
+    }
   });
 
-  document.addEventListener("event-edit", ({ detail }) => {
-    // FIX: Xử lý đúng format data
-    const updatedEvent = detail.event || detail;
-    const all = getAllEvents().map(evt =>
-      evt.id === updatedEvent.id ? updatedEvent : evt
-    );
-    saveAllEvents(all);
-    notify();
+  // Handle event editing
+  document.addEventListener("event-edit", async ({ detail }) => {
+    try {
+      const eventData = detail.event || detail;
+      const result = await eventsService.updateEvent(eventData.id, eventData);
+      
+      if (result.success) {
+        clearEventsCache(); // Clear cache to force refresh
+        notify();
+        console.log("Event updated successfully:", result.event);
+      } else {
+        console.error("Failed to update event:", result.message);
+        alert("Failed to update event: " + result.message);
+      }
+    } catch (error) {
+      console.error("Error updating event:", error);
+      alert("Error updating event: " + error.message);
+    }
   });
 
   return {
-    // controller expose cho calendar view
+    // Return the same interface for calendar view
     getEventsByDate(date) {
-      return fetchEventsByDate(date);
+      return getEventsByDate(date);
     }
   };
 }

@@ -1,29 +1,66 @@
-// services/eventsService.js - Events management service
+// services/eventsService.js - Events service tích hợp với backend
 import { apiClient } from './api.js';
 
-class EventsService {
-  constructor() {
-    this.events = [];
+export class EventsService {
+  // Convert frontend event format to backend format
+  formatEventForBackend(frontendEvent) {
+    // Convert minutes since midnight to datetime
+    const baseDate = new Date(frontendEvent.date);
+    const startTime = new Date(baseDate);
+    startTime.setMinutes(frontendEvent.startTime);
+    
+    const endTime = new Date(baseDate);
+    endTime.setMinutes(frontendEvent.endTime);
+
+    return {
+      title: frontendEvent.title,
+      description: frontendEvent.description || '',
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      event_type: frontendEvent.event_type || 'general',
+      location: frontendEvent.location || '',
+      priority: frontendEvent.priority || 'normal'
+    };
   }
 
-  // Create a new event
+  // Convert backend event format to frontend format
+  formatEventForFrontend(backendEvent) {
+    const startTime = new Date(backendEvent.start_time);
+    const endTime = new Date(backendEvent.end_time);
+    
+    // Convert to minutes since midnight
+    const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+    const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+
+    return {
+      id: backendEvent.id,
+      title: backendEvent.title,
+      description: backendEvent.description,
+      date: new Date(backendEvent.start_time.split('T')[0]), // Just the date part
+      startTime: startMinutes,
+      endTime: endMinutes,
+      color: backendEvent.color || '#2563eb', // Default color
+      event_type: backendEvent.event_type,
+      location: backendEvent.location,
+      priority: backendEvent.priority
+    };
+  }
+
+  // Create event
   async createEvent(eventData) {
     try {
-      // Format dates to ISO strings if they're Date objects
-      const formattedData = this.formatEventData(eventData);
-      
-      const response = await apiClient.post('/api/events/', formattedData);
+      const backendData = this.formatEventForBackend(eventData);
+      const response = await apiClient.post('/api/events/', backendData);
       
       return {
         success: true,
         message: 'Event created successfully',
-        event: response
+        event: this.formatEventForFrontend(response)
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message,
-        status: error.status
+        message: error.message
       };
     }
   }
@@ -35,39 +72,36 @@ class EventsService {
       
       return {
         success: true,
-        event: this.parseEventData(response)
+        event: this.formatEventForFrontend(response)
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message,
-        status: error.status
+        message: error.message
       };
     }
   }
 
-  // Update an event
+  // Update event
   async updateEvent(eventId, eventData) {
     try {
-      const formattedData = this.formatEventData(eventData);
-      
-      const response = await apiClient.put(`/api/events/${eventId}`, formattedData);
+      const backendData = this.formatEventForBackend(eventData);
+      const response = await apiClient.put(`/api/events/${eventId}`, backendData);
       
       return {
         success: true,
         message: 'Event updated successfully',
-        event: response
+        event: this.formatEventForFrontend(response)
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message,
-        status: error.status
+        message: error.message
       };
     }
   }
 
-  // Delete an event
+  // Delete event
   async deleteEvent(eventId) {
     try {
       await apiClient.delete(`/api/events/${eventId}`);
@@ -79,164 +113,50 @@ class EventsService {
     } catch (error) {
       return {
         success: false,
-        message: error.message,
-        status: error.status
+        message: error.message
       };
     }
   }
 
   // Search events
-  async searchEvents({ keyword, date, eventType } = {}) {
+  async searchEvents({ keyword, date } = {}) {
     try {
-      const params = {};
+      const params = new URLSearchParams();
+      if (keyword) params.append('keyword', keyword);
+      if (date) params.append('date', date.toISOString());
       
-      if (keyword) params.keyword = keyword;
-      if (date) params.date = date instanceof Date ? date.toISOString() : date;
-      if (eventType) params.event_type = eventType;
-      
-      const response = await apiClient.get('/api/events/', params);
+      const url = `/api/events/${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await apiClient.get(url);
       
       return {
         success: true,
-        events: response.map(event => this.parseEventData(event))
+        events: response.map(event => this.formatEventForFrontend(event))
       };
     } catch (error) {
       return {
         success: false,
         message: error.message,
-        status: error.status,
         events: []
       };
     }
   }
 
-  // Format event data before sending to API
-  formatEventData(eventData) {
-    const formatted = { ...eventData };
-    
-    // Convert Date objects to ISO strings
-    if (formatted.start_time instanceof Date) {
-      formatted.start_time = formatted.start_time.toISOString();
-    }
-    if (formatted.end_time instanceof Date) {
-      formatted.end_time = formatted.end_time.toISOString();
-    }
-    
-    // Map frontend field names to backend field names if needed
-    if (formatted.startTime && !formatted.start_time) {
-      formatted.start_time = formatted.startTime instanceof Date ? 
-        formatted.startTime.toISOString() : formatted.startTime;
-      delete formatted.startTime;
-    }
-    
-    if (formatted.endTime && !formatted.end_time) {
-      formatted.end_time = formatted.endTime instanceof Date ? 
-        formatted.endTime.toISOString() : formatted.endTime;
-      delete formatted.endTime;
-    }
-    
-    if (formatted.eventType && !formatted.event_type) {
-      formatted.event_type = formatted.eventType;
-      delete formatted.eventType;
-    }
-    
-    return formatted;
-  }
-
-  // Parse event data received from API
-  parseEventData(eventData) {
-    const parsed = { ...eventData };
-    
-    // Convert ISO strings back to Date objects
-    if (parsed.start_time) {
-      parsed.startTime = new Date(parsed.start_time);
-      parsed.date = new Date(parsed.start_time); // For compatibility with existing frontend
-    }
-    
-    if (parsed.end_time) {
-      parsed.endTime = new Date(parsed.end_time);
-    }
-    
-    if (parsed.created_at) {
-      parsed.createdAt = new Date(parsed.created_at);
-    }
-    
-    if (parsed.updated_at) {
-      parsed.updatedAt = new Date(parsed.updated_at);
-    }
-    
-    // Map backend field names to frontend field names if needed
-    if (parsed.event_type) {
-      parsed.eventType = parsed.event_type;
-    }
-    
-    if (parsed.creator_id) {
-      parsed.creatorId = parsed.creator_id;
-    }
-    
-    if (parsed.group_id) {
-      parsed.groupId = parsed.group_id;
-    }
-    
-    return parsed;
-  }
-
-  // Helper method to convert frontend event format to minutes since midnight
-  convertToMinutes(timeString) {
-    if (typeof timeString === 'number') return timeString;
-    
-    const [hours, minutes] = timeString.split(':').map(Number);
-    return hours * 60 + minutes;
-  }
-
-  // Helper method to convert minutes since midnight to time string
-  convertToTimeString(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-  }
-
-  // Validate event data before sending
-  validateEventData(eventData) {
-    const errors = [];
-    
-    if (!eventData.title || eventData.title.trim().length === 0) {
-      errors.push('Event title is required');
-    }
-    
-    if (eventData.title && eventData.title.length > 100) {
-      errors.push('Event title must be less than 100 characters');
-    }
-    
-    if (!eventData.start_time && !eventData.startTime) {
-      errors.push('Start time is required');
-    }
-    
-    if (!eventData.end_time && !eventData.endTime) {
-      errors.push('End time is required');
-    }
-    
-    // Validate that end time is after start time
-    const startTime = eventData.start_time || eventData.startTime;
-    const endTime = eventData.end_time || eventData.endTime;
-    
-    if (startTime && endTime) {
-      const start = new Date(startTime);
-      const end = new Date(endTime);
+  // Get events for a specific date (helper method for calendar)
+  async getEventsByDate(date) {
+    try {
+      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const result = await this.searchEvents({ date: new Date(dateStr) });
       
-      if (end <= start) {
-        errors.push('End time must be after start time');
+      if (result.success) {
+        return result.events;
       }
+      return [];
+    } catch (error) {
+      console.error('Error getting events by date:', error);
+      return [];
     }
-    
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
   }
 }
 
-// Create singleton instance
-const eventsService = new EventsService();
-
-export { eventsService };
+// Create singleton
+export const eventsService = new EventsService();

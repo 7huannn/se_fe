@@ -1,4 +1,5 @@
-// controllers/login.js
+// controllers/login.js - Updated to use API
+import { authService } from '../services/authService.js';
 
 /**
  * Kiểm tra định dạng email hợp lệ
@@ -8,15 +9,15 @@ export function isValidEmail(email) {
 }
 
 /**
- * Redirect sang backend để khởi động OAuth flow
+ * Social auth redirect (giữ nguyên)
  */
 export function socialAuthRedirect(provider) {
-  const base = 'https://se_backend.hrzn.run/public_apiauth';
+  const base = 'http://localhost:8000/public_apiauth'; // Update URL cho đúng
   const url = new URL(base);
   url.searchParams.set('provider', provider);
   window.location.href = url.toString();
 }
-// Wrapper cho từng provider (dễ đọc, dễ bảo trì)
+
 export function loginWithGoogle() {
   socialAuthRedirect('google');
 }
@@ -34,9 +35,7 @@ export function loginWithLinkedIn() {
 }
 
 /**
- * Đăng nhập
- * @param {{ email: string, password: string }} creds
- * @returns {Promise<Object>}
+ * Đăng nhập sử dụng API
  */
 export async function login({ email, password }) {
   if (!email || !password) {
@@ -46,30 +45,21 @@ export async function login({ email, password }) {
     throw new Error('Invalid email format');
   }
 
-  const apiUrl = 'https://se_backend.hrzn.run/public_apiauth/login';
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
+    const result = await authService.login({ email, password });
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message);
     }
-    return data;
-  } catch (err) {
-    const msg = err.message.includes('Failed to fetch')
-      ? 'Network error: Please check your connection.'
-      : err.message;
-    throw new Error(msg);
+  } catch (error) {
+    throw new Error(error.message || 'Login failed');
   }
 }
 
 /**
- * Đăng ký
- * @param {{ username: string, email: string, password: string, confirmPassword: string }} payload
- * @returns {Promise<Object>}
+ * Đăng ký sử dụng API
  */
 export async function signup({ username, email, password, confirmPassword }) {
   if (!username || !email || !password || !confirmPassword) {
@@ -82,52 +72,36 @@ export async function signup({ username, email, password, confirmPassword }) {
     throw new Error('Passwords do not match');
   }
 
-  const apiUrl = 'https://se_backend.hrzn.run/public_apiauth/register';
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password })
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Registration failed');
+    const result = await authService.register({ username, email, password });
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message);
     }
-    return data;
-  } catch (err) {
-    const msg = err.message.includes('Failed to fetch')
-      ? 'Network error: Please check your connection.'
-      : err.message;
-    throw new Error(msg);
+  } catch (error) {
+    throw new Error(error.message || 'Registration failed');
   }
 }
 
 /**
- * Quên mật khẩu
- * @param {string} email
- * @returns {Promise<Object>}
+ * Quên mật khẩu sử dụng API
  */
 export async function forgotPassword(email) {
   if (!email || !isValidEmail(email)) {
     throw new Error('Please enter a valid email');
   }
 
-  const apiUrl = 'https://se_backend.hrzn.run/public_apiauth/forgot';
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to send reset link');
+    const result = await authService.forgotPassword(email);
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message);
     }
-    return data;
-  } catch (err) {
-    const msg = err.message.includes('Failed to fetch')
-      ? 'Network error: Please check your connection.'
-      : err.message;
-    throw new Error(msg);
+  } catch (error) {
+    throw new Error(error.message || 'Failed to send reset link');
   }
 }
