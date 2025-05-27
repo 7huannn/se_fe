@@ -22,13 +22,6 @@
     <div class="form-container sign-up">
       <form id="signUpForm">
         <h1>Create Account</h1>
-        <div class="social-icons">
-          <a href="#" id="googleSignUp" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-          <!-- <a href="#" id="facebookSignUp" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" id="githubSignUp"   class="icon"><i class="fa-brands fa-github"></i></a>
-          <a href="#" id="linkedinSignUp" class="icon"><i class="fa-brands fa-linkedin-in"></i></a> -->
-        </div>
-        <span>or use your email for registration</span>
         <input type="text" id="signUpUsername" name="username" placeholder="Username" required />
         <input type="email" id="signUpEmail" name="email" placeholder="Email" required />
         <input type="password" id="signUpPassword" name="password" placeholder="Password" required />
@@ -36,18 +29,29 @@
         <button type="submit">Sign Up</button>
       </form>
     </div>
-
+    <div class="form-container email-verification">
+      <form id="emailVerificationForm">
+        <h1>Email Verification</h1>
+        <div class="verification-icon">
+          <i class="fa-solid fa-envelope-circle-check"></i>
+        </div>
+        <p>We've sent a verification code to your email address. Please enter the code below to complete your
+          registration.</p>
+        <div class="verification-code-input">
+          <input type="text" id="verificationCode" name="verificationCode" placeholder="Enter verification code"
+            maxlength="6" required />
+        </div>
+        <button type="submit">Verify Email</button>
+        <div class="verification-actions">
+          <a href="#" id="resendCode">Didn't receive the code? Resend</a>
+          <a href="#" id="backToSignUp">Back to Sign Up</a>
+        </div>
+      </form>
+    </div>
     <!-- ---------------- SIGN IN ---------------- -->
     <div class="form-container sign-in">
       <form id="signInForm">
         <h1>Sign In</h1>
-        <div class="social-icons">
-          <a href="#" id="googleSignIn" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-          <!-- <a href="#" id="facebookSignIn" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" id="githubSignIn"   class="icon"><i class="fa-brands fa-github"></i></a>
-          <a href="#" id="linkedinSignIn" class="icon"><i class="fa-brands fa-linkedin-in"></i></a> -->
-        </div>
-        <span>or use your email &amp; password</span>
         <input type="email" id="loginEmail" name="email" placeholder="Email" required />
         <input type="password" id="loginPassword" name="password" placeholder="Password" required />
         <a href="#" id="showForgotPassword">Forget Your Password?</a>

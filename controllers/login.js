@@ -9,32 +9,6 @@ export function isValidEmail(email) {
 }
 
 /**
- * Social auth redirect (giữ nguyên)
- */
-export function socialAuthRedirect(provider) {
-  const base = 'http://localhost:8000/public_apiauth'; // Update URL cho đúng
-  const url = new URL(base);
-  url.searchParams.set('provider', provider);
-  window.location.href = url.toString();
-}
-
-export function loginWithGoogle() {
-  socialAuthRedirect('google');
-}
-
-export function loginWithFacebook() {
-  socialAuthRedirect('facebook');
-}
-
-export function loginWithGitHub() {
-  socialAuthRedirect('github');
-}
-
-export function loginWithLinkedIn() {
-  socialAuthRedirect('linkedin');
-}
-
-/**
  * Đăng nhập sử dụng API
  */
 export async function login({ email, password }) {
@@ -82,6 +56,53 @@ export async function signup({ username, email, password, confirmPassword }) {
     }
   } catch (error) {
     throw new Error(error.message || 'Registration failed');
+  }
+}
+
+/**
+ * Xác thực email sử dụng API
+ */
+export async function verifyEmail({ email, code }) {
+  if (!email || !code) {
+    throw new Error('Email and verification code are required');
+  }
+  if (!isValidEmail(email)) {
+    throw new Error('Invalid email format');
+  }
+
+  try {
+    // Nếu authService chưa có method verifyEmail, bạn có thể tạm thời mock như sau:
+    const result = await authService.verifyEmail({ email, code });
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (error) {
+    throw new Error(error.message || 'Email verification failed');
+  }
+}
+
+/**
+ * Gửi lại mã xác thực
+ */
+export async function resendVerificationCode(email) {
+  if (!email || !isValidEmail(email)) {
+    throw new Error('Please enter a valid email');
+  }
+
+  try {
+    // Nếu authService chưa có method resendVerificationCode, bạn có thể tạm thời mock như sau:
+    const result = await authService.resendVerificationCode(email);
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (error) {
+    throw new Error(error.message || 'Failed to resend verification code');
   }
 }
 

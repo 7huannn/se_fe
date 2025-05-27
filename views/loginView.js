@@ -3,8 +3,9 @@ import {
   login,
   signup,
   forgotPassword,
+  verifyEmail,
+  resendVerificationCode,
   isValidEmail,
-  socialAuthRedirect
 } from '../controllers/login.js';
 
 export function initLoginView() {
@@ -14,33 +15,58 @@ export function initLoginView() {
     const loginBtn     = document.getElementById('login');
     const showForgot   = document.getElementById('showForgotPassword');
     const backToLogin  = document.getElementById('backToLogin');
+    const backToSignUp = document.getElementById('backToSignUp');
+    const resendCode   = document.getElementById('resendCode');
+
+    // Store user email for verification
+    let pendingVerificationEmail = '';
 
     // --- Toggle Sign Up / Sign In ---
-    registerBtn?.addEventListener('click', () => container.classList.add('active'));
-    loginBtn?.addEventListener('click',    () => container.classList.remove('active'));
+    registerBtn?.addEventListener('click', () => {
+      container.classList.remove('verification-mode');
+      container.classList.add('active');
+    });
+    
+    loginBtn?.addEventListener('click', () => {
+      container.classList.remove('active');
+      container.classList.remove('verification-mode');
+    });
 
     // --- Toggle Forgot Password ---
     showForgot?.addEventListener('click', e => {
       e.preventDefault();
       container.classList.add('forgot-mode');
+      container.classList.remove('verification-mode');
     });
+    
     backToLogin?.addEventListener('click', e => {
       e.preventDefault();
       container.classList.remove('forgot-mode');
+      container.classList.remove('verification-mode');
     });
 
-    // --- Social OAuth buttons ---
-    ['google', 'facebook', 'github', 'linkedin'].forEach(provider => {
-      const upBtn = document.getElementById(`${provider}SignUp`);
-      const inBtn = document.getElementById(`${provider}SignIn`);
-      upBtn?.addEventListener('click', e => {
-        e.preventDefault();
-        socialAuthRedirect(provider);
-      });
-      inBtn?.addEventListener('click', e => {
-        e.preventDefault();
-        socialAuthRedirect(provider);
-      });
+    // --- Back to Sign Up from Verification ---
+    backToSignUp?.addEventListener('click', e => {
+      e.preventDefault();
+      container.classList.remove('verification-mode');
+      container.classList.add('active');
+      pendingVerificationEmail = '';
+    });
+
+    // --- Resend Verification Code ---
+    resendCode?.addEventListener('click', async e => {
+      e.preventDefault();
+      if (!pendingVerificationEmail) {
+        alert('No email found for verification');
+        return;
+      }
+      
+      try {
+        await resendVerificationCode(pendingVerificationEmail);
+        alert('Verification code sent successfully!');
+      } catch (err) {
+        alert(err.message);
+      }
     });
 
     // --- Sign Up Form ---
@@ -51,13 +77,44 @@ export function initLoginView() {
       const email          = document.getElementById('signUpEmail').value.trim();
       const password       = document.getElementById('signUpPassword').value;
       const confirmPassword= document.getElementById('confirmPassword').value;
+      
       try {
         if (!username)                            throw new Error('Username is required');
         if (!isValidEmail(email))                 throw new Error('Invalid email address');
+        
         await signup({ username, email, password, confirmPassword });
-        alert('Sign up successful!');
-        container.classList.remove('active');     // về lại Sign In
+        
+        // Store email for verification and switch to verification mode
+        pendingVerificationEmail = email;
+        container.classList.remove('active');
+        container.classList.add('verification-mode');
         signUpForm.reset();
+        
+        alert('Registration successful! Please check your email for verification code.');
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // --- Email Verification Form ---
+    const emailVerificationForm = document.getElementById('emailVerificationForm');
+    emailVerificationForm?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const verificationCode = document.getElementById('verificationCode').value.trim();
+      
+      try {
+        if (!verificationCode) throw new Error('Please enter verification code');
+        if (!pendingVerificationEmail) throw new Error('No email found for verification');
+        
+        await verifyEmail({ email: pendingVerificationEmail, code: verificationCode });
+        
+        alert('Email verified successfully! You can now sign in.');
+        
+        // Reset and go back to sign in
+        emailVerificationForm.reset();
+        container.classList.remove('verification-mode');
+        pendingVerificationEmail = '';
+        
       } catch (err) {
         alert(err.message);
       }
@@ -94,6 +151,22 @@ export function initLoginView() {
         alert(err.message);
       }
     });
+
+    // Auto-focus verification code input when in verification mode
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (container.classList.contains('verification-mode')) {
+            setTimeout(() => {
+              const codeInput = document.getElementById('verificationCode');
+              codeInput?.focus();
+            }, 300);
+          }
+        }
+      });
+    });
+    
+    observer.observe(container, { attributes: true });
   });
 }
 

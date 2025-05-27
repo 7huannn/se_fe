@@ -56,17 +56,35 @@ export default class ChatBubbleController {
   }
 
   /**
-   * Check if current page is home - BUSINESS LOGIC
+   * Check if current page is home - FIXED BUSINESS LOGIC
    */
   isHomePage() {
     const currentPath = window.location.pathname;
+    const currentTitle = document.title.toLowerCase();
     
-    return currentPath.includes('home.html') || 
-           currentPath === '/' || 
-           currentPath.endsWith('/') ||
-           currentPath === '' ||
-           currentPath.includes('index') && !currentPath.includes('personal') ||
-           document.title.toLowerCase().includes('schedigo') && !document.title.toLowerCase().includes('calendar');
+    // Chỉ check path trước, rồi mới check title để tránh false positive
+    const isHomeByPath = currentPath.includes('home.html') || 
+                        currentPath === '/' || 
+                        currentPath.endsWith('/') ||
+                        currentPath === '' ||
+                        (currentPath.includes('index') && !currentPath.includes('personal'));
+    
+    // Nếu path đã xác định là home thì return true
+    if (isHomeByPath) {
+      return true;
+    }
+    
+    // Chỉ check title nếu path chưa xác định được và phải loại trừ các trang khác
+    const isHomeByTitle = currentTitle.includes('schedigo') && 
+                         !currentTitle.includes('calendar') &&
+                         !currentTitle.includes('login') &&
+                         !currentTitle.includes('register') &&
+                         !currentTitle.includes('sign') &&
+                         !currentTitle.includes('auth') &&
+                         !currentTitle.includes('team') &&
+                         !currentTitle.includes('group');
+    
+    return isHomeByTitle;
   }
 
   /**
