@@ -3,24 +3,20 @@
 import AccView from '../views/accView.js';
 import AccountModel from '../models/account.js';
 
-/**
- * Controller chỉ chịu trách nhiệu điều phối giữa Model và View
- * Xử lý business logic và user interactions
- * Không thao tác DOM trực tiếp
- */
+// Lớp AccountController chịu trách nhiệm điều phối giữa View và Model
 export class AccountController {
   constructor(formId = 'accountForm', saveIndicatorId = 'saveIndicator') {
     this.form = document.getElementById(formId);
     this.saveIndicator = document.getElementById(saveIndicatorId);
-    
+
     if (!this.form) {
       console.error(`Form with ID "${formId}" not found`);
       return;
     }
-    
+
     this.view = new AccView();
     this.model = new AccountModel();
-    
+
     this.init();
   }
 
@@ -38,16 +34,16 @@ export class AccountController {
   async _loadAndDisplayAccountData() {
     try {
       const accountData = await AccountModel.getAccountInfo();
-      
+
       // Use view to populate form
       this.view.populateForm(accountData);
-      
+
       // Handle avatar logic
       await this._handleAvatarLogic(accountData);
-      
+
       // Store user info
       this._storeUserInfo(accountData);
-      
+
     } catch (error) {
       console.error('Error loading account data:', error);
       this.view.showError('Failed to load account data. Please try again later.');
@@ -59,7 +55,7 @@ export class AccountController {
    */
   async _handleAvatarLogic(accountData) {
     const savedAvatarUrl = localStorage.getItem('user_avatar');
-    
+
     if (savedAvatarUrl && !accountData.avatar) {
       this.view.previewAvatar({ src: savedAvatarUrl });
     } else if (accountData.avatar) {
@@ -75,7 +71,7 @@ export class AccountController {
     if (accountData.username) {
       localStorage.setItem('username', accountData.username);
     }
-    
+
     if (accountData.email) {
       localStorage.setItem('email', accountData.email);
     }
@@ -87,16 +83,16 @@ export class AccountController {
   _bindEvents() {
     // Password toggle events
     this.view.bindPasswordToggle();
-    
+
     // Avatar preview events
     this.view.bindAvatarPreview();
-    
+
     // Dark mode toggle
     this.view.bindDarkModeToggle();
-    
+
     // Date validation events
     this.view.bindDateValidation();
-    
+
     // Form submission
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -111,33 +107,33 @@ export class AccountController {
     try {
       // Get form data from view
       const formData = this.view.getFormData();
-      
+
       // Validate form data
       const validation = this._validateFormData(formData);
       if (!validation.isValid) {
         this.view.showError(validation.message, validation.field);
         return;
       }
-      
+
       // Process account update
       await this._processAccountUpdate(formData);
-      
+
       // Process password update if needed
       if (formData.hasPassword) {
         await this._processPasswordUpdate(formData);
       }
-      
+
       // Process avatar upload if needed
       if (formData.hasAvatar) {
         await this._processAvatarUpload(formData);
       }
-      
+
       // Update stored user info
       this._updateStoredUserInfo(formData);
-      
+
       // Show success and redirect
       this._handleSuccessfulUpdate();
-      
+
     } catch (error) {
       console.error('Error updating account:', error);
       this.view.showError(error.message || 'An error occurred while updating your account');
@@ -155,7 +151,7 @@ export class AccountController {
         field: 'email'
       };
     }
-    
+
     if (!AccountModel.isValidEmail(formData.email)) {
       return {
         isValid: false,
@@ -163,7 +159,7 @@ export class AccountController {
         field: 'email'
       };
     }
-    
+
     if (!formData.username.trim()) {
       return {
         isValid: false,
@@ -171,7 +167,7 @@ export class AccountController {
         field: 'username'
       };
     }
-    
+
     // Validate date of birth
     if (!this.view.isValidDateOfBirth()) {
       return {
@@ -180,13 +176,13 @@ export class AccountController {
         field: 'birthDay'
       };
     }
-    
+
     // Validate passwords
     const passwordValidation = this._validatePasswords(formData);
     if (!passwordValidation.isValid) {
       return passwordValidation;
     }
-    
+
     return { isValid: true };
   }
 
@@ -196,7 +192,7 @@ export class AccountController {
   _validatePasswords(formData) {
     const hasPassword = formData.password && formData.password.trim() !== '';
     const hasConfirmPassword = formData.confirmPassword && formData.confirmPassword.trim() !== '';
-    
+
     if ((hasPassword && !hasConfirmPassword) || (!hasPassword && hasConfirmPassword)) {
       return {
         isValid: false,
@@ -204,7 +200,7 @@ export class AccountController {
         field: 'confirmPassword'
       };
     }
-    
+
     if (hasPassword && hasConfirmPassword) {
       if (formData.password !== formData.confirmPassword) {
         return {
@@ -214,7 +210,7 @@ export class AccountController {
         };
       }
     }
-    
+
     return { isValid: true };
   }
 
@@ -223,11 +219,12 @@ export class AccountController {
    */
   async _processAccountUpdate(formData) {
     const dateOfBirth = this._formatDateOfBirth(formData);
-    
+
     const accountData = {
       email: formData.email,
       username: formData.username,
-      fullname: formData.fullname || '',
+      fname: formData.fname || '',
+      lname: formData.lname || '',
       gender: formData.gender || 'male',
       dateOfBirth: dateOfBirth
     };
@@ -246,11 +243,11 @@ export class AccountController {
       formData.password,
       formData.confirmPassword
     );
-    
+
     if (!result.success) {
       throw new Error(result.message || 'Failed to update password');
     }
-    
+
     // Clear password fields through view
     this.view.clearPasswordFields();
   }
@@ -260,22 +257,22 @@ export class AccountController {
    */
   async _processAvatarUpload(formData) {
     const result = await AccountModel.uploadAvatar(formData.avatarFile);
-    
+
     if (!result.success) {
       throw new Error(result.message || 'Failed to upload avatar');
     }
-    
+
     if (result.avatarUrl) {
       // Update view
       this.view.previewAvatar({ src: result.avatarUrl });
-      
+
       // Dispatch events for other components
       this._dispatchAvatarUpdatedEvent(result.avatarUrl);
-      
+
       // Store in localStorage
       localStorage.setItem('user_avatar', result.avatarUrl);
     }
-    
+
     // Clear file input through view
     this.view.clearAvatarInput();
   }
@@ -285,11 +282,11 @@ export class AccountController {
    */
   _formatDateOfBirth(formData) {
     const dob = formData.dateOfBirth;
-    
+
     if (dob.day && dob.month && dob.year) {
       return AccountModel.formatDateOfBirth(dob.day, dob.month, dob.year);
     }
-    
+
     return null;
   }
 
@@ -299,7 +296,7 @@ export class AccountController {
   _updateStoredUserInfo(formData) {
     localStorage.setItem('username', formData.username);
     localStorage.setItem('email', formData.email);
-    
+
     // Dispatch event for other components
     this._dispatchUserInfoUpdatedEvent(formData);
   }
@@ -310,7 +307,7 @@ export class AccountController {
   _handleSuccessfulUpdate() {
     // Show success indicator through view
     this.view.showSaveIndicator(this.saveIndicator);
-    
+
     // Redirect after delay
     setTimeout(() => {
       this._redirectToCalendar();
@@ -339,7 +336,7 @@ export class AccountController {
    */
   _dispatchUserInfoUpdatedEvent(formData) {
     document.dispatchEvent(new CustomEvent('user-info-updated', {
-      detail: { 
+      detail: {
         username: formData.username,
         email: formData.email
       },

@@ -15,20 +15,21 @@ export default class AccountModel {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch account data');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching account data:', error);
-      
+
       // Fallback to mock data if API fails
       return {
         email: 'Schedigo@gmail.com',
         username: 'Schedigo',
-        fullname: '',
+        fname: 'sche',     
+        lname: 'digo',     
         gender: 'male',
         dateOfBirth: '2005-00-00', // ISO format: YYYY-MM-DD
         avatar: null
@@ -51,16 +52,16 @@ export default class AccountModel {
         },
         body: JSON.stringify(accountData)
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update account');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error updating account:', error);
-      
+
       // Return mock success for development
       return {
         success: true,
@@ -82,7 +83,7 @@ export default class AccountModel {
       if (newPassword !== confirmPassword) {
         throw new Error('Passwords do not match');
       }
-      
+
       const response = await fetch('https://se_backend.hrzn.run/api/account/password', {
         method: 'PUT',
         headers: {
@@ -94,16 +95,16 @@ export default class AccountModel {
           confirmPassword
         })
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update password');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error updating password:', error);
-      
+
       // Return mock success for development
       return {
         success: true,
@@ -128,10 +129,10 @@ export default class AccountModel {
           avatarUrl: null
         };
       }
-      
+
       const formData = new FormData();
       formData.append('avatar', file);
-      
+
       const response = await fetch('https://se_backend.hrzn.run/api/account/avatar', {
         method: 'POST',
         headers: {
@@ -139,12 +140,12 @@ export default class AccountModel {
         },
         body: formData
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to upload avatar');
       }
-      
+
       const data = await response.json();
       return {
         success: true,
@@ -153,7 +154,7 @@ export default class AccountModel {
       };
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      
+
       // Return mock success with local URL for development
       return {
         success: true,
@@ -162,7 +163,7 @@ export default class AccountModel {
       };
     }
   }
-  
+
   /**
    * Validates email format
    * @param {string} email - Email address to validate
@@ -171,7 +172,7 @@ export default class AccountModel {
   static isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
-  
+
   /**
    * Get authentication token from localStorage
    * @returns {string} The authentication token
@@ -180,7 +181,7 @@ export default class AccountModel {
   static _getToken() {
     return localStorage.getItem('auth_token') || '';
   }
-  
+
   /**
    * Build date of birth string from separate day, month, year values
    * @param {number} day - Day of birth
@@ -194,7 +195,7 @@ export default class AccountModel {
     const dayFormatted = day.toString().padStart(2, '0');
     return `${year}-${monthFormatted}-${dayFormatted}`;
   }
-  
+
   /**
    * Parse ISO date string into day, month, year components
    * @param {string} dateString - Date in ISO format (YYYY-MM-DD)
@@ -202,10 +203,10 @@ export default class AccountModel {
    */
   static parseDateOfBirth(dateString) {
     if (!dateString) return { day: '', month: '', year: '' };
-    
+
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return { day: '', month: '', year: '' };
-    
+
     return {
       day: date.getDate(),
       month: date.getMonth(), // 0-based month

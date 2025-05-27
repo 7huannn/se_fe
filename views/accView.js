@@ -8,7 +8,8 @@ export default class AccView {
   constructor() {
     this.emailInput = document.getElementById('email');
     this.usernameInput = document.getElementById('username');
-    this.fullnameInput = document.getElementById('fullname');
+    this.fnameInput = document.getElementById('fname');
+    this.lnameInput = document.getElementById('lname');
     this.genderInputs = document.querySelectorAll('input[name="gender"]');
     this.passwordInput = document.getElementById('password');
     this.confirmPasswordInput = document.getElementById('confirmPassword');
@@ -21,7 +22,7 @@ export default class AccView {
     this.birthMonthSelect = document.getElementById('birthMonth');
     this.birthYearSelect = document.getElementById('birthYear');
     this.body = document.body;
-    
+
     this._initializeDateSelects();
     this._initDarkMode();
   }
@@ -38,7 +39,7 @@ export default class AccView {
         this.birthDaySelect.appendChild(option);
       }
     }
-    
+
     if (this.birthYearSelect) {
       const currentYear = new Date().getFullYear();
       for (let i = currentYear; i >= currentYear - 100; i--) {
@@ -70,15 +71,16 @@ export default class AccView {
     if (this.emailInput) {
       this.emailInput.value = data.email || '';
     }
-    
+
     if (this.usernameInput) {
       this.usernameInput.value = data.username || '';
     }
-    
-    if (this.fullnameInput) {
-      this.fullnameInput.value = data.fullname || '';
+    if (this.fnameInput) {
+      this.fnameInput.value = data.fname || '';
     }
-    
+    if (this.lnameInput) {
+      this.lnameInput.value = data.lname || '';
+    }
     // Set gender radio button
     if (this.genderInputs.length > 0) {
       this.genderInputs.forEach(input => {
@@ -87,13 +89,13 @@ export default class AccView {
         }
       });
     }
-    
+
     // Set date of birth if available
     if (data.dateOfBirth) {
       const dateOfBirth = this._parseDateOfBirth(data.dateOfBirth);
       this.setDateOfBirth(dateOfBirth);
     }
-    
+
     // Display avatar if exists
     if (data.avatar) {
       this.previewAvatar({ src: data.avatar });
@@ -107,7 +109,8 @@ export default class AccView {
     return {
       email: this.emailInput ? this.emailInput.value.trim() : '',
       username: this.usernameInput ? this.usernameInput.value.trim() : '',
-      fullname: this.fullnameInput ? this.fullnameInput.value.trim() : '',
+      fname: this.fnameInput ? this.fnameInput.value.trim() : '',
+      lname: this.lnameInput ? this.lnameInput.value.trim() : '',
       gender: document.querySelector('input[name="gender"]:checked')?.value || 'male',
       password: this.passwordInput ? this.passwordInput.value : '',
       confirmPassword: this.confirmPasswordInput ? this.confirmPasswordInput.value : '',
@@ -127,7 +130,7 @@ export default class AccView {
         this.togglePassword(this.passwordInput, this.passwordToggle);
       });
     }
-    
+
     if (this.confirmPasswordToggle && this.confirmPasswordInput) {
       this.confirmPasswordToggle.addEventListener('click', () => {
         this.togglePassword(this.confirmPasswordInput, this.confirmPasswordToggle);
@@ -170,7 +173,7 @@ export default class AccView {
         const year = parseInt(this.birthYearSelect.value);
         this.updateDaysInMonth(month, year);
       });
-      
+
       this.birthYearSelect.addEventListener('change', () => {
         if (this.birthMonthSelect.value === '1') { // February
           const month = parseInt(this.birthMonthSelect.value);
@@ -186,7 +189,7 @@ export default class AccView {
    */
   togglePassword(inputElement, toggleElement) {
     if (!inputElement || !toggleElement) return;
-    
+
     const isPwd = inputElement.type === 'password';
     inputElement.type = isPwd ? 'text' : 'password';
     toggleElement.classList.toggle('fa-eye');
@@ -198,13 +201,13 @@ export default class AccView {
    */
   previewAvatar(file) {
     if (!file || !this.avatarPreview) return;
-    
+
     if (file.src) {
       // Handle case when file is actually an object with src property
       this.avatarPreview.innerHTML = `<img src="${file.src}" alt="Avatar">`;
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = e => {
       this.avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
@@ -217,7 +220,7 @@ export default class AccView {
    */
   toggleDarkMode() {
     this.body.classList.toggle('dark-mode');
-    
+
     if (this.body.classList.contains('dark-mode')) {
       this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
       this._applyDarkModeStyles();
@@ -266,7 +269,7 @@ export default class AccView {
    */
   showSaveIndicator(saveIndicator, duration = 1500) {
     if (!saveIndicator) return;
-    
+
     saveIndicator.textContent = 'Saved successfully! Redirecting...';
     saveIndicator.style.display = 'block';
   }
@@ -276,15 +279,15 @@ export default class AccView {
    */
   setDateOfBirth(dateOfBirth) {
     if (!dateOfBirth) return;
-    
+
     if (this.birthDaySelect) {
       this.birthDaySelect.value = dateOfBirth.day || '';
     }
-    
+
     if (this.birthMonthSelect) {
       this.birthMonthSelect.value = dateOfBirth.month || '';
     }
-    
+
     if (this.birthYearSelect) {
       this.birthYearSelect.value = dateOfBirth.year || '';
     }
@@ -306,34 +309,34 @@ export default class AccView {
    */
   isValidDateOfBirth() {
     const dob = this.getDateOfBirth();
-    
+
     // If all fields are empty, consider it valid (not provided)
     if (!dob.day && !dob.month && !dob.year) {
       return true;
     }
-    
+
     // If some fields are filled but others aren't, it's invalid
     if (!dob.day || !dob.month || !dob.year) {
       return false;
     }
-    
+
     // Create a date object and check if it's valid
     const date = new Date(dob.year, dob.month, dob.day);
     if (isNaN(date.getTime())) {
       return false;
     }
-    
+
     // Check if the date is reasonable (not in the future)
     const today = new Date();
     if (date > today) {
       return false;
     }
-    
+
     // Check if month and day match (to catch invalid dates like Feb 30)
     if (date.getMonth() != dob.month || date.getDate() != dob.day) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -342,17 +345,17 @@ export default class AccView {
    */
   updateDaysInMonth(month, year) {
     if (!this.birthDaySelect || isNaN(month)) return;
-    
+
     const currentDay = this.birthDaySelect.value;
-    
+
     // Clear existing options except placeholder
     while (this.birthDaySelect.options.length > 1) {
       this.birthDaySelect.remove(1);
     }
-    
+
     // Determine days in month
     let daysInMonth = 31;
-    
+
     if (month === 1) { // February (0-based)
       daysInMonth = 28;
       if (!isNaN(year) && ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0)) {
@@ -361,7 +364,7 @@ export default class AccView {
     } else if ([3, 5, 8, 10].includes(month)) { // April, June, September, November
       daysInMonth = 30;
     }
-    
+
     // Add options
     for (let i = 1; i <= daysInMonth; i++) {
       const option = document.createElement('option');
@@ -369,7 +372,7 @@ export default class AccView {
       option.textContent = i;
       this.birthDaySelect.appendChild(option);
     }
-    
+
     // Restore selected day if possible
     if (currentDay && currentDay <= daysInMonth) {
       this.birthDaySelect.value = currentDay;
@@ -381,14 +384,14 @@ export default class AccView {
    */
   showError(message, fieldId = null) {
     let errorDiv;
-    
+
     if (fieldId) {
       const field = document.getElementById(fieldId);
       if (!field) return;
-      
+
       const parentDiv = field.closest('.form-group');
       if (!parentDiv) return;
-      
+
       errorDiv = parentDiv.querySelector('.error-message');
       if (!errorDiv) {
         errorDiv = document.createElement('div');
@@ -407,11 +410,11 @@ export default class AccView {
         }
       }
     }
-    
+
     if (errorDiv) {
       errorDiv.textContent = message;
       errorDiv.classList.add('show');
-      
+
       setTimeout(() => {
         errorDiv.classList.remove('show');
       }, 5000);
@@ -444,10 +447,10 @@ export default class AccView {
    */
   _parseDateOfBirth(dateString) {
     if (!dateString) return { day: '', month: '', year: '' };
-    
+
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return { day: '', month: '', year: '' };
-    
+
     return {
       day: date.getDate(),
       month: date.getMonth(), // 0-based month
