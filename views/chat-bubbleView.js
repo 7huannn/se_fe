@@ -1,8 +1,7 @@
-// views/chat-bubbleView.js - FIXED MVC COMPLIANT VERSION
-
+// views/chat-bubbleView.js
 /**
- * View chỉ chịu trách nhiệm về presentation và DOM manipulation
- * Không chứa business logic hoặc data processing
+ * View cho Floating Chat Bubble
+ * Xử lý hiển thị và tương tác UI
  */
 export default class ChatBubbleView {
   constructor() {
@@ -18,21 +17,24 @@ export default class ChatBubbleView {
     this.isExpanded = false;
     this.isMouseOver = false;
     this.opacity = 0.6;
-    this.autoOpened = false;
   }
 
   /**
-   * Create DOM elements - PURE DOM CREATION
+   * Khởi tạo các DOM elements
+   * @returns {HTMLElement} Container element chứa chat bubble
    */
   createElements() {
+    // Tạo container chính
     this.container = document.createElement('div');
     this.container.className = 'floating-chat-container';
     
+    // Tạo chat bubble
     this.bubble = document.createElement('div');
     this.bubble.className = 'floating-chat-bubble';
     this.bubble.innerHTML = '<i class="chat-icon">💬</i>';
     this.bubble.style.opacity = this.opacity.toString();
     
+    // Tạo chat panel (ẩn ban đầu)
     this.panel = document.createElement('div');
     this.panel.className = 'floating-chat-panel';
     this.panel.style.display = 'none';
@@ -56,11 +58,14 @@ export default class ChatBubbleView {
       </div>
     `;
     
+    // Thêm vào container
     this.container.appendChild(this.bubble);
     this.container.appendChild(this.panel);
+    
+    // Thêm vào body
     document.body.appendChild(this.container);
     
-    // Store references
+    // Lưu tham chiếu đến các elements
     this.messagesContainer = this.panel.querySelector('.chat-messages');
     this.chatInput = this.panel.querySelector('.chat-input');
     this.sendButton = this.panel.querySelector('.send-btn');
@@ -71,7 +76,8 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Attach event listeners - PURE EVENT BINDING
+   * Đính kèm các event listener cho tương tác
+   * @param {Object} events - Các hàm callback cho sự kiện
    */
   attachEventListeners(events) {
     // Bubble hover effects
@@ -85,12 +91,12 @@ export default class ChatBubbleView {
       this.updateBubbleOpacity();
     });
     
-    // Click events - dispatch to controller
+    // Click để mở rộng/thu gọn
     this.bubble.addEventListener('click', events.expandChat);
     this.minimizeButton.addEventListener('click', events.collapseChat);
     this.closeButton.addEventListener('click', events.collapseChat);
     
-    // Input events
+    // Gửi tin nhắn
     this.sendButton.addEventListener('click', events.sendMessage);
     this.chatInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') events.sendMessage();
@@ -98,17 +104,9 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Get input message and clear field - PURE UI INTERACTION
-   */
-  getInputMessage() {
-    const message = this.chatInput.value.trim();
-    this.chatInput.value = '';
-    return message;
-  }
-
-  /**
-   * Add user message to chat - PURE DOM MANIPULATION
-   * Text formatting is handled by controller/model
+   * Thêm tin nhắn từ người dùng vào chat
+   * @param {string} text - Nội dung tin nhắn
+   * @param {string} time - Thời gian định dạng
    */
   addUserMessage(text, time) {
     const messageEl = document.createElement('div');
@@ -123,14 +121,15 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Add bot message to chat - PURE DOM MANIPULATION
-   * Accepts pre-formatted HTML from controller
+   * Thêm tin nhắn từ bot vào chat
+   * @param {string} text - Nội dung tin nhắn
+   * @param {string} time - Thời gian định dạng
    */
-  addBotMessage(formattedText, time) {
+  addBotMessage(text, time) {
     const messageEl = document.createElement('div');
     messageEl.className = 'chat-message bot-message';
     messageEl.innerHTML = `
-      <div class="message-bubble">${formattedText}</div>
+      <div class="message-bubble">${text}</div>
       <div class="message-time">${time}</div>
     `;
     
@@ -139,7 +138,8 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Show typing indicator - PURE UI STATE
+   * Hiển thị chỉ báo đang nhập
+   * @returns {HTMLElement} Element chỉ báo đang nhập
    */
   showTypingIndicator() {
     const typingIndicator = document.createElement('div');
@@ -151,7 +151,8 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Remove typing indicator - PURE DOM MANIPULATION
+   * Xóa chỉ báo đang nhập
+   * @param {HTMLElement} indicator - Element chỉ báo đang nhập
    */
   removeTypingIndicator(indicator) {
     if (indicator && indicator.parentNode) {
@@ -160,63 +161,28 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Expand chat with animation - PURE UI ANIMATION
+   * Mở rộng chat panel
    */
   expandChat() {
     this.isExpanded = true;
-    this.autoOpened = true;
-    
     this.panel.style.display = 'flex';
-    this.panel.style.transform = 'translateY(20px)';
-    this.panel.style.opacity = '0';
     this.bubble.style.display = 'none';
     
-    setTimeout(() => {
-      this.panel.style.transition = 'all 0.3s ease';
-      this.panel.style.transform = 'translateY(0)';
-      this.panel.style.opacity = '1';
-    }, 10);
-    
-    setTimeout(() => {
-      this.chatInput.focus();
-      if (this.autoOpened) {
-        this.addWelcomePulse();
-      }
-    }, 350);
+    // Focus vào input
+    setTimeout(() => this.chatInput.focus(), 100);
   }
 
   /**
-   * Collapse chat with animation - PURE UI ANIMATION
+   * Thu gọn chat panel
    */
   collapseChat() {
     this.isExpanded = false;
-    this.autoOpened = false;
-    
-    this.panel.style.transition = 'all 0.3s ease';
-    this.panel.style.transform = 'translateY(20px)';
-    this.panel.style.opacity = '0';
-    
-    setTimeout(() => {
-      this.panel.style.display = 'none';
-      this.bubble.style.display = 'flex';
-      this.panel.style.transition = '';
-      this.panel.style.transform = '';
-      this.panel.style.opacity = '';
-    }, 300);
+    this.panel.style.display = 'none';
+    this.bubble.style.display = 'flex';
   }
 
   /**
-   * Add welcome pulse effect - PURE UI ANIMATION
-   */
-  addWelcomePulse() {
-    this.panel.classList.add('welcome-pulse');
-    setTimeout(() => {
-      this.panel.classList.remove('welcome-pulse');
-    }, 2000);
-  }
-
-  /**
-   * Update bubble opacity - PURE UI STATE
+   * Cập nhật độ mờ của bubble dựa trên trạng thái hover
    */
   updateBubbleOpacity() {
     if (this.isExpanded) return;
@@ -229,24 +195,35 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Scroll to bottom - PURE UI INTERACTION
+   * Cuộn chat xuống cuối
    */
   scrollToBottom() {
     this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
   }
 
   /**
-   * Render messages from data - PURE PRESENTATION
-   * Accepts formatted message data from controller
+   * Lấy nội dung tin nhắn từ input và xóa input
+   * @returns {string} Nội dung tin nhắn
    */
-  renderMessages(formattedMessages) {
+  getInputMessage() {
+    const message = this.chatInput.value.trim();
+    this.chatInput.value = '';
+    return message;
+  }
+
+  /**
+   * Vẽ lại tất cả tin nhắn trong lịch sử
+   * @param {Array} messages - Danh sách tin nhắn
+   */
+  renderMessages(messages) {
     this.messagesContainer.innerHTML = '';
     
-    formattedMessages.forEach(msg => {
+    messages.forEach(msg => {
+      const time = this.formatTime(new Date(msg.timestamp));
       if (msg.isUser) {
-        this.addUserMessage(msg.content, msg.formattedTime);
+        this.addUserMessage(msg.content, time);
       } else {
-        this.addBotMessage(msg.formattedContent, msg.formattedTime);
+        this.addBotMessage(msg.content, time);
       }
     });
     
@@ -254,60 +231,11 @@ export default class ChatBubbleView {
   }
 
   /**
-   * Clear all messages - PURE UI RESET
+   * Định dạng thời gian
+   * @param {Date} date - Đối tượng Date
+   * @returns {string} Thời gian đã định dạng
    */
-  clearMessages() {
-    this.messagesContainer.innerHTML = '';
-  }
-
-  /**
-   * Set chat input value - PURE UI STATE
-   */
-  setChatInputValue(value) {
-    this.chatInput.value = value;
-  }
-
-  /**
-   * Focus on input - PURE UI INTERACTION
-   */
-  focusInput() {
-    this.chatInput.focus();
-  }
-
-  /**
-   * Check if chat is expanded - PURE STATE CHECK
-   */
-  isExpanded() {
-    return this.isExpanded;
-  }
-
-  /**
-   * Set bubble opacity - PURE UI STATE
-   */
-  setBubbleOpacity(opacity) {
-    this.opacity = opacity;
-    this.updateBubbleOpacity();
-  }
-
-  /**
-   * Show/hide panel - PURE UI STATE CONTROL
-   */
-  showPanel() {
-    this.panel.style.display = 'flex';
-  }
-
-  hidePanel() {
-    this.panel.style.display = 'none';
-  }
-
-  /**
-   * Show/hide bubble - PURE UI STATE CONTROL
-   */
-  showBubble() {
-    this.bubble.style.display = 'flex';
-  }
-
-  hideBubble() {
-    this.bubble.style.display = 'none';
+  formatTime(date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 }
