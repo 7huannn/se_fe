@@ -8,7 +8,7 @@ export default class AccountModel {
    */
   static async getAccountInfo() {
     try {
-      const response = await fetch('https://se_backend.hrzn.run/api/account/profile', {
+      const response = await fetch('https://se_backend.hrzn.run/public_apiapi/account/profile', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this._getToken()}`,

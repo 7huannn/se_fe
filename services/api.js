@@ -1,7 +1,7 @@
 // services/api.js - API client đơn giản để kết nối với backend
 class APIClient {
   constructor() {
-    this.baseURL = 'http://localhost:8000'; // URL backend của bạn
+    this.baseURL = 'https://se_backend.hrzn.run/public_api'; // URL backend của bạn
     this.token = localStorage.getItem('auth_token');
   }
 

@@ -40,7 +40,7 @@ export class AuthService {
   // Login
   async login({ email, password }) {
     try {
-      const response = await apiClient.post('/api/auth/login', {
+      const response = await apiClient.post('api/auth/login', {
         email,
         password
       });
@@ -77,7 +77,7 @@ export class AuthService {
   // Register
   async register({ username, email, password }) {
     try {
-      const response = await apiClient.post('/api/users/register', {
+      const response = await apiClient.post('api/users/register', {
         username,
         email,
         password,
@@ -103,7 +103,7 @@ export class AuthService {
       const token = localStorage.getItem('auth_token');
       
       if (token) {
-        await apiClient.post('/api/auth/logout', { token });
+        await apiClient.post('api/auth/logout', { token });
       }
     } catch (error) {
       console.error('Logout API call failed:', error);
@@ -123,7 +123,7 @@ export class AuthService {
   // Forgot password
   async forgotPassword(email) {
     try {
-      const response = await apiClient.post('/api/users/password-reset-request', {
+      const response = await apiClient.post('api/users/password-reset-request', {
         email
       });
 

@@ -1,5 +1,4 @@
-// controllers/menu-navigate.js (Updated version)
-// Removed chat function
+// controllers/menu-navigate.js 
 
 export function goToAcc() {
   window.open("manageAcc.html", "_self");

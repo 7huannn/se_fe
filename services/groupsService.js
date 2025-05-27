@@ -9,7 +9,7 @@ class GroupsService {
   // Create a new group
   async createGroup(groupData) {
     try {
-      const response = await apiClient.post('/api/groups/', groupData);
+      const response = await apiClient.post('api/groups/', groupData);
       
       return {
         success: true,
@@ -28,7 +28,7 @@ class GroupsService {
   // Join a group via invite code
   async joinGroupByInviteCode(inviteCode) {
     try {
-      const response = await apiClient.post('/api/groups/join/', null, {
+      const response = await apiClient.post('api/groups/join/', null, {
         params: { invite_code: inviteCode }
       });
       
@@ -49,7 +49,7 @@ class GroupsService {
   // Join a group by ID
   async joinGroup(groupId) {
     try {
-      const response = await apiClient.post(`/api/groups/${groupId}/join/`);
+      const response = await apiClient.post(`api/groups/${groupId}/join/`);
       
       return {
         success: true,
@@ -68,7 +68,7 @@ class GroupsService {
   // Leave a group
   async leaveGroup(groupId) {
     try {
-      await apiClient.delete(`/api/groups/${groupId}/leave/`);
+      await apiClient.delete(`api/groups/${groupId}/leave/`);
       
       return {
         success: true,
@@ -86,7 +86,7 @@ class GroupsService {
   // Delete a group (owner only)
   async deleteGroup(groupId) {
     try {
-      await apiClient.delete(`/api/groups/${groupId}`);
+      await apiClient.delete(`api/groups/${groupId}`);
       
       return {
         success: true,
@@ -104,7 +104,7 @@ class GroupsService {
   // Invite a member to group
   async inviteMember(groupId, userId) {
     try {
-      const response = await apiClient.post(`/api/groups/${groupId}/invite/`, null, {
+      const response = await apiClient.post(`api/groups/${groupId}/invite/`, null, {
         params: { user_id: userId }
       });
       
@@ -125,7 +125,7 @@ class GroupsService {
   // Remove a member from group
   async removeMember(groupId, userId) {
     try {
-      await apiClient.delete(`/api/groups/${groupId}/members/${userId}`);
+      await apiClient.delete(`api/groups/${groupId}/members/${userId}`);
       
       return {
         success: true,
@@ -143,7 +143,7 @@ class GroupsService {
   // Get group member info
   async getGroupMember(groupId, userId) {
     try {
-      const response = await apiClient.get(`/api/groups/${groupId}/members/${userId}`);
+      const response = await apiClient.get(`api/groups/${groupId}/members/${userId}`);
       
       return {
         success: true,
@@ -161,7 +161,7 @@ class GroupsService {
   // Update member role
   async updateMemberRole(groupId, userId, role) {
     try {
-      const response = await apiClient.put(`/api/groups/${groupId}/role`, {
+      const response = await apiClient.put(`api/groups/${groupId}/role`, {
         user_id: userId,
         role: role
       });
@@ -183,7 +183,7 @@ class GroupsService {
   // Transfer group ownership
   async transferOwnership(groupId, newOwnerId) {
     try {
-      const response = await apiClient.put(`/api/groups/${groupId}/transfer-ownership/`, null, {
+      const response = await apiClient.put(`api/groups/${groupId}/transfer-ownership/`, null, {
         params: { new_owner_id: newOwnerId }
       });
       
@@ -204,7 +204,7 @@ class GroupsService {
   // Update group email notification settings
   async updateGroupEmailNotification(groupId, enabled) {
     try {
-      const response = await apiClient.put(`/api/groups/${groupId}/email-notification`, {
+      const response = await apiClient.put(`api/groups/${groupId}/email-notification`, {
         enabled
       });
       
@@ -228,7 +228,7 @@ class GroupsService {
   async createGroupEvent(groupId, eventData) {
     try {
       const formattedData = this.formatEventData(eventData);
-      const response = await apiClient.post(`/api/groups/${groupId}/events/`, formattedData);
+      const response = await apiClient.post(`api/groups/${groupId}/events/`, formattedData);
       
       return {
         success: true,
@@ -248,7 +248,7 @@ class GroupsService {
   async updateGroupEvent(groupId, eventId, eventData) {
     try {
       const formattedData = this.formatEventData(eventData);
-      const response = await apiClient.put(`/api/groups/${groupId}/events/${eventId}`, formattedData);
+      const response = await apiClient.put(`api/groups/${groupId}/events/${eventId}`, formattedData);
       
       return {
         success: true,
@@ -267,7 +267,7 @@ class GroupsService {
   // Delete a group event
   async deleteGroupEvent(groupId, eventId) {
     try {
-      await apiClient.delete(`/api/groups/${groupId}/events/${eventId}`);
+      await apiClient.delete(`api/groups/${groupId}/events/${eventId}`);
       
       return {
         success: true,
@@ -285,7 +285,7 @@ class GroupsService {
   // Get all events for a group
   async getGroupEvents(groupId) {
     try {
-      const response = await apiClient.get(`/api/groups/${groupId}/events/`);
+      const response = await apiClient.get(`api/groups/${groupId}/events/`);
       
       return {
         success: true,

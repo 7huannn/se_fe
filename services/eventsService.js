@@ -11,7 +11,7 @@ export class EventsService {
     
     const endTime = new Date(baseDate);
     endTime.setMinutes(frontendEvent.endTime);
-
+    
     return {
       title: frontendEvent.title,
       description: frontendEvent.description || '',
@@ -50,7 +50,9 @@ export class EventsService {
   async createEvent(eventData) {
     try {
       const backendData = this.formatEventForBackend(eventData);
-      const response = await apiClient.post('/api/events/', backendData);
+      console.log(backendData.start_time)
+      
+      const response = await apiClient.post('api/events/', backendData);
       
       return {
         success: true,
@@ -68,7 +70,7 @@ export class EventsService {
   // Get event by ID
   async getEvent(eventId) {
     try {
-      const response = await apiClient.get(`/api/events/${eventId}`);
+      const response = await apiClient.get(`api/events/${eventId}`);
       
       return {
         success: true,
@@ -86,7 +88,7 @@ export class EventsService {
   async updateEvent(eventId, eventData) {
     try {
       const backendData = this.formatEventForBackend(eventData);
-      const response = await apiClient.put(`/api/events/${eventId}`, backendData);
+      const response = await apiClient.put(`api/events/${eventId}`, backendData);
       
       return {
         success: true,
@@ -104,7 +106,7 @@ export class EventsService {
   // Delete event
   async deleteEvent(eventId) {
     try {
-      await apiClient.delete(`/api/events/${eventId}`);
+      await apiClient.delete(`api/events/${eventId}`);
       
       return {
         success: true,
@@ -125,7 +127,7 @@ export class EventsService {
       if (keyword) params.append('keyword', keyword);
       if (date) params.append('date', date.toISOString());
       
-      const url = `/api/events/${params.toString() ? '?' + params.toString() : ''}`;
+      const url = `api/events/${params.toString() ? '?' + params.toString() : ''}`;
       const response = await apiClient.get(url);
       
       return {
