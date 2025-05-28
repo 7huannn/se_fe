@@ -1,4 +1,4 @@
-// models/notifications.js - NEW MVC COMPLIANT VERSION
+// models/notifications.js
 
 /**
  * Model chỉ chịu trách nhiệm về data và business logic
