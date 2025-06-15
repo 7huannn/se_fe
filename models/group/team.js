@@ -18,7 +18,7 @@ export function saveTeams(teams) {
 export async function loadTeams() {
     try {
         // TODO: Khi backend có endpoint getUserGroups, uncomment đoạn này:
-        /*
+        
         if (authService.isUserAuthenticated()) {
             const backendResult = await getUserGroupsFromBackend();
             if (backendResult.success && backendResult.groups.length > 0) {
@@ -27,8 +27,8 @@ export async function loadTeams() {
                 return backendResult.groups;
             }
         }
-        */
         
+
         // Fallback to localStorage
         const teamsData = localStorage.getItem('schedigo_teams');
         return teamsData ? JSON.parse(teamsData) : [];
@@ -80,7 +80,41 @@ export function getInitials(name) {
         return name.substring(0, 2).toUpperCase();
     }
 }
-
+/**
+ * Create team on backend
+ * @param {Object} teamData - Frontend team data
+ * @returns {Promise<Object>} Backend result
+ */
+export async function createTeamOnBackend(teamData) {
+    try {
+        const backendData = {
+            name: teamData.name,
+            description: teamData.description || ''
+        };
+        
+        const result = await groupsService.createGroup(backendData);
+        
+        if (result.success) {
+            return {
+                success: true,
+                group: {
+                    id: result.group.id,
+                    invite_code: result.group.invite_code,
+                    creator_id: result.group.creator_id,
+                    ...result.group
+                }
+            };
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Backend team creation failed:', error);
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
 /**
  * Thêm team mới - với backend integration
  * @param {Object} teamData - Thông tin team mới
@@ -134,41 +168,7 @@ export async function addTeam(teamData) {
     }
 }
 
-/**
- * Create team on backend
- * @param {Object} teamData - Frontend team data
- * @returns {Promise<Object>} Backend result
- */
-async function createTeamOnBackend(teamData) {
-    try {
-        const backendData = {
-            name: teamData.name,
-            description: teamData.description || ''
-        };
-        
-        const result = await groupsService.createGroup(backendData);
-        
-        if (result.success) {
-            return {
-                success: true,
-                group: {
-                    id: result.group.id,
-                    invite_code: result.group.invite_code,
-                    creator_id: result.group.creator_id,
-                    ...result.group
-                }
-            };
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('Backend team creation failed:', error);
-        return {
-            success: false,
-            message: error.message
-        };
-    }
-}
+
 
 /**
  * Join team by invite code - NEW FUNCTION
@@ -251,7 +251,7 @@ export async function updateTeam(teamId, updateData) {
         if (currentTeam.backendId && authService.isUserAuthenticated()) {
             try {
                 // TODO: Implement when backend has update group endpoint
-                // await groupsService.updateGroup(currentTeam.backendId, updateData);
+                await groupsService.updateGroup(currentTeam.backendId, updateData);
                 console.log('Backend sync for team update not yet implemented');
             } catch (error) {
                 console.warn('Backend sync failed for team update:', error);
