@@ -28,9 +28,8 @@ class GroupsService {
   // Join a group via invite code
   async joinGroupByInviteCode(inviteCode) {
     try {
-      const response = await apiClient.post('api/groups/join/', null, {
-        params: { invite_code: inviteCode }
-      });
+      const response = await apiClient.post(`api/groups/join/?invite_code=${encodeURIComponent(inviteCode)}`, null, 
+      );
       
       return {
         success: true,

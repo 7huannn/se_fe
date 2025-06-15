@@ -37,7 +37,7 @@ class APIClient {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'API request failed');
@@ -56,11 +56,18 @@ class APIClient {
   }
 
   async post(endpoint, data) {
-    return this.request(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    if (data == null) {
+      return this.request(endpoint, {
+        method: 'POST',
+      });
+    } else {
+      return this.request(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    }
   }
+
 
   async put(endpoint, data) {
     return this.request(endpoint, {

@@ -177,6 +177,7 @@ export function initJoinTeamController() {
     newJoinBtn.addEventListener('click', async () => {
         const teamCodeInput = document.getElementById('teamCode');
         const teamCode = teamCodeInput.value.trim();
+        // console.log('Joining team with code:', teamCode);
         
         if (!teamCode) {
             showToast('Please enter a team code', 'error');
