@@ -45,6 +45,63 @@ export class EventsService {
       priority: backendEvent.priority
     };
   }
+  
+  // Get user groups
+async getUserGroups() {
+  try {
+    const response = await apiClient.get('/api/groups/get_user_groups');
+    console.log(' API Response:', response);
+    
+    const currentUser = {
+      email: localStorage.getItem('email'),
+      name: localStorage.getItem('username')
+    };
+    
+    const groups = response.map(group => ({
+      id: group.id,
+      name: group.name,
+      description: group.description || '',
+      code: group.invite_code || `TEAM${group.id}`,
+      inviteCode: group.invite_code || `TEAM${group.id}`,
+      privacy: 'private',
+      color: 'blue',
+      initials: this.generateInitials(group.name),
+      createdAt: group.created_at,
+      creator_id: group.creator_id,
+      
+      members: [{
+        id: Date.now(),
+        email: currentUser.email,
+        name: currentUser.name,
+        role: 'leader',
+        addedAt: new Date().toISOString()
+      }],
+      
+      synced: true,
+      backendId: group.id
+    }));
+
+    return {
+      success: true,
+      groups
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+      groups: []
+    };
+  }
+}
+
+generateInitials(name) {
+  if (!name) return 'GR';
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
 
   // Create event
   async createEvent(eventData) {

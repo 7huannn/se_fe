@@ -1,4 +1,4 @@
-// controllers/group/membersController.js - Updated with notifications
+// controllers/group/membersController.js - FIXED VERSION with proper error handling
 
 import { 
     addTeamMember, 
@@ -274,7 +274,7 @@ export function openTeamMembersModal(teamId, isLeader = false) {
 }
 
 /**
- * Refresh the team members list in the modal
+ * Refresh the team members list in the modal - FIXED VERSION
  * @param {number} teamId - ID of the team
  * @param {boolean} isLeader - Whether the current user is a leader
  */
@@ -285,31 +285,58 @@ function refreshTeamMembersList(teamId, isLeader = false) {
     // Clear current list
     membersList.innerHTML = '';
     
-    // Get team members
-    const members = getTeamMembers(teamId);
-    
-    // Get current user
-    const currentUser = getCurrentUser();
-    
-    if (!members || members.length === 0) {
-        // Show empty message
+    try {
+        // Get team members - FIXED: Add null check and array validation
+        const members = getTeamMembers(teamId);
+        
+        // FIXED: Validate that members is actually an array
+        if (!members || !Array.isArray(members)) {
+            console.warn('Team members is not an array or is null:', members);
+            // Show empty message
+            membersList.innerHTML = `
+                <div class="empty-members-message">
+                    No members found for this team.
+                </div>
+            `;
+            return;
+        }
+        
+        // Get current user
+        const currentUser = getCurrentUser();
+        
+        if (members.length === 0) {
+            // Show empty message
+            membersList.innerHTML = `
+                <div class="empty-members-message">
+                    No members added to this team yet.
+                </div>
+            `;
+            return;
+        }
+        
+        // Render each member
+        members.forEach(member => {
+            // FIXED: Add null check for member object
+            if (!member || typeof member !== 'object') {
+                console.warn('Invalid member object:', member);
+                return; // Skip this iteration
+            }
+            
+            // Don't allow leaders to remove themselves
+            const canRemove = isLeader && 
+                             (member.email.toLowerCase() !== currentUser.email.toLowerCase() || 
+                              members.filter(m => m && m.role === TEAM_ROLES.LEADER).length > 1);
+            
+            renderMemberItem(membersList, member, 'manage', isLeader, canRemove);
+        });
+    } catch (error) {
+        console.error('Error refreshing team members list:', error);
         membersList.innerHTML = `
-            <div class="empty-members-message">
-                No members added to this team yet.
+            <div class="error-message">
+                Error loading team members. Please try again.
             </div>
         `;
-        return;
     }
-    
-    // Render each member
-    members.forEach(member => {
-        // Don't allow leaders to remove themselves
-        const canRemove = isLeader && 
-                         (member.email.toLowerCase() !== currentUser.email.toLowerCase() || 
-                          members.filter(m => m.role === TEAM_ROLES.LEADER).length > 1);
-        
-        renderMemberItem(membersList, member, 'manage', isLeader, canRemove);
-    });
 }
 
 /**
@@ -321,16 +348,24 @@ function refreshTeamMembersList(teamId, isLeader = false) {
  * @param {boolean} canRemove - Whether this member can be removed
  */
 function renderMemberItem(container, member, type, isLeader = false, canRemove = true) {
+    // FIXED: Add validation for member object
+    if (!member || typeof member !== 'object' || !member.email) {
+        console.warn('Invalid member data provided to renderMemberItem:', member);
+        return;
+    }
+    
     const memberEl = document.createElement('div');
     memberEl.className = 'team-member';
-    memberEl.dataset.memberId = member.id;
+    memberEl.dataset.memberId = member.id || 'unknown';
     
-    // Get initial from name or email
-    const initial = member.name ? member.name.charAt(0).toUpperCase() : member.email.charAt(0).toUpperCase();
+    // Get initial from name or email - FIXED: Add safety checks
+    const name = member.name || '';
+    const email = member.email || '';
+    const initial = name ? name.charAt(0).toUpperCase() : (email ? email.charAt(0).toUpperCase() : '?');
     
     // Get the current user
     const currentUser = getCurrentUser();
-    const isCurrentUser = member.email.toLowerCase() === currentUser.email.toLowerCase();
+    const isCurrentUser = email.toLowerCase() === currentUser.email.toLowerCase();
     
     // Determine if this is the only leader
     const isOnlyLeader = member.role === TEAM_ROLES.LEADER && type === 'manage';
@@ -340,11 +375,11 @@ function renderMemberItem(container, member, type, isLeader = false, canRemove =
             <div class="team-member-avatar">${initial}</div>
             <div class="team-member-details">
                 <div class="team-member-name">
-                    ${member.name || ''}
+                    ${name || 'Unknown'}
                     ${isCurrentUser ? '<span class="current-user-indicator">(You)</span>' : ''}
-                    <span class="member-role-badge ${member.role}">${member.role}</span>
+                    <span class="member-role-badge ${member.role || 'member'}">${member.role || 'member'}</span>
                 </div>
-                <div class="team-member-email">${member.email}</div>
+                <div class="team-member-email">${email}</div>
             </div>
         </div>
         <div class="team-member-actions">
@@ -386,7 +421,9 @@ function renderMemberItem(container, member, type, isLeader = false, canRemove =
             
             if (type === 'create') {
                 // Remove from temporary array
-                window.tempTeamMembers = window.tempTeamMembers.filter(m => m.id !== member.id);
+                if (window.tempTeamMembers && Array.isArray(window.tempTeamMembers)) {
+                    window.tempTeamMembers = window.tempTeamMembers.filter(m => m.id !== member.id);
+                }
                 
                 // Remove from UI
                 memberEl.remove();
@@ -468,11 +505,12 @@ function handleTeamMemberRemove(event) {
     }
     
     // Find the member to be removed
-    const memberToRemove = team.members.find(m => m.id === memberId);
+    const memberToRemove = team.members && Array.isArray(team.members) ? 
+        team.members.find(m => m.id === memberId) : null;
     
     // Don't allow removing the last leader
     if (memberToRemove?.role === TEAM_ROLES.LEADER) {
-        const leaderCount = team.members.filter(m => m.role === TEAM_ROLES.LEADER).length;
+        const leaderCount = team.members ? team.members.filter(m => m.role === TEAM_ROLES.LEADER).length : 0;
         if (leaderCount <= 1) {
             showToast('Cannot remove the last team leader', 'error');
             return;
@@ -519,7 +557,8 @@ function handleTeamMemberRoleChange(event) {
     }
     
     // Find the member to be updated
-    const memberToUpdate = team.members.find(m => m.id === memberId);
+    const memberToUpdate = team.members && Array.isArray(team.members) ? 
+        team.members.find(m => m.id === memberId) : null;
     
     if (!memberToUpdate) {
         showToast('Member not found', 'error');
@@ -530,7 +569,7 @@ function handleTeamMemberRoleChange(event) {
     
     // If changing from leader to member, check if this is the last leader
     if (memberToUpdate?.role === TEAM_ROLES.LEADER && role === TEAM_ROLES.MEMBER) {
-        const leaderCount = team.members.filter(m => m.role === TEAM_ROLES.LEADER).length;
+        const leaderCount = team.members ? team.members.filter(m => m.role === TEAM_ROLES.LEADER).length : 0;
         if (leaderCount <= 1) {
             showToast('Cannot demote the last team leader', 'error');
             
