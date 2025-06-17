@@ -70,6 +70,8 @@ export class EventsService {
   // Get event by ID
   async getEvent(eventId) {
     try {
+      localStorage.clear();
+
       const response = await apiClient.get(`api/events/${eventId}`);
       
       return {
@@ -146,6 +148,7 @@ export class EventsService {
   // Get events for a specific date (helper method for calendar)
   async getEventsByDate(date) {
     try {
+
       const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD format
       const result = await this.searchEvents({ date: new Date(dateStr) });
       

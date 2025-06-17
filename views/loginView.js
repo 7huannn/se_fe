@@ -90,7 +90,7 @@ export function initLoginView() {
         container.classList.add('verification-mode');
         signUpForm.reset();
         
-        alert('Registration successful! Please check your email for verification code.');
+        alert('Registration successful! Please check your email for verification token.');
       } catch (err) {
         alert(err.message);
       }
@@ -100,13 +100,13 @@ export function initLoginView() {
     const emailVerificationForm = document.getElementById('emailVerificationForm');
     emailVerificationForm?.addEventListener('submit', async e => {
       e.preventDefault();
-      const verificationCode = document.getElementById('verificationCode').value.trim();
+      const verificationToken = document.getElementById('verificationToken').value.trim();
       
       try {
-        if (!verificationCode) throw new Error('Please enter verification code');
+        if (!verificationToken) throw new Error('Please enter verification token');
         if (!pendingVerificationEmail) throw new Error('No email found for verification');
         
-        await verifyEmail({ email: pendingVerificationEmail, code: verificationCode });
+        await verifyEmail({ email: pendingVerificationEmail, token: verificationToken });
         
         alert('Email verified successfully! You can now sign in.');
         
@@ -152,14 +152,14 @@ export function initLoginView() {
       }
     });
 
-    // Auto-focus verification code input when in verification mode
+    // Auto-focus verification token input when in verification mode
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
           if (container.classList.contains('verification-mode')) {
             setTimeout(() => {
-              const codeInput = document.getElementById('verificationCode');
-              codeInput?.focus();
+              const tokenInput = document.getElementById('verificationToken');
+              tokenInput?.focus();
             }, 300);
           }
         }

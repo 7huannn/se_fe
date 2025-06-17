@@ -2,7 +2,29 @@
 
 import { groupsService } from '../../services/groupsService.js';
 import { authService } from '../../services/authService.js';
+import { groupServiceWrapper } from '../../services/groupServiceWrapper.js';
 
+/**
+ * Fetch user's groups from backend
+ * @returns {Promise<{success: boolean, groups: Array, message?: string}>}
+ */
+export async function getUserGroupsFromBackend() {
+    try {
+        if (!authService.isUserAuthenticated()) {
+            return { success: false, groups: [], message: 'User not authenticated' };
+        }
+
+        const result = await groupServiceWrapper.getUserGroups();
+        if (result && result.success) {
+            return { success: true, groups: result.groups };
+        }
+
+        return { success: false, groups: [], message: result.message || 'Failed to get groups' };
+    } catch (error) {
+        console.error('Error fetching user groups from backend:', error);
+        return { success: false, groups: [], message: error.message || 'Failed to get groups' };
+    }
+}
 /**
  * Lưu teams vào localStorage
  * @param {Array} teams - Mảng chứa thông tin các team

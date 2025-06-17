@@ -97,6 +97,47 @@ export class AuthService {
     }
   }
 
+  // Verify email using token
+  async verifyEmail({ email, token }) {
+    try {
+      const response = await apiClient.post('api/users/verify-email', {
+        email,
+        token,
+      });
+
+      return {
+        success: true,
+        message: 'Email verified successfully',
+        data: response,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  // Resend verification token
+  async resendVerificationCode(email) {
+    try {
+      const response = await apiClient.post('api/users/resend-verification-code', {
+        email,
+      });
+
+      return {
+        success: true,
+        message: 'Verification code resent successfully',
+        data: response,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
   // Logout
   async logout() {
     try {

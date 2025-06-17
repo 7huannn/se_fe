@@ -62,9 +62,9 @@ export async function signup({ username, email, password, confirmPassword }) {
 /**
  * Xác thực email sử dụng API
  */
-export async function verifyEmail({ email, code }) {
-  if (!email || !code) {
-    throw new Error('Email and verification code are required');
+export async function verifyEmail({ email, token }) {
+  if (!email || !token) {
+    throw new Error('Email and verification token are required');
   }
   if (!isValidEmail(email)) {
     throw new Error('Invalid email format');
@@ -72,7 +72,7 @@ export async function verifyEmail({ email, code }) {
 
   try {
     // Nếu authService chưa có method verifyEmail, bạn có thể tạm thời mock như sau:
-    const result = await authService.verifyEmail({ email, code });
+    const result = await authService.verifyEmail({ email, token });
     
     if (result.success) {
       return result;
@@ -102,7 +102,7 @@ export async function resendVerificationCode(email) {
       throw new Error(result.message);
     }
   } catch (error) {
-    throw new Error(error.message || 'Failed to resend verification code');
+    throw new Error(error.message || 'Failed to resend verification token');
   }
 }
 
