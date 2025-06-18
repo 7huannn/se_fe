@@ -80,7 +80,7 @@ export default class ChatBubbleModel {
       console.log('AI agent response:', data);
       
       // Backend trả về { response: "AI response text" } hoặc { message: "AI response text" }
-      return data.response || data.message.output || "Xin lỗi, tôi không thể xử lý yêu cầu của bạn lúc này.";
+      return data.response || data.message || "Xin lỗi, tôi không thể xử lý yêu cầu của bạn lúc này.";
       
     } catch (error) {
       console.error('Error calling AI agent:', error);
