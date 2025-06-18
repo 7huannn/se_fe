@@ -49,7 +49,7 @@ export class EventsService {
   // Get user groups
 async getUserGroups() {
   try {
-    const response = await apiClient.get('/api/groups/get_user_groups');
+    const response = await apiClient.get('api/groups/get_user_groups');
     console.log(' API Response:', response);
     
     const currentUser = {

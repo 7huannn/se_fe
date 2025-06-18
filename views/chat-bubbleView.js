@@ -1,3 +1,4 @@
+
 // views/chat-bubbleView.js
 /**
  * View cho Floating Chat Bubble
@@ -157,6 +158,37 @@ export default class ChatBubbleView {
   removeTypingIndicator(indicator) {
     if (indicator && indicator.parentNode) {
       indicator.parentNode.removeChild(indicator);
+    }
+  }
+
+  /**
+   * Hiển thị trạng thái lỗi
+   * @param {string} errorMessage - Thông báo lỗi
+   */
+  showError(errorMessage) {
+    const errorEl = document.createElement('div');
+    errorEl.className = 'chat-error';
+    errorEl.innerHTML = `
+      <div class="error-message">❌ ${errorMessage}</div>
+    `;
+    this.messagesContainer.appendChild(errorEl);
+    this.scrollToBottom();
+  }
+
+  /**
+   * Disable/Enable input khi đang gửi request
+   * @param {boolean} disabled - True để disable, false để enable
+   */
+  setInputDisabled(disabled) {
+    this.chatInput.disabled = disabled;
+    this.sendButton.disabled = disabled;
+    
+    if (disabled) {
+      this.chatInput.placeholder = "Đang xử lý...";
+      this.sendButton.style.opacity = "0.5";
+    } else {
+      this.chatInput.placeholder = "Nhập tin nhắn...";
+      this.sendButton.style.opacity = "1";
     }
   }
 

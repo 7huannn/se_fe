@@ -1,16 +1,19 @@
 // models/chat-bubble.js
+import { apiClient } from '../services/api.js';
+
 /**
- * Model cho Floating Chat Bubble
- * Xử lý dữ liệu và logic nghiệp vụ liên quan đến chat 
+ * Model cho Floating Chat Bubble với authentication
+ * Xử lý dữ liệu và logic nghiệp vụ liên quan đến chat với backend
  */
 export default class ChatBubbleModel {
   constructor() {
     this.messages = [];
-    this.initializeResponses();
+    this.apiEndpoint = 'api/agents/call_event_agents'; // Endpoint tương đối cho chat API
+    this.apiClient = apiClient;
   }
 
   /**
-   * Thêm tin nhắn mới vào lịch sử chat
+   * Thêm tin nhắn mới vào lịch sử chat (chỉ trong session hiện tại)
    * @param {string} content - Nội dung tin nhắn
    * @param {boolean} isUser - true nếu do người dùng gửi, false nếu do AI
    * @returns {object} Tin nhắn đã tạo
@@ -24,10 +27,6 @@ export default class ChatBubbleModel {
     };
     
     this.messages.push(message);
-    
-    // Lưu vào localStorage để giữ lịch sử chat giữa các lần ghé thăm
-    this._saveMessages();
-    
     return message;
   }
 
@@ -40,110 +39,99 @@ export default class ChatBubbleModel {
   }
 
   /**
-   * Khởi tạo và load tin nhắn từ localStorage nếu có
+   * Khởi tạo với tin nhắn chào mừng
    */
-  loadMessages() {
-    const savedMessages = localStorage.getItem('schedigo_chat_messages');
-    if (savedMessages) {
-      try {
-        this.messages = JSON.parse(savedMessages);
-      } catch (e) {
-        console.error("Error loading messages:", e);
-        this.messages = [];
-      }
-    }
-    
-    // Nếu không có tin nhắn, thêm tin nhắn chào mừng
+  initializeWelcomeMessage() {
     if (this.messages.length === 0) {
       this.addMessage("Xin chào! Tôi là trợ lý AI của Schedigo. Bạn cần tôi giúp gì hôm nay?", false);
     }
   }
 
   /**
-   * Lưu tin nhắn vào localStorage
-   * @private
-   */
-  _saveMessages() {
-    try {
-      localStorage.setItem('schedigo_chat_messages', JSON.stringify(this.messages));
-    } catch (e) {
-      console.error("Error saving messages:", e);
-    }
-  }
-
-  /**
-   * Xóa tất cả tin nhắn
+   * Xóa tất cả tin nhắn (chỉ trong session hiện tại)
    */
   clearMessages() {
     this.messages = [];
-    this._saveMessages();
   }
 
   /**
-   * Khởi tạo các phản hồi có sẵn từ AI
+   * Kiểm tra trạng thái authentication
+   * @returns {boolean} True nếu user đã authenticated
    */
-  initializeResponses() {
-    this.responses = {
-      greetings: [
-        "Xin chào! Tôi có thể giúp gì cho bạn hôm nay?",
-        "Chào bạn! Bạn cần tôi giúp đỡ về vấn đề gì?",
-        "Xin chào! Tôi là trợ lý AI của Schedigo."
-      ],
-      calendar: [
-        "Tôi có thể giúp bạn quản lý lịch. Bạn có muốn tạo sự kiện mới không?",
-        "Lịch của bạn đang trống. Bạn có muốn thêm sự kiện không?",
-        "Tôi có thể giúp bạn xem, tạo hoặc chỉnh sửa sự kiện lịch. Bạn muốn làm gì?"
-      ],
-      teams: [
-        "Bạn có thể tạo hoặc tham gia nhóm từ trang Teams. Bạn có muốn tôi hướng dẫn bạn đến đó không?",
-        "Không gian làm việc nhóm cho phép bạn cộng tác. Bạn cần trợ giúp về điều gì cụ thể?",
-        "Teams giúp bạn cộng tác với người khác. Bạn có thể tạo nhóm mới hoặc tham gia nhóm hiện có."
-      ],
-      group_calendar: [
-        "Lịch nhóm giúp bạn quản lý sự kiện chung. Bạn muốn xem lịch nhóm nào?",
-        "Bạn có thể thêm sự kiện vào lịch nhóm. Bạn muốn làm điều đó không?",
-        "Tôi có thể giúp bạn quản lý lịch nhóm. Bạn cần tạo hay xem sự kiện nào?"
-      ],
-      help: [
-        "Tôi đang ở đây để giúp đỡ! Bạn có thể hỏi tôi về sự kiện lịch, nhóm hoặc điều hướng.",
-        "Bạn cần trợ giúp? Tôi có thể giúp với lịch trình, quản lý nhóm và nhiều thứ khác.",
-        "Tôi có thể hỗ trợ bạn điều gì? Tôi có thể giúp với lịch, nhóm, điều hướng và nhiều thứ khác."
-      ],
-      fallback: [
-        "Tôi không chắc mình hiểu. Bạn có thể diễn đạt lại câu hỏi của mình không?",
-        "Tôi vẫn đang học. Bạn có thể thử hỏi theo cách khác không?",
-        "Tôi chưa có câu trả lời cho điều đó. Có điều gì khác tôi có thể giúp bạn không?"
-      ]
-    };
+  isAuthenticated() {
+    return !!this.apiClient.token;
   }
 
   /**
-   * Xử lý và trả về phản hồi dựa trên tin nhắn người dùng
+   * Gửi tin nhắn đến backend và nhận phản hồi
    * @param {string} message - Tin nhắn của người dùng
-   * @returns {string} Phản hồi từ AI
+   * @returns {Promise<string>} Phản hồi từ AI agent
    */
-  getAIResponse(message) {
-    // Xử lý tin nhắn để xác định phản hồi
-    let responseType = 'fallback';
+  async getAIResponse(message) {
+    try {
+      // Kiểm tra authentication
+      if (!this.apiClient.token) {
+        throw new Error('AUTHENTICATION_REQUIRED');
+      }
+      console.log('Calling AI agent with message:', message);
+      const data = await this.apiClient.post(this.apiEndpoint, {
+        user_input: message ,
+      });
+      console.log('AI agent response:', data);
+      
+      // Backend trả về { response: "AI response text" } hoặc { message: "AI response text" }
+      return data.response || data.message.output || "Xin lỗi, tôi không thể xử lý yêu cầu của bạn lúc này.";
+      
+    } catch (error) {
+      console.error('Error calling AI agent:', error);
+      
+      // Xử lý lỗi authentication
+      if (error.message === 'AUTHENTICATION_REQUIRED') {
+        throw error;
+      }
+      
+      // Fallback response cho các lỗi khác
+      return this.getFallbackResponse(message);
+    }
+  }
+
+  /**
+   * Phản hồi dự phòng khi không thể kết nối backend
+   * @param {string} message - Tin nhắn của người dùng
+   * @returns {string} Phản hồi dự phòng
+   */
+  getFallbackResponse(message) {
     const lowerMsg = message.toLowerCase();
     
     if (lowerMsg.includes('xin chào') || lowerMsg.includes('chào') || lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
-      responseType = 'greetings';
+      return "Xin chào! Tôi có thể giúp gì cho bạn hôm nay?";
     } else if (lowerMsg.includes('lịch') || lowerMsg.includes('sự kiện') || lowerMsg.includes('event') || lowerMsg.includes('calendar')) {
-      responseType = 'calendar';
+      return "Tôi có thể giúp bạn quản lý lịch. Bạn có muốn tạo sự kiện mới không?";
     } else if (lowerMsg.includes('nhóm') || lowerMsg.includes('team') || lowerMsg.includes('group')) {
-      if (lowerMsg.includes('lịch nhóm') || lowerMsg.includes('group calendar')) {
-        responseType = 'group_calendar';
-      } else {
-        responseType = 'teams';
-      }
+      return "Bạn có thể tạo hoặc tham gia nhóm từ trang Teams. Bạn có muốn tôi hướng dẫn bạn đến đó không?";
     } else if (lowerMsg.includes('giúp') || lowerMsg.includes('trợ giúp') || lowerMsg.includes('help')) {
-      responseType = 'help';
+      return "Tôi đang ở đây để giúp đỡ! Bạn có thể hỏi tôi về sự kiện lịch, nhóm hoặc điều hướng.";
+    } else {
+      return "Xin lỗi, tôi đang gặp sự cố kết nối. Vui lòng thử lại sau.";
     }
-    
-    // Lấy phản hồi ngẫu nhiên từ danh mục đã chọn
-    const responses = this.responses[responseType];
-    const randomIndex = Math.floor(Math.random() * responses.length);
-    return responses[randomIndex];
+  }
+
+  /**
+   * Cập nhật API endpoint
+   * @param {string} endpoint - URL endpoint mới
+   */
+  setApiEndpoint(endpoint) {
+    this.apiEndpoint = endpoint;
+  }
+
+  /**
+   * Lấy thông tin authentication status
+   * @returns {object} Thông tin về authentication
+   */
+  getAuthStatus() {
+    return {
+      isAuthenticated: this.isAuthenticated(),
+      hasToken: !!this.apiClient.token
+    };
   }
 }
