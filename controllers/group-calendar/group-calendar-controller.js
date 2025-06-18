@@ -206,7 +206,7 @@ export function initGroupCalendarController(eventStore) {
   }
 
   // Update team header when a team is selected
-  function updateTeamHeader(team) {
+  async function updateTeamHeader(team) {
     if (!teamHeaderElement) return;
     
     if (team) {
@@ -240,7 +240,7 @@ export function initGroupCalendarController(eventStore) {
       teamEventStore = createTeamEventStore(selectedTeamId);
       
       // Handle event creation in team context
-      setupTeamEventHandlers(selectedTeamId);
+      await setupTeamEventHandlers(selectedTeamId);
     } else {
       teamHeaderElement.innerHTML = `
         <div class="team-header-placeholder">
@@ -262,12 +262,12 @@ export function initGroupCalendarController(eventStore) {
   }
   
   // Set up event handlers for team events
-  function setupTeamEventHandlers(teamId) {
+  async function setupTeamEventHandlers(teamId) {
     // Remove any existing handlers first
     removeTeamEventHandlers();
     
     // Get team data and check permissions
-    const team = getTeamById(teamId);
+    const team = await getTeamById(teamId);
     const currentUser = getCurrentUser();
     userCanCreateEvents = canCreateEvents(team, currentUser.email);
     
