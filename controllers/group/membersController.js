@@ -149,7 +149,7 @@ function initManageTeamMembersModal() {
     });
     
     // Function to add member to existing team
-    function addMemberToExistingTeam() {
+    async function addMemberToExistingTeam() {
         const email = memberEmailInput.value.trim();
         const teamId = parseInt(modal.dataset.teamId, 10);
         const isLeader = modal.dataset.isLeader === 'true';
@@ -200,7 +200,7 @@ function initManageTeamMembersModal() {
         clearMemberError(memberError);
         
         // Refresh members list
-        refreshTeamMembersList(teamId, isLeader);
+        await refreshTeamMembersList(teamId, isLeader);
         
         // Focus back on input
         memberEmailInput.focus();
@@ -212,7 +212,7 @@ function initManageTeamMembersModal() {
  * @param {number} teamId - ID of the team
  * @param {boolean} isLeader - Whether the current user is a leader
  */
-export function openTeamMembersModal(teamId, isLeader = false) {
+export async function openTeamMembersModal(teamId, isLeader = false) {
     const modal = document.getElementById('teamMembersModal');
     if (!modal) return;
     
@@ -267,7 +267,7 @@ export function openTeamMembersModal(teamId, isLeader = false) {
     }
     
     // Refresh members list
-    refreshTeamMembersList(teamId, isLeader);
+    await refreshTeamMembersList(teamId, isLeader);
     
     // Show modal
     showModal(modal);
@@ -278,7 +278,7 @@ export function openTeamMembersModal(teamId, isLeader = false) {
  * @param {number} teamId - ID of the team
  * @param {boolean} isLeader - Whether the current user is a leader
  */
-function refreshTeamMembersList(teamId, isLeader = false) {
+async function refreshTeamMembersList(teamId, isLeader = false) {
     const membersList = document.getElementById('manageMembersList');
     if (!membersList) return;
     
@@ -287,7 +287,7 @@ function refreshTeamMembersList(teamId, isLeader = false) {
     
     try {
         // Get team members - FIXED: Add null check and array validation
-        const members = getTeamMembers(teamId);
+        const members = await getTeamMembers(teamId);
         
         // FIXED: Validate that members is actually an array
         if (!members || !Array.isArray(members)) {
@@ -457,7 +457,7 @@ function renderMemberItem(container, member, type, isLeader = false, canRemove =
  * Handle team member add event
  * @param {CustomEvent} event - The event object
  */
-function handleTeamMemberAdd(event) {
+async function handleTeamMemberAdd(event) {
     const { teamId, member } = event.detail;
     
     // Add member to team
@@ -478,7 +478,7 @@ function handleTeamMemberAdd(event) {
         showToast('Member added successfully');
         
         // Refresh members list
-        refreshTeamMembersList(teamId, isLeader);
+        await refreshTeamMembersList(teamId, isLeader);
     } else {
         // Show error
         const memberError = document.getElementById('manageMemberError');
@@ -490,7 +490,7 @@ function handleTeamMemberAdd(event) {
  * Handle team member remove event
  * @param {CustomEvent} event - The event object
  */
-function handleTeamMemberRemove(event) {
+async function handleTeamMemberRemove(event) {
     const { teamId, memberId } = event.detail;
     
     // Get team data and current user
@@ -531,7 +531,7 @@ function handleTeamMemberRemove(event) {
         showToast('Member removed successfully');
         
         // Refresh members list
-        refreshTeamMembersList(teamId, isLeader);
+        await refreshTeamMembersList(teamId, isLeader);
     } else {
         // Show error
         showToast('Failed to remove member', 'error');
@@ -542,7 +542,7 @@ function handleTeamMemberRemove(event) {
  * Handle team member role change event
  * @param {CustomEvent} event - The event object
  */
-function handleTeamMemberRoleChange(event) {
+async function handleTeamMemberRoleChange(event) {
     const { teamId, memberId, role } = event.detail;
     
     // Get team data and current user
@@ -600,7 +600,7 @@ function handleTeamMemberRoleChange(event) {
         showToast(`Member role updated to ${role}`);
         
         // Refresh members list
-        refreshTeamMembersList(teamId, isLeader);
+        await refreshTeamMembersList(teamId, isLeader);
     } else {
         // Show error
         showToast('Failed to update member role', 'error');
