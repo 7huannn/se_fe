@@ -21,7 +21,7 @@ import { initEventFormController } from "../event-form-dialog.js";
 import { initGroupCalendarSidebar } from "./group-calendar-sidebar.js";
 import { initGroupCalendarNavigation } from "./navigation-controller.js";
 import { initEventSearchController } from "../event-search.js"; // Import search controller
-
+import { initReminderController } from "../reminderController.js";
 // Initialize URL sync and Event Store
 initUrlSync();
 const eventStore = initEventStore();
@@ -43,7 +43,7 @@ initEventCreateController();
 initEventDeleteController();
 initEventDetailsController();
 initEventFormController();
-
+initReminderController();
 // Initialize search controller - NEW
 const searchController = initEventSearchController('search-input');
 
