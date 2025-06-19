@@ -26,6 +26,7 @@ import { initEventFormController }     from "./event-form-dialog.js";
 import { initAccountController } from "./acc.js";
 import { initCalendar }                from "./calendar.js";
 import { initEventSearchController } from "./event-search.js"; // Import search controller
+import { initReminderController }     from "./reminderController.js";
 
 // a) UI‐wide controllers
 initResponsiveController();    
@@ -38,6 +39,7 @@ initNotificationsController();
 initSidebarToggleView();    // hoặc initSidebarToggleController() nếu bạn có controller cho sidebar
 initMenuNavigateView();
 initAccountController();
+initReminderController();
 
 // b) Form & dialog controllers
 initEventCreateController();
