@@ -31,7 +31,7 @@
             <button class="button button--primary button--lg" data-event-create-button>Create event</button>
 
             <!-- Navigation Links -->
-            <div class="sidebar-navigation">
+            <!-- <div class="sidebar-navigation">
                 <div class="sidebar-item" data-sidebar-item="teams">
                     <div class="sidebar-icon">👥</div>
                     <div class="sidebar-text">Teams</div>
@@ -46,7 +46,7 @@
                     <div class="sidebar-icon">🗓️</div>
                     <div class="sidebar-text">Group Calendar</div>
                 </div>
-            </div>
+            </div> -->
 
             <div class="mini-calendar" data-mini-calendar>
                 <div class="mini-calendar__header">
@@ -222,6 +222,7 @@
             <button id="btn-teams" class="menu-card"><i class="icon">👥</i><span>Teams</span></button>
             <!-- <button id="btn-chatbox" class="menu-card"><i class="icon">💬</i><span>ChatBox</span></button>
             <button id="btn-events" class="menu-card"><i class="icon">📅</i><span>Events</span></button> -->
+            <button id="btn-events" class="menu-card"><i class="icon">📅</i><span>Personal Calendar</span></button>
             <button id="btn-group-calendar" class="menu-card active"><i class="icon">🗓️</i><span>Group
                     Calendar</span></button>
         </div>
@@ -522,6 +523,78 @@
                 <div class="week-calendar__content-inner" data-calendar-scrollable>
                     <ul class="week-calendar__time-list">
                         <!-- Time list items will be dynamically generated -->
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">12:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">1:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">2:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">3:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">4:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">5:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">6:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">7:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">8:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">9:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">10:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">11:00 AM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">12:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">1:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">2:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">3:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">4:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">5:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">6:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">7:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">8:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">9:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">10:00 PM</time>
+                        </li>
+                        <li class="week-calendar__time-item">
+                            <time class="week-calendar__time">11:00 PM</time>
+                        </li>
                     </ul>
 
                     <div class="week-calendar__columns" data-week-calendar-columns>
@@ -548,7 +621,31 @@
 
     <template data-template="week-calendar-column">
         <div class="week-calendar__column" data-week-calendar-column>
-            <!-- Column cells will be dynamically generated -->
+             <!-- Column cells will be dynamically generated -->
+            <div class="week-calendar__cell" data-week-calendar-cell="0"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="60"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="120"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="180"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="240"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="300"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="360"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="420"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="480"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="540"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="600"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="660"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="720"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="780"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="840"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="900"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="960"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="1020"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="1080"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="1140"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="1200"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="1260"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="1320"></div>
+            <div class="week-calendar__cell" data-week-calendar-cell="1380"></div>
         </div>
     </template>
 
