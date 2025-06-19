@@ -91,13 +91,13 @@ export class EventSearchController {
    * Thực hiện tìm kiếm
    * @param {string} query - Từ khóa tìm kiếm
    */
-  performSearch(query) {
+  async performSearch(query) {
     let results = [];
     
     if (this.currentSearchType === 'personal') {
-      results = this.model.searchPersonalEvents(query);
+      results = await this.model.searchPersonalEvents(query);
     } else if (this.currentSearchType === 'team' && this.currentTeamId) {
-      results = this.model.searchTeamEvents(this.currentTeamId, query);
+      results = await this.model.searchTeamEvents(this.currentTeamId, query);
     }
 
     // Save search query to history
@@ -142,13 +142,13 @@ export class EventSearchController {
    * Xử lý xem chi tiết event
    * @param {number} eventId - ID của event
    */
-  handleViewEvent(eventId) {
+  async handleViewEvent(eventId) {
     let event = null;
     
     if (this.currentSearchType === 'personal') {
-      event = this.model.getPersonalEventById(eventId);
+      event = await this.model.getPersonalEventById(eventId);
     } else if (this.currentSearchType === 'team' && this.currentTeamId) {
-      event = this.model.getTeamEventById(this.currentTeamId, eventId);
+      event = await this.model.getTeamEventById(this.currentTeamId, eventId);
     }
     
     if (event) {
@@ -166,13 +166,13 @@ export class EventSearchController {
    * Xử lý chỉnh sửa event
    * @param {number} eventId - ID của event
    */
-  handleEditEvent(eventId) {
+  async handleEditEvent(eventId) {
     let event = null;
     
     if (this.currentSearchType === 'personal') {
-      event = this.model.getPersonalEventById(eventId);
+      event = await this.model.getPersonalEventById(eventId);
     } else if (this.currentSearchType === 'team' && this.currentTeamId) {
-      event = this.model.getTeamEventById(this.currentTeamId, eventId);
+      event = await this.model.getTeamEventById(this.currentTeamId, eventId);
     }
     
     if (event) {

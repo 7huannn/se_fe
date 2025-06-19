@@ -2,7 +2,7 @@
 import { getAllEvents } from "./storage.js";
 import { getTeamEvents } from "./group/team-calendar.js";
 import { isTheSameDay } from "./date.js";
-
+import { groupsService } from "../services/groupsService.js";
 /**
  * Model cho chức năng tìm kiếm sự kiện
  */
@@ -16,8 +16,8 @@ export class EventSearchModel {
    * @param {string} query - Từ khóa tìm kiếm
    * @returns {Array} Danh sách events tìm được
    */
-  searchPersonalEvents(query) {
-    const events = getAllEvents();
+  async searchPersonalEvents(query) {
+    const events = await getAllEvents();
     return this.searchEvents(events, query);
   }
 
@@ -27,8 +27,16 @@ export class EventSearchModel {
    * @param {string} query - Từ khóa tìm kiếm
    * @returns {Array} Danh sách events tìm được
    */
-  searchTeamEvents(teamId, query) {
+  async searchTeamEvents(teamId, query) {
     if (!teamId) return [];
+    try {
+      const result = await groupsService.getGroupEvents(teamId);
+      if (result.success) {
+        return this.searchEvents(result.events, query);
+      }
+    } catch (error) {
+      console.error('Error fetching team events from backend:', error);
+    }
     const events = getTeamEvents(teamId);
     return this.searchEvents(events, query);
   }
@@ -41,15 +49,15 @@ export class EventSearchModel {
    */
   searchEvents(events, query) {
     if (!query || !query.trim()) return [];
-    
+
     const queryLower = query.toLowerCase();
-    
+
     const results = events.filter(event => {
       // Tìm theo title
       if (event.title.toLowerCase().includes(queryLower)) {
         return true;
       }
-      
+
       // Tìm theo date
       if (event.date instanceof Date) {
         const eventDate = event.date;
@@ -57,15 +65,15 @@ export class EventSearchModel {
           eventDate.toLocaleDateString('en-GB'), // dd/mm/yyyy
           eventDate.toLocaleDateString('en-US'), // mm/dd/yyyy
           eventDate.toISOString().split('T')[0], // yyyy-mm-dd
-          eventDate.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          eventDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           }).toLowerCase()
         ];
-        
-        return dateStrings.some(dateStr => 
+
+        return dateStrings.some(dateStr =>
           dateStr.toLowerCase().includes(queryLower)
         );
       } else if (typeof event.date === 'string') {
@@ -76,22 +84,22 @@ export class EventSearchModel {
             eventDate.toLocaleDateString('en-GB'),
             eventDate.toLocaleDateString('en-US'),
             eventDate.toISOString().split('T')[0],
-            eventDate.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            eventDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             }).toLowerCase()
           ];
-          
-          return dateStrings.some(dateStr => 
+
+          return dateStrings.some(dateStr =>
             dateStr.toLowerCase().includes(queryLower)
           );
         } catch (e) {
           return false;
         }
       }
-      
+
       return false;
     });
 
@@ -109,15 +117,15 @@ export class EventSearchModel {
     return events.sort((a, b) => {
       const aRelevance = this.calculateRelevance(a, query);
       const bRelevance = this.calculateRelevance(b, query);
-      
+
       if (aRelevance !== bRelevance) {
         return bRelevance - aRelevance;
       }
-      
+
       // Nếu độ liên quan bằng nhau, sắp xếp theo thời gian gần nhất
       const aDate = a.date instanceof Date ? a.date : new Date(a.date);
       const bDate = b.date instanceof Date ? b.date : new Date(b.date);
-      
+
       return bDate - aDate;
     });
   }
@@ -131,9 +139,9 @@ export class EventSearchModel {
   calculateRelevance(event, query) {
     const queryLower = query.toLowerCase();
     const titleLower = event.title.toLowerCase();
-    
+
     let relevance = 0;
-    
+
     // Exact match gets highest score
     if (titleLower === queryLower) {
       relevance += 100;
@@ -146,15 +154,15 @@ export class EventSearchModel {
     else if (titleLower.includes(queryLower)) {
       relevance += 25;
     }
-    
+
     // Boost recent events
     const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
     const now = new Date();
     const daysDiff = Math.abs(now - eventDate) / (1000 * 60 * 60 * 24);
-    
+
     if (daysDiff <= 7) relevance += 10;
     else if (daysDiff <= 30) relevance += 5;
-    
+
     return relevance;
   }
 
@@ -163,8 +171,9 @@ export class EventSearchModel {
    * @param {number} eventId - ID của event
    * @returns {Object|null} Event object hoặc null
    */
-  getPersonalEventById(eventId) {
-    return getAllEvents().find(e => e.id === eventId) || null;
+  async getPersonalEventById(eventId) {
+    const events = await getAllEvents();
+    return events.find(e => e.id === eventId) || null;
   }
 
   /**
@@ -173,8 +182,16 @@ export class EventSearchModel {
    * @param {number} eventId - ID của event
    * @returns {Object|null} Event object hoặc null
    */
-  getTeamEventById(teamId, eventId) {
+  async getTeamEventById(teamId, eventId) {
     if (!teamId) return null;
+        try {
+      const result = await groupsService.getGroupEvents(teamId);
+      if (result.success) {
+        return result.events.find(e => e.id === eventId) || null;
+      }
+    } catch (error) {
+      console.error('Error fetching team events from backend:', error);
+    }
     return getTeamEvents(teamId).find(e => e.id === eventId) || null;
   }
 
@@ -184,16 +201,16 @@ export class EventSearchModel {
    */
   saveSearchQuery(query) {
     if (!query || !query.trim()) return;
-    
+
     // Remove duplicate if exists
     this.searchHistory = this.searchHistory.filter(item => item !== query);
-    
+
     // Add to beginning
     this.searchHistory.unshift(query);
-    
+
     // Keep only last 10 searches
     this.searchHistory = this.searchHistory.slice(0, 10);
-    
+
     // Save to localStorage
     localStorage.setItem('event_search_history', JSON.stringify(this.searchHistory));
   }
